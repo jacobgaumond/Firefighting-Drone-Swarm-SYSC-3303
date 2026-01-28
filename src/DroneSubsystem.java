@@ -54,8 +54,11 @@ public class DroneSubsystem {
         String responseMsg = "Fire 1 extinguished";
         byte msg[] = responseMsg.getBytes();
 
-        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.DRONE_SCHEDULER_PORT);
+
         try {
+            sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.DRONE_SCHEDULER_PORT);
+            sendReceiveSocket.send(sendPacket);
+            sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONEGUI_PORT);
             sendReceiveSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();

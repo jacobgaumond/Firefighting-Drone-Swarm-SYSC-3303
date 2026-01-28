@@ -2,13 +2,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-
+import java.net.*;
 import static java.lang.Thread.sleep;
 
-public class Iteration1_GUI extends JFrame {
+public class DroneGUI extends JFrame {
     private JTextArea logArea;
+    private GridPanel mainGrid;
+    public static final int DRONEGUI_PORT = 5002;
     //This is the mainframe in charge of organizing the values
-    public Iteration1_GUI() {
+    public DroneGUI() {
         setTitle("Group 2, Drone GUI");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1300, 600);
@@ -24,8 +26,39 @@ public class Iteration1_GUI extends JFrame {
 
         add(mainGrid, BorderLayout.CENTER); //fills remaining space when growing/shrinking
         add(rightSide, BorderLayout.EAST);//stays to the rightside
+        startListening();
     }
 
+    private void startListening() {
+        Thread listenerThread = new Thread(() -> {
+            // This is your fireIncident-style Receive Socket
+            try (DatagramSocket guiSocket = new DatagramSocket(5002)) {
+                byte[] buffer = new byte[100]; // Matching the project's 100-byte buffer
+
+                while (true) {
+                    DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+
+                    // Block until a packet arrives (Just like FireIncidentSubsystem)
+                    guiSocket.receive(receivePacket);
+
+                    // Convert and Clean padding
+                    String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                    String cleanMessage = received.trim();
+
+                    // Display in GUI
+                    logMessage("RECV: " + cleanMessage);
+
+                /* If the GUI ever needs to "Reply" (like FireIncident confirms receipt),
+                   you would add your send logic here using receivePacket.getAddress()
+                */
+                }
+            } catch (Exception e) {
+                logMessage("GUI Socket Error: " + e.getMessage());
+            }
+        });
+        listenerThread.setDaemon(true);
+        listenerThread.start();
+    }
     /**
      * Organizes the right-side sidebar into the Legend of squares and the statistics
      */
@@ -71,9 +104,12 @@ public class Iteration1_GUI extends JFrame {
 
     public void logMessage(String message) {
         SwingUtilities.invokeLater(() -> {
-            logArea.append(message + "\n");
+            // Remove trailing X's and whitespace, then append
+            String cleanMsg = message.replaceAll("X+$", "").trim();
+            logArea.append(cleanMsg + "\n");
+
+            // Auto-scroll to the bottom
             logArea.setCaretPosition(logArea.getDocument().getLength());
-            //scrolls bottom
         });
     }
     /** The legend that was shown in the assignment*/
@@ -233,23 +269,8 @@ public class Iteration1_GUI extends JFrame {
     }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Create the instance
-            Iteration1_GUI gui = new Iteration1_GUI();
-            gui.setVisible(true);
-            //Quick test of the log system message scrolling
-            new Thread(() -> {
-                for (int i = 0; i < 100; i++) {
-                    try {
-                        Thread.sleep(100); //sleeps thread to show scrolling
-
-                        // This prints any messages to the log
-                        gui.logMessage("Log entry: " + i);
-
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start(); // Starts the int thread
+            DroneGUI gui = new DroneGUI();
+            gui.setVisible(true); // Double-ensure it is visible
         });
     }
 }
