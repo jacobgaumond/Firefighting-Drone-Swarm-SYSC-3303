@@ -3,11 +3,20 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.net.*;
+import java.util.Objects;
+
 import static java.lang.Thread.sleep;
 
 public class DroneGUI extends JFrame {
     private JTextArea logArea;
     private GridPanel mainGrid;
+
+    /*Sets all of the zone numbers for easy modification later
+    * keep in mind that some values should add up to be the same and if they don't will cause misalignment
+    * consitency with  width =  Z1+Z2==Z3+Z4 height Z1==Z2 Z3==Z4 and Z5== Z1+Z3
+    * */
+
+    public static int zone1x=7, zone1y=7, zone2x=5, zone2y=7, zone3x=5,zone3y=7,zone4x=7,zone4y=7,zone5x=9,zone5y=14;
     public static final int DRONEGUI_PORT = 5002;
     //This is the mainframe in charge of organizing the values
     public DroneGUI() {
@@ -18,7 +27,7 @@ public class DroneGUI extends JFrame {
         setLayout(new BorderLayout());
 
         //helper for static grid pieces
-        GridPanel mainGrid = new GridPanel(21, 14);
+     mainGrid = new GridPanel(zone1x+zone2x+zone5x, zone1y+zone3y);
         GridHelper.initializeZones(mainGrid);
 
         // Create the Right Side container (we'll define this below)
@@ -162,16 +171,28 @@ public class DroneGUI extends JFrame {
         public static void initializeZones(GridPanel panel) {
             Color zoneColor = new Color(158, 194, 211);
             panel.addSquareLabel(0, 0, "Z(1)", zoneColor);
-            panel.addSquareLabel(7, 0, "Z(2)", zoneColor);
-            panel.addSquareLabel(12, 0, "Z(5)", zoneColor);
-            panel.addSquareLabel(0, 7, "Z(3)", zoneColor);
-            panel.addSquareLabel(5, 7, "Z(4)", zoneColor);
+            panel.createFireLabel(0,zone1x,0,zone1y,"",0);
+
+            panel.addSquareLabel(zone1x, 0, "Z(2)", zoneColor);
+            panel.createFireLabel(zone1x,zone2x,0,zone2y,"",1);
+
+
+            panel.addSquareLabel(0, zone1y, "Z(3)", zoneColor);
+            panel.createFireLabel(0,zone3x,zone1y,zone3y,"",3);
+
+            panel.addSquareLabel(zone3x, zone1y, "Z(4)", zoneColor);
+            panel.createFireLabel(zone3x,zone4x,zone1y,zone4y,"",4);
+
+            panel.addSquareLabel(zone1x+zone2x, 0, "Z(5)",zoneColor);
+            panel.createFireLabel(zone1x+zone2x,zone5x,0,zone5y,"",2);
         }
     }
     // Grid Panel creations
     class GridPanel extends JPanel {
         private final int cols;
         private final int rows;
+
+        public JLabel[] fireLabels = new JLabel[5]; //sets location for middle fires + visibility
 
         public GridPanel(int cols, int rows) {
             this.cols = cols;
@@ -207,7 +228,45 @@ public class DroneGUI extends JFrame {
             repositionComponents();
         }
 
+        public void createFireLabel(int startX, int totalWidth, int startY, int totalHeight, String text ,int currLabel) {
 
+            // 1. Check if the length is odd (for your "middle" requirement)
+            if (totalWidth % 2 == 0) {
+                System.out.println("Note: Width " + totalWidth + " is even; label will be slightly off-center.");
+            }
+
+            // 2. Calculate the center relative to the starting position
+            // If width is 5, (5 / 2) = 2. StartX + 2 puts it in the 3rd slot.
+            int centerX = startX + (totalWidth / 2);
+            int centerY = startY + (totalHeight / 2);
+
+            JLabel label = new JLabel(text);
+            label.setOpaque(true);
+            label.setBackground(new Color(130, 255, 95));
+            label.setForeground(Color.BLACK);
+            label.setHorizontalAlignment(SwingConstants.CENTER);
+
+            // Store the center coordinates so the GUI knows where to draw it
+            label.putClientProperty("gridX", centerX);
+            label.putClientProperty("gridY", centerY);
+
+            // Track in our array of size 5
+            fireLabels[currLabel] = label;
+
+            this.add(label);
+            repositionComponents();
+        }
+
+        private void fireStatusChange(int zone ,String fireLevel){
+            if(Objects.equals(fireLevel,"")) {
+                fireLabels[zone - 1].setBackground(new Color(130, 255, 95));
+                fireLabels[zone - 1].setText(fireLevel);
+            }
+                else {
+                    fireLabels[zone-1].setBackground(new Color(255,103, 95));
+                    fireLabels[zone-1].setText(fireLevel);
+                }
+        }
         /** This is for the resize of all components on the Grid**/
         private void repositionComponents() {
             double unitW = (double) getWidth() / cols;
@@ -249,20 +308,21 @@ public class DroneGUI extends JFrame {
 
             /** Draw all the darker segments */
 
-            int x12 = (int) (12 * unitW);
-            int x7 = (int) (7 * unitW);
-            int yHalf = (int) (7 * unitH);
+            int middleline = (int) ((zone1x+zone2x) * unitW);
+            int zone1length = (int) (zone1x * unitW);
+            int topHalfY = (int) (zone1y * unitH);
+            int bottomhalfY = (int)(zone3y*unitH);
             int x5 = (int) (5 * unitW);
             g2.setStroke(new BasicStroke(3));
             g2.setColor(darkGrid);
 
-            g2.drawLine(x7, 0, x7, yHalf); //Z1 || Z2
+            g2.drawLine(zone1length, 0, zone1length, topHalfY); //Z1 || Z2
 
-            g2.drawLine(x5, yHalf, x5, getHeight());//Z3 || Z4
+            g2.drawLine(x5, topHalfY, x5, getHeight());//Z3 || Z4
 
-            g2.drawLine(x12, 0, x12, getHeight()); // Z2,Z4 || Z5
+            g2.drawLine(middleline, 0, middleline, getHeight()); // Z2,Z4 || Z5
 
-            g2.drawLine(0, yHalf, x12, yHalf);// (Z1, Z2) -- (Z3, Z4)
+            g2.drawLine(0, topHalfY,middleline,bottomhalfY );// (Z1, Z2) -- (Z3, Z4)
 
             g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);//border
         }
@@ -271,6 +331,7 @@ public class DroneGUI extends JFrame {
         SwingUtilities.invokeLater(() -> {
             DroneGUI gui = new DroneGUI();
             gui.setVisible(true); // Double-ensure it is visible
+
         });
     }
 }
