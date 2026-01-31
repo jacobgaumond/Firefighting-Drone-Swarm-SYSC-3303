@@ -1,6 +1,6 @@
 public class Main {
     public static void main(String[] args) {
-        String inputFileName = "/src/data/Sample_event_file.csv";
+        String inputFileName = "src/data/Sample_event_file.csv";
 
         MessageBox schedulerBox     = new MessageBox();
         MessageBox fireIncidentBox  = new MessageBox();
