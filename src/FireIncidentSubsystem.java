@@ -19,7 +19,7 @@ import java.util.List;
 public class FireIncidentSubsystem {
     SocketWrapper clientSocket;
 
-    public final static int FIRE_INCIDENT_PORT = 5000;
+    public final static int FIRE_INCIDENT_PORT = 9502;
 
     public FireIncidentSubsystem() {
         try {

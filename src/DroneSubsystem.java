@@ -17,7 +17,7 @@ import java.net.*;
 public class DroneSubsystem {
     SocketWrapper clientSocket;
 
-    public final static int DRONE_PORT = 5001;
+    public final static int DRONE_PORT = 5901;
 
     public DroneSubsystem() {
         try {

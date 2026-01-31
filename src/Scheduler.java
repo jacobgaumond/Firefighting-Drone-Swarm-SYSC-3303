@@ -19,7 +19,7 @@ import java.net.*;
 public class Scheduler {
     SocketWrapper serverSocket;
 
-    public final static int SCHEDULER_PORT = 6000;
+    public final static int SCHEDULER_PORT = 9500;
 
     public Scheduler() {
         try {

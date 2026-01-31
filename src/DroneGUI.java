@@ -17,7 +17,7 @@ public class DroneGUI extends JFrame {
     * */
 
     public static int zone1x=7, zone1y=7, zone2x=5, zone2y=7, zone3x=5,zone3y=7,zone4x=7,zone4y=7,zone5x=9,zone5y=14;
-    public static final int DRONEGUI_PORT = 5002;
+    public static final int DRONEGUI_PORT = 9503;
     //This is the mainframe in charge of organizing the values
     public DroneGUI() {
         setTitle("Group 2, Drone GUI");
