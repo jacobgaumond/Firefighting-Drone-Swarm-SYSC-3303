@@ -55,7 +55,7 @@ public class Scheduler {
         System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         // send to DroneSubsystem
-        sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getData().length, receivePacket.getAddress(), DroneSubsystem.DRONE_PORT);
+        sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), DroneSubsystem.DRONE_PORT);
         try {
             sendSocket.send(sendPacket);
         } catch (IOException e) {
@@ -75,7 +75,7 @@ public class Scheduler {
         System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         // send to FireIncidentSubsystem
-        sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getData().length, receivePacket.getAddress(), FireIncidentSubsystem.FIRE_INCIDENT_PORT);
+        sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), FireIncidentSubsystem.FIRE_INCIDENT_PORT);
         try {
             sendSocket.send(sendPacket);
         } catch (IOException e) {
