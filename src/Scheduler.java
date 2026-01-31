@@ -13,51 +13,61 @@
  *     DroneSubsystem:         updates on events and drone statuses
  */
 
-import java.io.*;
-import java.net.*;
+class Scheduler {
+    private FireEvent currentTask = null;
+    private boolean taskAvailable = false;
+    private boolean responseAvailable = false;
 
-public class Scheduler {
-    SocketWrapper serverSocket;
-
-    public final static int SCHEDULER_PORT = 9500;
-
-    public Scheduler() {
-        try {
-            serverSocket = new SocketWrapper(SCHEDULER_PORT);
-        } catch (SocketException e) {
-            e.printStackTrace();
-            System.exit(1);
+    // Called by Fire Incident System (Producer)
+    public synchronized void putEvent(FireEvent event) {
+        // Wait if there is an unprocessed task or an unread response on the table
+        while (taskAvailable || responseAvailable) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                return;
+            }
         }
+        this.currentTask = event;
+        this.taskAvailable = true;
+        // System.out.println("[SCHEDULER] Event received for Zone " + event.getZoneId());
+        notifyAll();
     }
 
-    /**
-     * Establishes the UDP connection to/from FireIncident and Drone subsystems
-     */
-    public void schedulerBridge() {
-        byte[] packetBuf = new byte[100];
-        DatagramPacket receivePacket = new DatagramPacket(packetBuf, packetBuf.length);
-        DatagramPacket sendPacket;
-
-        // receive from FireIncidentSubsystem
-        serverSocket.receiveUDPPacket(receivePacket, "FIRE INCIDENT SUBSYSTEM");
-
-        // send to DroneSubsystem
-        sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), DroneSubsystem.DRONE_PORT);
-        serverSocket.sendUDPPacket(sendPacket, "DRONE SUBSYSTEM");
-
-        // receive from DroneSubsystem
-        serverSocket.receiveUDPPacket(receivePacket, "DRONE SUBSYSTEM");
-
-        // send to FireIncidentSubsystem
-        sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), FireIncidentSubsystem.FIRE_INCIDENT_PORT);
-        serverSocket.sendUDPPacket(sendPacket, "FIRE INCIDENT SUBSYSTEM");
-
-        // close the socket
-        serverSocket.close();
+    // Called by Drone (Consumer/Worker)
+    public synchronized FireEvent getTask() {
+        while (!taskAvailable) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                return null;
+            }
+        }
+        FireEvent task = currentTask;
+        taskAvailable = false;
+        return task;
     }
 
-    public static void main(String args[]) {
-        Scheduler server = new Scheduler();
-        server.schedulerBridge();
+    // Sends Drone Result
+    public synchronized void sendResult(FireEvent event) {
+        this.currentTask = event;
+        this.responseAvailable = true;
+        notifyAll();
+    }
+
+    // Confirms Fire is extinguished
+    public synchronized FireEvent waitForResponse() {
+        while (!responseAvailable) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                return null;
+            }
+        }
+        FireEvent response = currentTask;
+        responseAvailable = false;
+        currentTask = null; // Clear the table for the next event
+        notifyAll();
+        return response;
     }
 }
