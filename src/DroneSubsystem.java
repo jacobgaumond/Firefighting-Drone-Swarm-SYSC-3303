@@ -11,57 +11,41 @@
  *     Scheduler:  updates on events and drone statuses
  */
 
-import java.io.*;
-import java.net.*;
+//import java.io.*;
+//import java.net.*;
 
-public class DroneSubsystem {
-    SocketWrapper clientSocket;
+public class DroneSubsystem implements Runnable {
+//    SocketWrapper clientSocket;
+//
+//    public final static int DRONE_PORT = 5901;
+//
+//    public DroneSubsystem() {
+//        try {
+//            clientSocket = new SocketWrapper(DRONE_PORT);
+//        } catch (SocketException se) {
+//            throw new RuntimeException(se);
+//        }
+//    }
 
-    public final static int DRONE_PORT = 5901;
+    private MessageBox incomingMessageBox;
+    private MessageBox schedulerMessageBox;
 
-    public DroneSubsystem() {
-        try {
-            clientSocket = new SocketWrapper(DRONE_PORT);
-        } catch (SocketException se) {
-            throw new RuntimeException(se);
-        }
+    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
+        this.schedulerMessageBox = schedulerMessageBox;
+        this.incomingMessageBox = incomingMessageBox;
     }
 
-    /**
-     * Establishes the UDP connection with Scheduler
-     */
-    public void sendAndReceive() {
-        byte[] packetBuf = new byte[100];
-        DatagramPacket receivePacket = new DatagramPacket(packetBuf, packetBuf.length);
-        DatagramPacket sendPacket;
-
-        // receive from Scheduler
-        clientSocket.receiveUDPPacket(receivePacket, "SCHEDULER");
-
-        // Mimic putting out fire
-        try {
-            System.out.println("Putting out fire...\n");
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        // send to Scheduler
-        String responseMsg = "Fire 1 extinguished";
-        byte[] msg = responseMsg.getBytes();
-
-        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.SCHEDULER_PORT);
-        clientSocket.sendUDPPacket(sendPacket, "SCHEDULER");
-
-        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONE_GUI_PORT);
-        clientSocket.sendUDPPacket(sendPacket, "DRONE GUI");
-
-        clientSocket.close();
-    }
-
-    public static void main(String args[]) {
-        DroneSubsystem client = new DroneSubsystem();
-        client.sendAndReceive();
+    @Override
+    public void run() {
+        boolean boxOpen = true;
+        do {
+            Message message = incomingMessageBox.getMessage();
+            if (message == null) {
+                boxOpen = false;
+            }
+            else {
+                schedulerMessageBox.putMessage(new Message("Scheduler", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent));
+            }
+        } while (boxOpen);
     }
 }

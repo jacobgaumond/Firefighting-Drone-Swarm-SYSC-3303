@@ -11,68 +11,67 @@
  *     Scheduler:  events (Time, Zone ID, Event type, Severity)
  */
 
-import java.io.*;
-import java.net.*;
+//import java.io.*;
+//import java.net.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Scanner;
 
-public class FireIncidentSubsystem {
-    SocketWrapper clientSocket;
+public class FireIncidentSubsystem implements Runnable {
+//    SocketWrapper clientSocket;
+//
+//    public final static int FIRE_INCIDENT_PORT = 9502;
+//
+//    public FireIncidentSubsystem() {
+//        try {
+//            clientSocket = new SocketWrapper(FIRE_INCIDENT_PORT);
+//        } catch (SocketException se) {
+//            throw new RuntimeException(se);
+//        }
+//    }
 
-    public final static int FIRE_INCIDENT_PORT = 9502;
+    private MessageBox incomingMessageBox;
+    private MessageBox schedulerMessageBox;
 
-    public FireIncidentSubsystem() {
-        try {
-            clientSocket = new SocketWrapper(FIRE_INCIDENT_PORT);
-        } catch (SocketException se) {
-            throw new RuntimeException(se);
-        }
+    private ArrayList<String> fileEvents = new ArrayList<String>();
+
+    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, String fileName) {
+        this.incomingMessageBox = incomingMessageBox;
+        this.schedulerMessageBox = schedulerMessageBox;
+
+        loadFromFile(fileName);
     }
 
-    /**
-     * Establishes the UDP connection with Scheduler
-     */
-    public void sendAndReceive() {
-        byte[] packetBuf = new byte[100];
-        DatagramPacket receivePacket = new DatagramPacket(packetBuf, packetBuf.length);
-        DatagramPacket sendPacket;
+    @Override
+    public void run() {
+        for (String event : fileEvents) {
+            schedulerMessageBox.putMessage(new Message("DroneSubsystem", "FireIncidentSubsystem", event, Message.MessageType.FireEvent));
+        }
+        schedulerMessageBox.closeBox();
+        incomingMessageBox.closeBox();
+    }
 
-        // get event data from Sample_event_file.csv
-        String event = new String(); // TODO: refine in future iterations (Event class)
+    private void loadFromFile(String fileName) {
+        File file = new File(fileName);
 
-        try (BufferedReader br = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/src/data/Sample_event_file.csv"))) {
-            String line = br.readLine(); // skip header
-            while ((line = br.readLine()) != null) {
-                event = line;
+        try {
+            Scanner reader = new Scanner(file);
+
+            while (reader.hasNextLine()) {
+                String line = reader.nextLine();
+
+                if (!line.trim().isEmpty()) {
+                    fileEvents.add(line);
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            reader.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("Error: " + e.getMessage());
+
             System.exit(1);
         }
-        byte[] msg = event.getBytes(); // use first event as example
-
-        // send to Scheduler
-
-        InetAddress address = null;
-        try {
-            address = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        sendPacket = new DatagramPacket(msg, msg.length, address, Scheduler.SCHEDULER_PORT);
-
-        clientSocket.sendUDPPacket(sendPacket, "SCHEDULER");
-
-        // receive from Scheduler
-        clientSocket.receiveUDPPacket(receivePacket, "SCHEDULER");
-
-        // close the socket
-        clientSocket.close();
-    }
-
-    public static void main(String args[]) {
-        FireIncidentSubsystem client = new FireIncidentSubsystem();
-        client.sendAndReceive();
     }
 }
