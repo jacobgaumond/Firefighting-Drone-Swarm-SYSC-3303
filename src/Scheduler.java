@@ -42,7 +42,7 @@ public class Scheduler {
      */
     public void schedulerBridge() {
         // receive from FireIncidentSubsystem
-        byte data[] = new byte[100];
+        byte[] data = new byte[100];
         receivePacket = new DatagramPacket(data, data.length);
 
         try {

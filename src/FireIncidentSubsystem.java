@@ -46,7 +46,7 @@ public class FireIncidentSubsystem {
             e.printStackTrace();
             System.exit(1);
         }
-        byte msg[] = event.getBytes(); // use first event as example
+        byte[] msg = event.getBytes(); // use first event as example
 
         // create packet
         try {
@@ -66,7 +66,7 @@ public class FireIncidentSubsystem {
         System.out.println("Fire Incident -> Scheduler: " + event);
 
         // receive from Scheduler
-        byte data[] = new byte[100];
+        byte[] data = new byte[100];
         receivePacket = new DatagramPacket(data, data.length);
 
         try {

@@ -33,7 +33,7 @@ public class DroneSubsystem {
      */
     public void sendAndReceive() {
         // receive from Scheduler
-        byte data[] = new byte[100];
+        byte[] data = new byte[100];
         receivePacket = new DatagramPacket(data, data.length);
 
         try {
@@ -56,7 +56,7 @@ public class DroneSubsystem {
 
         // send to Scheduler
         String responseMsg = "Fire 1 extinguished";
-        byte msg[] = responseMsg.getBytes();
+        byte[] msg = responseMsg.getBytes();
 
 
         try {
