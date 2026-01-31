@@ -62,7 +62,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("SCHEDULER -> DRONE: " + new String(data, 0, receivePacket.getLength()) + "\n");
+        System.out.println("SCHEDULER -> DRONE: " + new String(data, 0, sendPacket.getLength()) + "\n");
 
         // receive from DroneSubsystem
         try {
@@ -82,7 +82,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("SCHEDULER -> FIRE INCIDENT: " + new String(data, 0, receivePacket.getLength()) + "\n");
+        System.out.println("SENT -> FIRE INCIDENT: " + new String(data, 0, sendPacket.getLength()) + "\n");
     }
 
     public static void main(String args[]) {
