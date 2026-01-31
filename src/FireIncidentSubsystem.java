@@ -52,12 +52,15 @@ public class FireIncidentSubsystem {
         byte[] msg = event.getBytes(); // use first event as example
 
         // send to Scheduler
+
+        InetAddress address = null;
         try {
-            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), Scheduler.SCHEDULER_PORT);
+            address = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
         }
+        sendPacket = new DatagramPacket(msg, msg.length, address, Scheduler.SCHEDULER_PORT);
 
         clientSocket.sendUDPPacket(sendPacket, "SCHEDULER");
 
