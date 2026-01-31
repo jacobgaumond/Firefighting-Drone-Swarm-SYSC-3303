@@ -43,11 +43,11 @@ public class DroneSubsystem {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()));
+        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         // Mimic putting out fire
         try {
-            System.out.println("Putting out fire...");
+            System.out.println("Putting out fire...\n");
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -69,7 +69,7 @@ public class DroneSubsystem {
             System.exit(1);
         }
 
-        System.out.println("\nDrone -> Scheduler: " + responseMsg);
+        System.out.println("Drone -> Scheduler: " + responseMsg + "\n");
 
         sendReceiveSocket.close();
     }

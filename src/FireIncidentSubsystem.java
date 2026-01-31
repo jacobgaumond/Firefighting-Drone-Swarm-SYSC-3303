@@ -63,7 +63,7 @@ public class FireIncidentSubsystem {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("Fire Incident -> Scheduler: " + event);
+        System.out.println("Fire Incident -> Scheduler: " + event + "\n");
 
         // receive from Scheduler
         byte[] data = new byte[100];
@@ -76,7 +76,7 @@ public class FireIncidentSubsystem {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()));
+        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         sendReceiveSocket.close();
     }

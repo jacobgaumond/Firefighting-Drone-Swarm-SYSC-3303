@@ -52,7 +52,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()));
+        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         // send to DroneSubsystem
         sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getData().length, receivePacket.getAddress(), DroneSubsystem.DRONE_PORT);
@@ -62,7 +62,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("\nSCHEDULER -> DRONE: " + new String(data, 0, receivePacket.getLength()) + "\n");
+        System.out.println("SCHEDULER -> DRONE: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         // receive from DroneSubsystem
         try {
@@ -72,7 +72,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()));
+        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
 
         // send to FireIncidentSubsystem
         sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getData().length, receivePacket.getAddress(), FireIncidentSubsystem.FIRE_INCIDENT_PORT);
@@ -82,7 +82,7 @@ public class Scheduler {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("\nSCHEDULER -> FIRE INCIDENT: " + new String(data, 0, receivePacket.getLength()));
+        System.out.println("SCHEDULER -> FIRE INCIDENT: " + new String(data, 0, receivePacket.getLength()) + "\n");
     }
 
     public static void main(String args[]) {
