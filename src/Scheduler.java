@@ -69,6 +69,7 @@ public class Scheduler {
             System.out.println("WAITING ON DRONE");
             droneReceiveSocket.receive(receivePacket); // wait
         } catch (IOException e) {
+            e.printStackTrace();
             System.exit(1);
         }
         System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()));
