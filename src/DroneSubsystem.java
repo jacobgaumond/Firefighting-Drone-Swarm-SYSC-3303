@@ -54,7 +54,7 @@ public class DroneSubsystem {
         sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.SCHEDULER_PORT);
         clientSocket.sendUDPPacket(sendPacket, "SCHEDULER");
 
-        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONEGUI_PORT);
+        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONE_GUI_PORT);
         clientSocket.sendUDPPacket(sendPacket, "DRONE GUI");
 
         clientSocket.close();

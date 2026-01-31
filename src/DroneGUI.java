@@ -17,7 +17,7 @@ public class DroneGUI extends JFrame {
     * */
 
     public static int zone1x=7, zone1y=7, zone2x=5, zone2y=7, zone3x=5,zone3y=7,zone4x=7,zone4y=7,zone5x=9,zone5y=14;
-    public static final int DRONEGUI_PORT = 9503;
+    public static final int DRONE_GUI_PORT = 9503;
     //This is the mainframe in charge of organizing the values
     public DroneGUI() {
         setTitle("Group 2, Drone GUI");
@@ -27,7 +27,7 @@ public class DroneGUI extends JFrame {
         setLayout(new BorderLayout());
 
         //helper for static grid pieces
-     mainGrid = new GridPanel(zone1x+zone2x+zone5x, zone1y+zone3y);
+        mainGrid = new GridPanel(zone1x+zone2x+zone5x, zone1y+zone3y);
         GridHelper.initializeZones(mainGrid);
 
         // Create the Right Side container (we'll define this below)
@@ -41,7 +41,7 @@ public class DroneGUI extends JFrame {
     private void startListening() {
         Thread listenerThread = new Thread(() -> {
             // This is your fireIncident-style Receive Socket
-            try (DatagramSocket guiSocket = new DatagramSocket(5002)) {
+            try (DatagramSocket guiSocket = new DatagramSocket(DRONE_GUI_PORT)) {
                 byte[] buffer = new byte[100]; // Matching the project's 100-byte buffer
 
                 while (true) {
