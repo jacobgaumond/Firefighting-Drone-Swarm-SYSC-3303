@@ -38,9 +38,9 @@ public class DroneGUI extends JFrame {
 
         add(mainGrid, BorderLayout.CENTER); //fills remaining space when growing/shrinking
         add(rightSide, BorderLayout.EAST);//stays to the rightside
-        startListening();
+        //startListening();
     }
-/**Listerner for later implentation **/
+/**Listerner for later implentation
     private void startListening() {
         Thread listenerThread = new Thread(() -> {
             // This is your fireIncident-style Receive Socket
@@ -60,9 +60,7 @@ public class DroneGUI extends JFrame {
                     // Display in GUI
                     logMessage("RECV: " + cleanMessage);
 
-                /* If the GUI ever needs to "Reply" (like FireIncident confirms receipt),
-                   you would add your send logic here using receivePacket.getAddress()
-                */
+
                 }
             } catch (Exception e) {
                 logMessage("GUI Socket Error: " + e.getMessage());
@@ -71,7 +69,7 @@ public class DroneGUI extends JFrame {
         listenerThread.setDaemon(true);
         listenerThread.start();
     }
-
+    **/
     /**
      * Organizes the right-side sidebar into the Legend of squares and the logs
      */
@@ -337,7 +335,9 @@ public class DroneGUI extends JFrame {
         SwingUtilities.invokeLater(() -> {
             DroneGUI gui = new DroneGUI();
             gui.setVisible(true);
-
+            //quick test for fireStatusChange and logging messag
+            gui.logMessage("FIRE_DETECTED_3_H");
+            gui.mainGrid.fireStatusChange(3,"H");
         });
     }
 }
