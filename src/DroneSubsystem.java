@@ -22,7 +22,7 @@ public class DroneSubsystem {
 
     public DroneSubsystem() {
         try {
-            sendReceiveSocket = new DatagramSocket(5001);
+            sendReceiveSocket = new DatagramSocket(DRONE_PORT);
         } catch (SocketException se) {
             throw new RuntimeException(se);
         }
