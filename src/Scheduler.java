@@ -17,15 +17,13 @@ import java.io.*;
 import java.net.*;
 
 public class Scheduler {
-    DatagramPacket sendPacket, receivePacket;
-
-    DatagramSocket serverSocket;
+    SocketWrapper serverSocket;
 
     public final static int SCHEDULER_PORT = 6000;
 
     public Scheduler() {
         try {
-            serverSocket = new DatagramSocket(SCHEDULER_PORT);
+            serverSocket = new SocketWrapper(SCHEDULER_PORT);
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
@@ -36,49 +34,25 @@ public class Scheduler {
      * Establishes the UDP connection to/from FireIncident and Drone subsystems
      */
     public void schedulerBridge() {
-        // receive from FireIncidentSubsystem
-        byte[] data = new byte[100];
-        receivePacket = new DatagramPacket(data, data.length);
+        byte[] packetBuf = new byte[100];
+        DatagramPacket receivePacket = new DatagramPacket(packetBuf, packetBuf.length);
+        DatagramPacket sendPacket;
 
-        try {
-            System.out.println("WAITING ON FIRE INCIDENT");
-            serverSocket.receive(receivePacket); // wait
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
+        // receive from FireIncidentSubsystem
+        serverSocket.receiveUDPPacket(receivePacket, "FIRE INCIDENT SUBSYSTEM");
 
         // send to DroneSubsystem
         sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), DroneSubsystem.DRONE_PORT);
-        try {
-            serverSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("SCHEDULER -> DRONE: " + new String(data, 0, sendPacket.getLength()) + "\n");
+        serverSocket.sendUDPPacket(sendPacket, "DRONE SUBSYSTEM");
 
         // receive from DroneSubsystem
-        try {
-            System.out.println("WAITING ON DRONE");
-            serverSocket.receive(receivePacket); // wait
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
+        serverSocket.receiveUDPPacket(receivePacket, "DRONE SUBSYSTEM");
 
         // send to FireIncidentSubsystem
         sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), FireIncidentSubsystem.FIRE_INCIDENT_PORT);
-        try {
-            serverSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("SENT -> FIRE INCIDENT: " + new String(data, 0, sendPacket.getLength()) + "\n");
+        serverSocket.sendUDPPacket(sendPacket, "FIRE INCIDENT SUBSYSTEM");
 
+        // close the socket
         serverSocket.close();
     }
 

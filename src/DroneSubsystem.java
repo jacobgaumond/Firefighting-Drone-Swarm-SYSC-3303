@@ -15,14 +15,13 @@ import java.io.*;
 import java.net.*;
 
 public class DroneSubsystem {
-    DatagramPacket sendPacket, receivePacket;
-    DatagramSocket sendReceiveSocket;
+    SocketWrapper clientSocket;
 
     public final static int DRONE_PORT = 5001;
 
     public DroneSubsystem() {
         try {
-            sendReceiveSocket = new DatagramSocket(DRONE_PORT);
+            clientSocket = new SocketWrapper(DRONE_PORT);
         } catch (SocketException se) {
             throw new RuntimeException(se);
         }
@@ -32,18 +31,12 @@ public class DroneSubsystem {
      * Establishes the UDP connection with Scheduler
      */
     public void sendAndReceive() {
-        // receive from Scheduler
-        byte[] data = new byte[100];
-        receivePacket = new DatagramPacket(data, data.length);
+        byte[] packetBuf = new byte[100];
+        DatagramPacket receivePacket = new DatagramPacket(packetBuf, packetBuf.length);
+        DatagramPacket sendPacket;
 
-        try {
-            System.out.println("WAITING ON SCHEDULER");
-            sendReceiveSocket.receive(receivePacket); // wait
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
+        // receive from Scheduler
+        clientSocket.receiveUDPPacket(receivePacket, "SCHEDULER");
 
         // Mimic putting out fire
         try {
@@ -58,20 +51,13 @@ public class DroneSubsystem {
         String responseMsg = "Fire 1 extinguished";
         byte[] msg = responseMsg.getBytes();
 
+        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.SCHEDULER_PORT);
+        clientSocket.sendUDPPacket(sendPacket, "SCHEDULER");
 
-        try {
-            sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.SCHEDULER_PORT);
-            sendReceiveSocket.send(sendPacket);
-            sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONEGUI_PORT);
-            sendReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONEGUI_PORT);
+        clientSocket.sendUDPPacket(sendPacket, "DRONE GUI");
 
-        System.out.println("Drone -> Scheduler: " + responseMsg + "\n");
-
-        sendReceiveSocket.close();
+        clientSocket.close();
     }
 
     public static void main(String args[]) {

@@ -17,14 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FireIncidentSubsystem {
-    DatagramPacket sendPacket, receivePacket;
-    DatagramSocket sendReceiveSocket;
+    SocketWrapper clientSocket;
 
     public final static int FIRE_INCIDENT_PORT = 5000;
 
     public FireIncidentSubsystem() {
         try {
-            sendReceiveSocket = new DatagramSocket(FIRE_INCIDENT_PORT);
+            clientSocket = new SocketWrapper(FIRE_INCIDENT_PORT);
         } catch (SocketException se) {
             throw new RuntimeException(se);
         }
@@ -34,6 +33,10 @@ public class FireIncidentSubsystem {
      * Establishes the UDP connection with Scheduler
      */
     public void sendAndReceive() {
+        byte[] packetBuf = new byte[100];
+        DatagramPacket receivePacket = new DatagramPacket(packetBuf, packetBuf.length);
+        DatagramPacket sendPacket;
+
         // get event data from Sample_event_file.csv
         String event = new String(); // TODO: refine in future iterations (Event class)
 
@@ -48,7 +51,7 @@ public class FireIncidentSubsystem {
         }
         byte[] msg = event.getBytes(); // use first event as example
 
-        // create packet
+        // send to Scheduler
         try {
             sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), Scheduler.SCHEDULER_PORT);
         } catch (UnknownHostException e) {
@@ -56,29 +59,13 @@ public class FireIncidentSubsystem {
             System.exit(1);
         }
 
-        // send to Scheduler
-        try {
-            sendReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("Fire Incident -> Scheduler: " + event + "\n");
+        clientSocket.sendUDPPacket(sendPacket, "SCHEDULER");
 
         // receive from Scheduler
-        byte[] data = new byte[100];
-        receivePacket = new DatagramPacket(data, data.length);
+        clientSocket.receiveUDPPacket(receivePacket, "SCHEDULER");
 
-        try {
-            System.out.println("WAITING ON SCHEDULER");
-            sendReceiveSocket.receive(receivePacket); // wait
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        System.out.println("RECEIVED: " + new String(data, 0, receivePacket.getLength()) + "\n");
-
-        sendReceiveSocket.close();
+        // close the socket
+        clientSocket.close();
     }
 
     public static void main(String args[]) {
