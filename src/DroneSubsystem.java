@@ -60,7 +60,7 @@ public class DroneSubsystem {
 
 
         try {
-            sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.DRONE_SCHEDULER_PORT);
+            sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), Scheduler.SCHEDULER_PORT);
             sendReceiveSocket.send(sendPacket);
             sendPacket = new DatagramPacket(msg, msg.length, receivePacket.getAddress(), DroneGUI.DRONEGUI_PORT);
             sendReceiveSocket.send(sendPacket);

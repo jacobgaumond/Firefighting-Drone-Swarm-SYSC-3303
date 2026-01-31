@@ -19,18 +19,13 @@ import java.net.*;
 public class Scheduler {
     DatagramPacket sendPacket, receivePacket;
 
-    DatagramSocket sendSocket;
-    DatagramSocket fireIncidentReceiveSocket, droneReceiveSocket;
+    DatagramSocket serverSocket;
 
-    public final static int FIRE_INCIDENT_SCHEDULER_PORT = 6000;
-    public final static int DRONE_SCHEDULER_PORT = 6001;
+    public final static int SCHEDULER_PORT = 6000;
 
     public Scheduler() {
         try {
-            sendSocket = new DatagramSocket();
-
-            fireIncidentReceiveSocket = new DatagramSocket(FIRE_INCIDENT_SCHEDULER_PORT);
-            droneReceiveSocket = new DatagramSocket(DRONE_SCHEDULER_PORT);
+            serverSocket = new DatagramSocket(SCHEDULER_PORT);
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
@@ -47,7 +42,7 @@ public class Scheduler {
 
         try {
             System.out.println("WAITING ON FIRE INCIDENT");
-            fireIncidentReceiveSocket.receive(receivePacket); // wait
+            serverSocket.receive(receivePacket); // wait
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -57,7 +52,7 @@ public class Scheduler {
         // send to DroneSubsystem
         sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), DroneSubsystem.DRONE_PORT);
         try {
-            sendSocket.send(sendPacket);
+            serverSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -67,7 +62,7 @@ public class Scheduler {
         // receive from DroneSubsystem
         try {
             System.out.println("WAITING ON DRONE");
-            droneReceiveSocket.receive(receivePacket); // wait
+            serverSocket.receive(receivePacket); // wait
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
@@ -77,16 +72,14 @@ public class Scheduler {
         // send to FireIncidentSubsystem
         sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), FireIncidentSubsystem.FIRE_INCIDENT_PORT);
         try {
-            sendSocket.send(sendPacket);
+            serverSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
         System.out.println("SENT -> FIRE INCIDENT: " + new String(data, 0, sendPacket.getLength()) + "\n");
 
-        sendSocket.close();
-        fireIncidentReceiveSocket.close();
-        droneReceiveSocket.close();
+        serverSocket.close();
     }
 
     public static void main(String args[]) {

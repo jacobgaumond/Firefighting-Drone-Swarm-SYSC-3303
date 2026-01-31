@@ -50,7 +50,7 @@ public class FireIncidentSubsystem {
 
         // create packet
         try {
-            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), Scheduler.FIRE_INCIDENT_SCHEDULER_PORT);
+            sendPacket = new DatagramPacket(msg, msg.length, InetAddress.getLocalHost(), Scheduler.SCHEDULER_PORT);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(1);
