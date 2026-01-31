@@ -83,6 +83,10 @@ public class Scheduler {
             System.exit(1);
         }
         System.out.println("SENT -> FIRE INCIDENT: " + new String(data, 0, sendPacket.getLength()) + "\n");
+
+        sendSocket.close();
+        fireIncidentReceiveSocket.close();
+        droneReceiveSocket.close();
     }
 
     public static void main(String args[]) {
