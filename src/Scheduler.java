@@ -1,13 +1,17 @@
-// Scheduler.java
-// This class is the SERVER side of the Firefighting Drone Swarm
-
-// The Scheduler receives packets from:
-//      FireIncidentSubsystem:  events (Time, Zone ID, Event type, Severity)
-//      DroneSubsystem:         consults the Scheduler for tasks to perform
-
-// The Scheduler sends packets to:
-//      FireIncidentSubsystem:  updates on events
-//      DroneSubsystem:         updates on events and drone statuses
+/* Scheduler.java
+ *
+ * This project uses the Client-Server model.
+ *
+ * This class represents the SERVER in the Firefighting Drone Swarm.
+ *
+ * The Scheduler receives packets from:
+ *     FireIncidentSubsystem:  events (Time, Zone ID, Event type, Severity)
+ *     DroneSubsystem:         consults the Scheduler for tasks to perform
+ *
+ * The Scheduler sends packets to:
+ *     FireIncidentSubsystem:  updates on events
+ *     DroneSubsystem:         updates on events and drone statuses
+ */
 
 import java.io.*;
 import java.net.*;

@@ -1,11 +1,15 @@
-// FireIncidentSubsystem.java
-// This class is one of the CLIENT sides of the Firefighting Drone Swarm
-
-// The FireIncidentSubsystem receives packets from:
-//      Scheduler:  updates on events
-
-// The FireIncidentSubsystem sends packets to:
-//      Scheduler:  events (Time, Zone ID, Event type, Severity)
+/* FireIncidentSubsystem.java
+ *
+ * This project uses the Client-Server model.
+ *
+ * This class represents a CLIENT in the Firefighting Drone Swarm.
+ *
+ * The FireIncidentSubsystem receives packets from:
+ *     Scheduler:  updates on events
+ *
+ * The FireIncidentSubsystem sends packets to:
+ *     Scheduler:  events (Time, Zone ID, Event type, Severity)
+ */
 
 import java.io.*;
 import java.net.*;
