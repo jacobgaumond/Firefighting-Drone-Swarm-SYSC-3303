@@ -62,8 +62,8 @@ public class FireIncidentSubsystem implements Runnable {
                 System.out.println("[FireIncidentSubsystem] Received from " + message.getSourceName() + ": " + message.getMessageData());
                 if (!message.getMessageData().equals("Acknowledged")) {
                     message = new Message("DroneSubsystem", "FireIncidentSubsystem", "Acknowledged", Message.MessageType.FireEvent);
-                    schedulerMessageBox.putMessage(message);
                     System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
+                    schedulerMessageBox.putMessage(message);
                 }
             }
         } while (boxOpen);

@@ -58,8 +58,8 @@ public class Scheduler implements Runnable {
                 System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
 
                 if (message.getDestinationName().equals("FireIncidentSubsystem")) {
-                    fireIncidentMessageBox.putMessage(message);
                     System.out.println("[Scheduler] Sending to FireIncidentSubsystem: " + message.getMessageData());
+                    fireIncidentMessageBox.putMessage(message);
                 }
                 else if (message.getDestinationName().equals("DroneSubsystem")) {
                     System.out.println("[Scheduler] Sending to DroneSubsystem: " + message.getMessageData());
