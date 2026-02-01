@@ -22,6 +22,7 @@ class SchedulerTest {
         assertTrue(fireIncidentBox.isFull());
     }
 
+    @Test
     void toDroneMessageBox() throws InterruptedException {
         Scheduler scheduler = new Scheduler(schedulerBox, fireIncidentBox, droneBox);
         new Thread(scheduler, "SchedulerThread").start();
