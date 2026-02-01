@@ -47,6 +47,9 @@ before it was realized that they would only be usable in future iterations.
   This class is exclusively used to start the program. It creates threads to execute code for the Scheduler,
   FireIncidentSubsystem, and DroneSubsystem classes.
 
+- `src/DroneGUI.java`
+  This class is a standalone GUI using the java.swing library to be later connected to the DroneSystem classes. Currently it sets up   the static pieces of the legend, the zone labels and gridlines. Also it creates the zone fires in the middle of each zone and has    a status change class to demonstrate switching between fire states.
+
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
 
@@ -68,3 +71,6 @@ selecting "Run Main.main()). This will start 3 threads (i.e., one for the Schedu
 FireIncidentSubsystem (Client), and one for the DroneSubsystem (Client).
 
 Once running, the project will not stop until it is manually stopped by the user (i.e., by pressing stop in IntelliJ).
+
+
+To run the GUI aspect of the projet, run the main function of the DroneGUI class in `src/DroneGUI.java`.  This will create a resizable interface that will briefly show the change of state for one fire. Once running exit the pop up to end the program.
