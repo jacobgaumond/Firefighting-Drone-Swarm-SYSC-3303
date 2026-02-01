@@ -53,6 +53,21 @@ before it was realized that they would only be usable in future iterations.
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
 
+### Testing Code
+
+Tests verify inter-thread communication, with a focus verifying passing Message objects between threads.
+
+- `test/MessageBoxTest.java`
+  Tests and verifies the functionality of the public functions of the MessageBox class. This may not include functions
+  which were not actually used in this iterable of the project.
+
+- `test/FireIncidentSubsystemTest.java`, `test/DroneSubsystemTest.java`, and `test/SchedulerTest.java`
+  Tests the FireIncidentSubsystem and DroneSubsystem classes, with a focus on testing passing messages through outgoing
+  MessageBox objects. Note that `test/SchedulerTest.java` explicitly tests both of its Client MessageBox objects.
+  Each threaded component is tested by creating the thread (and providing it with references to MessageBox object(s)).
+  Then, the test functions inject messages into a MessageBox object and assert that they are correctly consumed and
+  redistributed to the appropriate recipients.
+
 ## Project Setup Instructions
 
 ### Downloading the git repository
@@ -66,7 +81,7 @@ from a ZIP file, extract the file and open the resulting directory using the Int
 
 ### Usage
 
-To run the project, run the main function of the Main class in `src/Main.java` (e.g., by right clicking the file and
+To run the project, run the main function of the Main class in `src/Main.java` (e.g., by right-clicking the file and
 selecting "Run Main.main()). This will start 3 threads (i.e., one for the Scheduler (Server), one for the
 FireIncidentSubsystem (Client), and one for the DroneSubsystem (Client).
 
@@ -74,3 +89,8 @@ Once running, the project will not stop until it is manually stopped by the user
 
 
 To run the GUI aspect of the projet, run the main function of the DroneGUI class in `src/DroneGUI.java`.  This will create a resizable interface that will briefly show the change of state for one fire. Once running exit the pop up to end the program.
+
+### Testing
+
+To test the project, run all of the tests in the `test/` directory (e.g., by right-clicking the directory and selecting
+"Run 'All Tests'").
