@@ -61,6 +61,10 @@ public class FireIncidentSubsystem implements Runnable {
         try {
             Scanner reader = new Scanner(file);
 
+            if (reader.hasNextLine()) {
+                // Discard the header
+                reader.nextLine();
+            }
             while (reader.hasNextLine()) {
                 String line = reader.nextLine();
 
