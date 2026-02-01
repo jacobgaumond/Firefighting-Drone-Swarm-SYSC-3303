@@ -70,6 +70,10 @@ Tests verify inter-thread communication, with a focus verifying passing Message 
   Then, the test functions inject messages into a MessageBox object and assert that they are correctly consumed and
   redistributed to the appropriate recipients.
 
+### UML Diagrams
+
+The `png` files under `uml/` contain UML class and sequence diagrams for the system.
+
 ## Project Setup Instructions
 
 ### Downloading the git repository
