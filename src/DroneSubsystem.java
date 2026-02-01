@@ -44,7 +44,10 @@ public class DroneSubsystem implements Runnable {
                 boxOpen = false;
             }
             else {
-                schedulerMessageBox.putMessage(new Message("Scheduler", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent));
+                System.out.println("Received from " + message.getSourceName() + ": " + message.getMessageData());
+                message = new Message("Scheduler", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent);
+                schedulerMessageBox.putMessage(message);
+                System.out.println("Sending to FireIncidentSubsystem: " + message.getMessageData());
             }
         } while (boxOpen);
     }
