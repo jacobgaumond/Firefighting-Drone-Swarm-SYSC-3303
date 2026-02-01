@@ -83,6 +83,10 @@ public class MessageBox {
         return this.message;
     }
 
+    public synchronized boolean isFull() {
+        return boxFull;
+    }
+
     /**
      * Closes the message box, causing all future interactions to return without an affect.
      * If there are any threads currently waiting on this object (excluding any calls to this function), then it waits
