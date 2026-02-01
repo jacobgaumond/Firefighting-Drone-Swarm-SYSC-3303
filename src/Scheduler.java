@@ -49,10 +49,10 @@ public class Scheduler implements Runnable {
             if (message == null) {
                 boxOpen = false;
 
-                // In case one or the other is still open...
-                incomingMessageBox.closeBox();
-                fireIncidentMessageBox.closeBox();
-                droneMessageBox.closeBox();
+//                // In case one or the other is still open...
+//                incomingMessageBox.closeBox();
+//                fireIncidentMessageBox.closeBox();
+//                droneMessageBox.closeBox();
             }
             else {
                 System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
