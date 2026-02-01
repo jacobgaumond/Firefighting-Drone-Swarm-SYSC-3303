@@ -48,7 +48,9 @@ before it was realized that they would only be usable in future iterations.
   FireIncidentSubsystem, and DroneSubsystem classes.
 
 - `src/DroneGUI.java`
-  This class is a standalone GUI using the java.swing library to be later connected to the DroneSystem classes. Currently it sets up   the static pieces of the legend, the zone labels and gridlines. Also it creates the zone fires in the middle of each zone and has    a status change class to demonstrate switching between fire states.
+  This class is a standalone GUI using the `java.swing` library to be later connected to the DroneSystem classes.
+  Currently, it sets up the static pieces of the legend, the zone labels and gridlines. It also creates the zone fires
+  in the middle of each zone and has a status change class to demonstrate switching between fire states.
 
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
@@ -88,8 +90,7 @@ FireIncidentSubsystem (Client), and one for the DroneSubsystem (Client).
 Once running, the project will not stop until it is manually stopped by the user (i.e., by pressing stop in IntelliJ).
 
 To run the GUI aspect of the project, run the main function of the DroneGUI class in `src/DroneGUI.java`. This will
-create a resizable interface that will briefly show the change of state for one fire. Once running, close the GUI
-window to end that program.
+create a resizable interface. Once running, close the GUI window to end that program.
 
 ### Testing
 
