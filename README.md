@@ -63,7 +63,8 @@ from a ZIP file, extract the file and open the resulting directory using the Int
 
 ### Usage
 
-To run the project, run the main function of the Main class in `src/Main.java`. This will start 3 threads (i.e., one
-for the Scheduler (Server), one for the FireIncidentSubsystem (Client), and one for the DroneSubsystem (Client).
+To run the project, run the main function of the Main class in `src/Main.java` (e.g., by right clicking the file and
+selecting "Run Main.main()). This will start 3 threads (i.e., one for the Scheduler (Server), one for the
+FireIncidentSubsystem (Client), and one for the DroneSubsystem (Client).
 
 Once running, the project will not stop until it is manually stopped by the user (i.e., by pressing stop in IntelliJ).
