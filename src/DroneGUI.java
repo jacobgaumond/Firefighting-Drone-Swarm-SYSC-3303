@@ -5,11 +5,12 @@ import java.awt.event.ComponentEvent;
 import java.net.*;
 import java.util.Objects;
 
-import static java.lang.Thread.sleep;
-
 public class DroneGUI extends JFrame {
     private JTextArea logArea;
     private GridPanel mainGrid;
+
+    private int activeFires; //tracks current fires
+    private JLabel activeFireLabel; // the visual component
 
     /*Sets all of the zone numbers for easy modification later
     * keep in mind that some values should add up to be equal, unequal addition will cause zone missalignmnet
@@ -24,6 +25,7 @@ public class DroneGUI extends JFrame {
 
     //The constructor for GUI instances
     public DroneGUI() {
+        activeFires =0;
         setTitle("Group 2, Drone GUI");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1300, 600);
@@ -81,21 +83,40 @@ public class DroneGUI extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0; // stretches panel
+        gbc.weightx = 1.0;
 
-        // The legend
+        // 1. The legend
         JPanel legendBar = createLegendPanel();
         gbc.gridy = 0;
         gbc.weighty = 0;
         sideWrapper.add(legendBar, gbc);
 
-        // The logs
-        JPanel bottomHalf = createLogsPanel();
+        //2. The fireLabel
         gbc.gridy = 1;
+        gbc.weighty = 0.0;
+        sideWrapper.add(createFireCounter(), gbc);
+
+        // 3.The logs
+        JPanel bottomHalf = createLogsPanel();
+        gbc.gridy = 2;
         gbc.weighty = 1.0; //this will stretch down
         sideWrapper.add(bottomHalf, gbc);
 
         return sideWrapper;
+    }
+
+    private JPanel createFireCounter() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        p.setBorder(BorderFactory.createTitledBorder("Fires"));
+        p.setBackground(new Color(245, 245, 245));
+
+        activeFireLabel = new JLabel("Active Fires: 0");
+        activeFireLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        p.add(activeFireLabel);
+
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));//stays same height doesn't squeeze the logs
+        return p;
     }
 
     /** Creates text LogPanel **/
@@ -258,11 +279,14 @@ public class DroneGUI extends JFrame {
             if(Objects.equals(fireLevel,"")) {//Extinguished Fires
                 fireLabels[zone - 1].setBackground(new Color(130, 255, 95));
                 fireLabels[zone - 1].setText(fireLevel);
+               if(activeFires>0) activeFires --;
             }
                 else {// Active Fires
                     fireLabels[zone-1].setBackground(new Color(255,103, 95));
                     fireLabels[zone-1].setText(fireLevel);
+                    activeFires ++;
                 }
+            activeFireLabel.setText("Active Fires: " + activeFires);
         }
 
         /**Later necessary function implentations**/
@@ -331,13 +355,25 @@ public class DroneGUI extends JFrame {
             g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);//border
         }
     }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             DroneGUI gui = new DroneGUI();
             gui.setVisible(true);
             //quick test for fireStatusChange and logging messag
+            Timer timer1 = new Timer(1000, e -> {
             gui.logMessage("FIRE_DETECTED_3_H");
             gui.mainGrid.fireStatusChange(3,"H");
+            });
+
+            Timer timer2 = new Timer(3000, e -> {
+                gui.logMessage("FIRE_EXTINGUISHED_3");
+                gui.mainGrid.fireStatusChange(3, "");
+            });
+            timer1.setRepeats(false);
+            timer1.start();
+            timer2.setRepeats(false);
+            timer2.start();
         });
     }
 }
