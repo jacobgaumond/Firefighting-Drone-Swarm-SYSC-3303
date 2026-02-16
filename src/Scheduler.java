@@ -16,6 +16,10 @@
 //import java.io.*;
 //import java.net.*;
 
+import java.util.Queue;
+import java.util.LinkedList;
+
+
 public class Scheduler implements Runnable {
 //    SocketWrapper serverSocket;
 //
@@ -34,11 +38,16 @@ public class Scheduler implements Runnable {
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
 
+    private Queue<String> taskQueue =  new LinkedList<>();
+    private Drone drone;
+
     public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
         this.incomingMessageBox     = incomingMessageBox;
 
         this.fireIncidentMessageBox = fireIncidentMessageBox;
         this.droneMessageBox        = droneMessageBox;
+
+        this.drone = new Drone();
     }
 
     @Override
@@ -65,7 +74,27 @@ public class Scheduler implements Runnable {
                     System.out.println("[Scheduler] Sending to DroneSubsystem: " + message.getMessageData());
                     droneMessageBox.putMessage(message);
                 }
+
+                if(drone.getCurrentState() == DroneState.IDLE){
+                    //assign task
+
+                } else{
+                    //taskQueue.add(fireevent);
+                }
+
             }
         } while (boxOpen);
     }
+
+
+    private void assignTaskToDrone(){
+        //change its state
+        drone.setCurrentState(DroneState.EN_ROUTE);
+
+    }
+
+
+
+
+
 }

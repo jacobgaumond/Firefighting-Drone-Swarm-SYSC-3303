@@ -44,12 +44,42 @@ public class FireIncidentSubsystem implements Runnable {
         loadFromFile(fileName);
     }
 
+    //constructor just for testing [FireIncidentSub -> testParseFireEvent] (doesn't load file)
+    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
+        this.incomingMessageBox = incomingMessageBox;
+        this.schedulerMessageBox = schedulerMessageBox;
+    }
+
     @Override
     public void run() {
         for (String event : fileEvents) {
             Message message = new Message("DroneSubsystem", "FireIncidentSubsystem", event, Message.MessageType.FireEvent);
             schedulerMessageBox.putMessage(message);
             System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
+
+
+
+            //parse the event CSV
+            FireTask fireTask = parseFireEvent(event);
+            if(fireTask == null) {
+                System.out.println("FireTask is null, skipping.");
+                continue;
+            }
+
+            //check the parsed info
+            String messageInfo = fireTask.toString();
+            System.out.println(messageInfo);
+
+
+            //create a Message for the Scheduler -> DroneSubsystem
+            Message fireTaskMessage = new Message(
+                    "Scheduler",
+                    "FireIncidentSubsystem",
+                    messageInfo,
+                    Message.MessageType.FireEvent
+            );
+
+            schedulerMessageBox.putMessage(fireTaskMessage);
         }
 
         boolean boxOpen = true;
@@ -97,4 +127,35 @@ public class FireIncidentSubsystem implements Runnable {
             System.exit(1);
         }
     }
+
+
+    //parse the csv file
+    public FireTask parseFireEvent(String line){
+        String[] parts = line.split(",");
+        if(parts.length != 4){
+            System.err.println("Error: FireIncidentSubsystem: Invalid FireEvent");
+            return null;
+        }
+
+        String time = parts[0];
+        int zoneId;
+        try {
+            zoneId = Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            System.err.println("Error: FireIncidentSubsystem: Invalid zoneId");
+            return null;
+        }
+        String eventType = parts[2];
+        String severity = parts[3];
+
+
+        //coordinates where drone should go to
+        //for now Center of the fire zone is used -> Later can be randomized or specific coordinates
+        int targetX = ZoneMap.getX(zoneId);
+        int targetY = ZoneMap.getY(zoneId);
+
+        return new FireTask(time, zoneId, eventType, severity, targetX, targetY);
+    }
+
+
 }

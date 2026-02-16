@@ -4,7 +4,11 @@ enum DroneEvent{
 }
 
 enum DroneState{
-
+    IDLE, //waiting for a task
+    EN_ROUTE, //flyting to fire
+    DROPPING_AGENT, //release the substance
+    REFILLING,
+    FAULTED
 }
 public class Drone {
     private static int nextIdValue = 1;//self ID creation
@@ -15,12 +19,14 @@ public class Drone {
     private int fluidAmount;
 
 
+    public DroneState currentState;
 
     public Drone() {//Null Constructor should be must initialization placements
         this.drone_ID = nextIdValue++; // Assign current value, then increment
         this.x_coord = 0;
         this.y_coord = 0;
         this.fluidAmount = 15;
+        this.currentState = DroneState.IDLE;
     }
 
     //
@@ -29,6 +35,7 @@ public class Drone {
         this.x_coord = x_coord;
         this.y_coord = y_coord;
         this.fluidAmount = fluidAmount;
+        this.currentState = DroneState.IDLE;
     }
 
     public void transitionTo(DroneState next, DroneEvent cause){
@@ -37,6 +44,11 @@ public class Drone {
     public synchronized void handleEvent(DroneEvent ev, String payload ){
 
     }
+
+
+
+
+
 
 
     // --- Getters and Setters ---
@@ -56,4 +68,9 @@ public class Drone {
     public static int getTotalDronesCreated() {
         return nextIdValue - 1;
     }
+
+    public DroneState  getCurrentState() {
+        return currentState;
+    }
+    public void setCurrentState(DroneState currentState) { this.currentState = currentState; }
 }
