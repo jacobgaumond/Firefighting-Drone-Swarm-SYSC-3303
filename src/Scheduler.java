@@ -38,7 +38,7 @@ public class Scheduler implements Runnable {
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
 
-    private Queue<String> taskQueue =  new LinkedList<>();
+    private Queue<Message> taskQueue =  new LinkedList<>();
     private Drone drone;
 
     public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
@@ -64,35 +64,93 @@ public class Scheduler implements Runnable {
 //                droneMessageBox.closeBox();
             }
             else {
-                System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
+//                System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
+//
+//                if (message.getDestinationName().equals("FireIncidentSubsystem")) {
+//                    System.out.println("[Scheduler] Sending to FireIncidentSubsystem: " + message.getMessageData());
+//                    fireIncidentMessageBox.putMessage(message);
+//                }
+//                else if (message.getDestinationName().equals("DroneSubsystem")) {
+//                    System.out.println("[Scheduler] Sending to DroneSubsystem: " + message.getMessageData());
+//                    droneMessageBox.putMessage(message);
+//                }
 
-                if (message.getDestinationName().equals("FireIncidentSubsystem")) {
-                    System.out.println("[Scheduler] Sending to FireIncidentSubsystem: " + message.getMessageData());
-                    fireIncidentMessageBox.putMessage(message);
-                }
-                else if (message.getDestinationName().equals("DroneSubsystem")) {
-                    System.out.println("[Scheduler] Sending to DroneSubsystem: " + message.getMessageData());
-                    droneMessageBox.putMessage(message);
-                }
 
-                if(drone.getCurrentState() == DroneState.IDLE){
-                    //assign task
 
-                } else{
-                    //taskQueue.add(fireevent);
-                }
+                processIncomingMessageBox(message);
 
             }
         } while (boxOpen);
     }
 
 
-    private void assignTaskToDrone(){
-        //change its state
-        drone.setCurrentState(DroneState.EN_ROUTE);
+
+    private void processIncomingMessageBox(Message message) {
+        System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
+
+        //if for droneSub or fireIncidentSub
+        if(message.getDestinationName().equals("DroneSubsystem")) {
+            handleDroneMessage(message);
+        } else if(message.getDestinationName().equals("FireIncidentSubsystem")) {
+            handleFireIncidentMessage(message);
+        }
 
     }
 
+
+
+    private void assignTaskToDrone(Message task){
+        //change its state
+        drone.setCurrentState(DroneState.EN_ROUTE); //dron is busy
+        System.out.println("[Scheduler] Assigning task to Drone: " + task.getMessageData());
+        droneMessageBox.putMessage(task); //send task to droneSubsystem
+    }
+
+    //handles if the (task finished) -> assigns next task in the queue or marks drone as idle
+    private void handleDroneMessage(Message message){
+        if(message.getMessageData().equals("Acknowledged")){
+            System.out.println("[Scheduler] Drone finished task");
+
+            //check for queued tasks
+            if(!taskQueue.isEmpty()){
+                Message nextTask = taskQueue.poll();
+                assignTaskToDrone(nextTask);
+            } else  {
+                drone.setCurrentState(DroneState.IDLE);
+                System.out.println("[Scheduler] No more tasks to process");
+            }
+        }
+    }
+
+    private void handleFireIncidentMessage(Message message){
+        System.out.println("[Scheduler] Handling fire message: " + message.getMessageData());
+
+        //only handle FireEvent or DroneRequest messages
+        if(message.getMessageType() == Message.MessageType.FireEvent || message.getMessageType() == Message.MessageType.DroneRequest){
+
+            //handles assigning of tasks for now
+            switch(drone.getCurrentState()){
+                case IDLE:
+                    assignTaskToDrone(message);
+                    break;
+
+                case EN_ROUTE:
+                case DROPPING_AGENT:
+                case REFILLING:
+                    //drone is busy -> queue the task
+                    taskQueue.add(message);
+                    System.out.println("[Scheduler] Drone busy refilling, tasks queued: " + message.getMessageData());
+                    break;
+
+                case FAULTED:
+                    System.out.println("[Scheduler] Drone is faulted, cannot assign task: " + message.getMessageData());
+                    break;
+            }
+
+
+
+        }
+    }
 
 
 

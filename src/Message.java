@@ -1,6 +1,8 @@
 public class Message {
     public enum MessageType { // TODO: Add more MessageType values as needed (e.g., DroneResponseEvent, etc.)
-        FireEvent
+        FireEvent,
+        DroneRequest,
+        DroneResponse
     }
 
     private final MessageType   type;
