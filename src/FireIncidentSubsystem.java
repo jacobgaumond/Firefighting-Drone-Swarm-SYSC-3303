@@ -53,9 +53,9 @@ public class FireIncidentSubsystem implements Runnable {
     @Override
     public void run() {
         for (String event : fileEvents) {
-            Message message = new Message("DroneSubsystem", "FireIncidentSubsystem", event, Message.MessageType.FireEvent);
-            schedulerMessageBox.putMessage(message);
-            System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
+//            Message message = new Message("DroneSubsystem", "FireIncidentSubsystem", event, Message.MessageType.FireEvent);
+//            schedulerMessageBox.putMessage(message);
+//            System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
 
 
 
