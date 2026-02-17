@@ -1,6 +1,11 @@
 public class Main {
     public static void main(String[] args) {
         String inputFileName = "src/data/Sample_event_file.csv";
+        String zoneFileName = "src/data/Sample_zone_file.csv";
+
+        //Load zones first
+        ZoneMap.loadZones(zoneFileName);
+        ZoneMap.printZones();
 
         MessageBox schedulerBox     = new MessageBox();
         MessageBox fireIncidentBox  = new MessageBox();

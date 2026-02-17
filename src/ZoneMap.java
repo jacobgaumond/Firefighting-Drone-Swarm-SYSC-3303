@@ -51,14 +51,41 @@ public class ZoneMap {
         zones.put(id, zone);
     }
 
+    public static Zone getZone(int zoneId) {
+        Zone zone = zones.get(zoneId);
+        if (zone == null) {
+            System.out.println("Zone with id " + zoneId + " not found");
+        }
+        return zone;
+    }
+
     //get the center of the zone X and for Y
     public static int getX(int zoneId) {
-        Zone zone = zones.get(zoneId);
+        Zone zone = getZone(zoneId);
         return (zone.startX + zone.endX) / 2;
     }
     public static int getY(int zoneId) {
-        Zone zone = zones.get(zoneId);
+        Zone zone = getZone(zoneId);
         return (zone.startY + zone.endY) / 2;
     }
+
+    public static void printZones() {
+        if (zones.isEmpty()) {
+            System.out.println("No zones loaded.");
+            return;
+        }
+
+        System.out.println("-------------Zones Loaded--------------");
+        for (Map.Entry<Integer, Zone> entry : zones.entrySet()) {
+            int id = entry.getKey();
+            Zone z = entry.getValue();
+            System.out.println("Zone ID: " + id +
+                    ", Start: (" + z.startX + ";" + z.startY + ")" +
+                    ", End: (" + z.endX + ";" + z.endY + ")" +
+                    ", Center: (" + getX(id) + ";" + getY(id) + ")");
+        }
+        System.out.println("=========================");
+    }
+
 
 }

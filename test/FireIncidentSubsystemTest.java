@@ -6,7 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FireIncidentSubsystemTest {
 
-    String inputFileName = "src/data/Sample_event_file.csv";
+    //String inputFileName = "src/data/Sample_event_file.csv";
+    String inputFileName = "C:\\Users\\r7755\\OneDrive\\Desktop\\Source\\COMP1501\\github\\Firefighting-Drone-Swarm-SYSC-3303\\src\\data\\Sample_event_file.csv";
 
 
     MessageBox fireIncidentBox = new MessageBox();
