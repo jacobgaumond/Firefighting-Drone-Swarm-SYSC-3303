@@ -89,13 +89,33 @@ public class Scheduler implements Runnable {
         System.out.println("\n[Scheduler] Received from " + message.getSourceName() + ": \n" + message.getMessageData());
 
         //if for droneSub or fireIncidentSub
-        if(message.getDestinationName().equals("DroneSubsystem")) {
-            handleDroneMessage(message);
-        } else if(message.getDestinationName().equals("FireIncidentSubsystem")) {
-            handleFireIncidentMessage(message);
+//        if(message.getDestinationName().equals("DroneSubsystem")) {
+//            handleDroneMessage(message);
+//        } else if(message.getDestinationName().equals("FireIncidentSubsystem")) {
+//            handleFireIncidentMessage(message);
+//        }
+
+        switch (message.getDestinationName()) {
+            case "DroneSubsystem":
+                handleDroneMessage(message);
+                break;
+            case "FireIncidentSubsystem":
+                handleFireIncidentMessage(message);
+                break;
+            case "Scheduler":
+                //checks if the incoming message is a fire task
+                if (message.getMessageType() == Message.MessageType.FireEvent) {
+                    handleFireIncidentMessage(message); //assign or queue task
+                } else if (message.getMessageType() == Message.MessageType.DroneResponse) {
+                    handleDroneMessage(message); //drone finished a task
+                }
+                break;
+            default:
+                System.out.println("[Scheduler] Unknown destination: " + message.getDestinationName());
         }
 
     }
+
 
 
 
@@ -135,6 +155,11 @@ public class Scheduler implements Runnable {
                     break;
 
                 case EN_ROUTE:
+                    taskQueue.add(message);
+                    System.out.println("[Scheduler] Drone busy (EN_ROUTE), task queued: " + message.getMessageData());
+                    System.out.println("[Scheduler] TaskQUEUE: Current queue (" + taskQueue.size() + " tasks): "
+                            + taskQueue.stream().map(Message::getMessageData).toList());
+                    break;
                 case DROPPING_AGENT:
                 case REFILLING:
                     //drone is busy -> queue the task
@@ -146,13 +171,16 @@ public class Scheduler implements Runnable {
                     System.out.println("[Scheduler] Drone is faulted, cannot assign task: " + message.getMessageData());
                     break;
             }
-
-
-
         }
     }
 
 
+    //getters
+    public Drone getDrone() {
+        return this.drone;
+    }
 
-
+    public Queue<Message> getTaskQueue() {
+        return taskQueue;
+    }
 }

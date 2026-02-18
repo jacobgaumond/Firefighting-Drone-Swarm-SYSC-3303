@@ -22,7 +22,7 @@ public class MessageBox {
      * @return  the Message object that was inside the box, or `null` if the box has been closed.
      */
     public synchronized Message getMessage() {
-        while (!boxFull || boxClosed) {
+        while (!boxFull) {
             if (boxClosed) {
                 return null;
             }
@@ -39,13 +39,14 @@ public class MessageBox {
             }
             numWaitingThreads -= 1;
         }
-        notifyAll();
+
 
         Message retrievedMessage = message;
 
         message = null;
         boxFull = false;
 
+        notifyAll();
         return retrievedMessage;
     }
 
@@ -75,11 +76,12 @@ public class MessageBox {
             }
             numWaitingThreads -= 1;
         }
-        notifyAll();
+
 
         this.message    = message;
         boxFull         = true;
 
+        notifyAll();
         return this.message;
     }
 
