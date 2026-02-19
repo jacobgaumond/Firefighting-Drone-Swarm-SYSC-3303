@@ -1,13 +1,25 @@
 
 enum DroneEvent{
+    MISSION_ASSIGNED,
+    FIRE_REACHED,
+    BASE_REACHED,
+    TANK_EMPTY,
+    FIRE_EXTINGUISHED,
+    REFILL_COMPLETE,//? do we need this as refill's are instant
+    REPAIRED,
 
+    FAILURE
 }
 
 enum DroneState{
     IDLE, //waiting for a task
-    EN_ROUTE, //flyting to fire
+    EN_ROUTE_FIRE, //flyting to fire
+
+    EN_ROUTE,
+    EN_ROUTE_BASE,
+
     DROPPING_AGENT, //release the substance
-    REFILLING,
+    REFILLING,//? do we need this as refill's are instant?
     FAULTED
 }
 public class Drone {
@@ -19,14 +31,14 @@ public class Drone {
     private int fluidAmount;
 
 
-    public DroneState currentState;
+    public DroneState state;
 
-    public Drone() {//Null Constructor should be must initialization placements
+    public Drone() {//Null Constructor
         this.drone_ID = nextIdValue++; // Assign current value, then increment
         this.x_coord = 0;
         this.y_coord = 0;
         this.fluidAmount = 15;
-        this.currentState = DroneState.IDLE;
+        this.state = DroneState.IDLE;
     }
 
     //
@@ -35,18 +47,59 @@ public class Drone {
         this.x_coord = x_coord;
         this.y_coord = y_coord;
         this.fluidAmount = fluidAmount;
-        this.currentState = DroneState.IDLE;
+        this.state = DroneState.IDLE;
     }
 
-    public void transitionTo(DroneState next, DroneEvent cause){
-
+    private void transitionTo(DroneState next, DroneEvent cause) {
+        System.out.println("[FSM] " + state + " --(" + cause + ")--> " + next);
+        state = next;
     }
     public synchronized void handleEvent(DroneEvent ev, String payload ){
 
+        switch(state){
+            case IDLE:
+                if(ev == DroneEvent.MISSION_ASSIGNED)
+                    transitionTo(DroneState.EN_ROUTE_FIRE, ev);
+            break;
+
+            case EN_ROUTE_FIRE:
+                if( ev == DroneEvent.FAILURE)  transitionTo(DroneState.FAULTED, ev);
+
+                else if( ev == DroneEvent.FIRE_REACHED) transitionTo(DroneState.DROPPING_AGENT,ev);
+
+            break;
+
+            case EN_ROUTE_BASE:
+                if( ev == DroneEvent.FAILURE)  transitionTo(DroneState.FAULTED, ev);
+
+                else  if(ev == DroneEvent.MISSION_ASSIGNED && fluidAmount!=0) transitionTo (DroneState.EN_ROUTE_FIRE, ev);
+
+                else if (ev == DroneEvent.BASE_REACHED) {
+                    transitionTo(DroneState.IDLE, ev);
+                    this.fluidAmount = 15; //refills the drone
+                }
+
+            break;
+
+            case DROPPING_AGENT:
+                if( ev == DroneEvent.FAILURE)  transitionTo(DroneState.FAULTED, ev);
+
+                else if (ev == DroneEvent.TANK_EMPTY && fluidAmount == 0) transitionTo(DroneState.EN_ROUTE_BASE, ev);
+
+                else if (ev == DroneEvent.FIRE_EXTINGUISHED) transitionTo(DroneState.IDLE, ev); //this logic might be changed to route back to base
+            break;
+
+            case FAULTED:
+
+                if (ev == DroneEvent.REPAIRED) transitionTo (DroneState.IDLE, ev);
+
+            break;
+
+            default:
+                System.out.println("Error Drone is is an unknown state:"+state);
+
+        }
     }
-
-
-
 
 
 
@@ -70,7 +123,7 @@ public class Drone {
     }
 
     public DroneState  getCurrentState() {
-        return currentState;
+        return state;
     }
-    public void setCurrentState(DroneState currentState) { this.currentState = currentState; }
+    public void setCurrentState(DroneState state) { this.state = state; }
 }
