@@ -61,7 +61,7 @@ public class SchedulerUnitTest {
 
 
         //simulate the drone finished the first task
-        Message ack = new Message("Scheduler", "DroneSubsystem", "Acknowledged", Message.MessageType.DroneResponse);
+        Message ack = new Message("Scheduler", "Scheduler", "Acknowledged", Message.MessageType.DroneResponse);
         schedulerBox.putMessage(ack);
 
         try {
@@ -70,43 +70,36 @@ public class SchedulerUnitTest {
             e.printStackTrace();
         }
 
-        //2nd task assigned
-
-//        Message secondAssigned = null;
-//        for (int i = 0; i < 50; i++) {
-//            synchronized (droneBox) {
-//                if (droneBox.isFull()) {
-//                    secondAssigned = droneBox.getMessage();
-//                    break;
-//                }
-//            }
-//            Thread.sleep(100);
-//        }
-
 
         Message secondAssigned = droneBox.getMessage();
         assertNotNull(secondAssigned, "Drone should have received the second task");
         assertEquals(fireTask2.getMessageData(), secondAssigned.getMessageData(), "Assigned task should match fireTask2");
 
-//
-//        //should be busy with task2
-//        assertEquals(DroneState.EN_ROUTE, scheduler.getDrone().getCurrentState(), "Drone should be EN_ROUTE after first task");
-//
-//
-//        //simulate drone finished second task
-//        Message ack2 = new Message("Scheduler", "DroneSubsystem", "Acknowledged", Message.MessageType.DroneResponse);
-//        schedulerBox.putMessage(ack2);
-//
-//
-//        //drone should be now idle
-//        assertEquals(DroneState.IDLE, scheduler.getDrone().getCurrentState(), "Drone should be IDLE");
-//        assertTrue(queue.isEmpty(), "Queue should be empty");
-//        assertTrue(scheduler.getTaskQueue().isEmpty(), "Queue should be empty");
-//
-//
-//        schedulerBox.closeBox();
-//        fireIncidentBox.closeBox();
-//        droneBox.closeBox();
+
+        //should be busy with task2
+        assertEquals(DroneState.EN_ROUTE, scheduler.getDrone().getCurrentState(), "Drone should be EN_ROUTE after first task");
+        System.out.println("Drone's Current State: " + scheduler.getDrone().getCurrentState());
+
+        //simulate drone finished second task
+        Message ack2 = new Message("Scheduler", "Scheduler", "Acknowledged", Message.MessageType.DroneResponse);
+        schedulerBox.putMessage(ack2);
+
+
+
+        //wait until drone becomes IDLE
+        long startTime = System.currentTimeMillis();
+        while (scheduler.getDrone().getCurrentState() != DroneState.IDLE) {
+            Thread.sleep(50); // yield
+            if (System.currentTimeMillis() - startTime > 5000) { // 5 second timeout
+                fail("Drone did not become IDLE within 5 seconds");
+            }
+        }
+
+        assertTrue(queue.isEmpty(), "Queue should be empty");
+        assertTrue(scheduler.getTaskQueue().isEmpty(), "Queue should be empty");
+        assertEquals(DroneState.IDLE, scheduler.getDrone().getCurrentState(), "Drone should be IDLE");
+        System.out.println("Drone's Current State: " + scheduler.getDrone().getCurrentState());
+
     }
 
 
