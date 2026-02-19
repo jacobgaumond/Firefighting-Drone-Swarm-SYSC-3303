@@ -3,14 +3,20 @@ public class Main {
         String inputFileName = "src/data/Sample_event_file.csv";
         String zoneFileName = "src/data/Sample_zone_file.csv";
 
-        //Load zones first
+        // Load zones
         ZoneMap.loadZones(zoneFileName);
         ZoneMap.printZones();
 
-        MessageBox schedulerBox     = new MessageBox();
-        MessageBox fireIncidentBox  = new MessageBox();
-        MessageBox droneBox         = new MessageBox();
+        // Build DroneGUI using loaded zones
+        DroneGUI gui = new DroneGUI();
+        gui.setVisible(true);
 
+        // Setup Message Boxes
+        MessageBox schedulerBox = new MessageBox();
+        MessageBox fireIncidentBox = new MessageBox();
+        MessageBox droneBox = new MessageBox();
+
+        // Setup Threads
         Thread scheduler = new Thread(new Scheduler(schedulerBox, fireIncidentBox, droneBox),
                 "SchedulerThread");
         Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(fireIncidentBox, schedulerBox, inputFileName),
@@ -18,6 +24,7 @@ public class Main {
         Thread droneSubsystem = new Thread(new DroneSubsystem(droneBox, schedulerBox),
                 "DroneSubsystemThread");
 
+        // Start Threads
         scheduler.start();
         fireIncidentSubsystem.start();
         droneSubsystem.start();

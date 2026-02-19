@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class ZoneMap {
+    // mapping zoneId to Zone object
+    private static Map<Integer, Zone> zones = new HashMap<>();
+
     public static class Zone {
         public int startX, startY, endX, endY;
 
@@ -16,14 +19,11 @@ public class ZoneMap {
         }
     }
 
-    //mapping zoneId to Zone object
-    private static Map<Integer, Zone> zones = new HashMap<>();
-
-
-    //load zones
+    // load zones
     public static void loadZones(String fileName) {
         try (Scanner scanner = new Scanner(new File(fileName))) {
-            if (scanner.hasNextLine()) scanner.nextLine(); //skip header
+            if (scanner.hasNextLine()) scanner.nextLine(); // skip header
+
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String[] parts = line.split(",");
@@ -38,6 +38,7 @@ public class ZoneMap {
                 int endX = Integer.parseInt(end[0]);
                 int endY = Integer.parseInt(end[1]);
 
+                // add zone to HashMap
                 zones.put(zoneId, new Zone(startX, startY, endX, endY));
             }
         } catch (FileNotFoundException e) {
@@ -59,16 +60,23 @@ public class ZoneMap {
         return zone;
     }
 
+    // get all zones
+    public static Map<Integer, Zone> getAllZones() {
+        return zones;
+    }
+
     //get the center of the zone X and for Y
     public static int getX(int zoneId) {
         Zone zone = getZone(zoneId);
         return (zone.startX + zone.endX) / 2;
     }
+
     public static int getY(int zoneId) {
         Zone zone = getZone(zoneId);
         return (zone.startY + zone.endY) / 2;
     }
 
+    // print all zones
     public static void printZones() {
         if (zones.isEmpty()) {
             System.out.println("No zones loaded.");
@@ -86,6 +94,4 @@ public class ZoneMap {
         }
         System.out.println("=========================");
     }
-
-
 }
