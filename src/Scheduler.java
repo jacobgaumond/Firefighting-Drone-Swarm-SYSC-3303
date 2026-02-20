@@ -39,7 +39,7 @@ public class Scheduler implements Runnable {
     private MessageBox droneMessageBox;
 
     private Queue<Message> taskQueue =  new LinkedList<>();
-    private Drone drone;
+    private DroneSubsystem drone;
 
     public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
         this.incomingMessageBox     = incomingMessageBox;
@@ -47,7 +47,7 @@ public class Scheduler implements Runnable {
         this.fireIncidentMessageBox = fireIncidentMessageBox;
         this.droneMessageBox        = droneMessageBox;
 
-        this.drone = new Drone();
+        this.drone = new DroneSubsystem();
     }
 
     @Override
@@ -176,7 +176,7 @@ public class Scheduler implements Runnable {
 
 
     //getters
-    public Drone getDrone() {
+    public DroneSubsystem getDrone() {
         return this.drone;
     }
 

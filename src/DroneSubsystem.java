@@ -40,17 +40,32 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
-    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, int x_coord, int y_coord, int fluidAmount) {
+
+
+    // WITHOUT MESSAGE BOXING
+    public DroneSubsystem() {
+        this.droneSM = new DroneStateMachine();
+        this.drone_ID = nextIdValue++;
+        this.x_coord =0;
+        this.y_coord = 0;
+        this.fluidAmount = 15;
+        this.batteryTravelDistance =1000;  // TravelDistanceLevel to be decided
+
+    }
+
+    //WITH MESSAGEBOX
+    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
         this.schedulerMessageBox = schedulerMessageBox;
         this.incomingMessageBox = incomingMessageBox;
         this.droneSM = new DroneStateMachine();
         this.drone_ID = nextIdValue++;
-        this.x_coord = x_coord;
-        this.y_coord = y_coord;
-        this.fluidAmount = fluidAmount;
-        this.batteryTravelDistance = batteryTravelDistance;  // TravelDistanceLevel
-
+        this.x_coord = 0;
+        this.y_coord = 0;
+        this.fluidAmount = 15;
+        this.batteryTravelDistance = 1000;  // TravelDistanceLevel change eventually
     }
+
+
 
     @Override
     public void run() {
@@ -86,6 +101,10 @@ public class DroneSubsystem implements Runnable {
 
     public int getFluidAmount() { return fluidAmount; }
     public void setFluidAmount(int fluidAmount) { this.fluidAmount = fluidAmount; }
+
+    public void setCurrentState(DroneState state){droneSM.setCurrentState(state);}
+
+    public DroneState getCurrentState(){return droneSM.getCurrentState();}
 
     // Static method to check how many drones have been created
     public static int getTotalDronesCreated() {
