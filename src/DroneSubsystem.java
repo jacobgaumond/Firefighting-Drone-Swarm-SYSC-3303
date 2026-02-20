@@ -148,6 +148,9 @@ public class DroneSubsystem implements Runnable {
         schedulerMessageBox.putMessage(message);
     }
 
+    public void handleEvent(DroneEvent event, String payload) {
+        droneSM.handleEvent(event, payload);
+    }
 
 
     public int getDrone_ID() {return drone_ID;}
