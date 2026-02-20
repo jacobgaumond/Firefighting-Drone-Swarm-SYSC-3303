@@ -124,7 +124,7 @@ public class DroneSubsystem implements Runnable {
                 this.fluidAmount,
                 this.batteryTravelDistance);
         // Return a new Message object intended for the Scheduler
-        return new Message("DroneSubsystem", "Scheduler", statusData, Message.MessageType.DroneResponse);
+        return new Message("Scheduler", "DroneSubsystem", statusData, Message.MessageType.DroneResponse);
     }
 
 
