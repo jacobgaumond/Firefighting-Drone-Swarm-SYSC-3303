@@ -1,4 +1,4 @@
-public class FireEvent {
+public class FireEvent extends SimulationEvent {
     private String time; //14:03:15
     private int zoneId; //1
     private String eventType; //fire detected
@@ -14,6 +14,17 @@ public class FireEvent {
         this.targetX = targetX;
         this.targetY = targetY;
     }
+
+    // TODO: Implement the String constructor that deserializes the output of FireEvent.serialize()
+//    /**
+//     * Constructor that creates a FireEvent object from the output of the FireEvent class's serialize() method. In
+//     * other words, it deserializes Strings to create FireEvent objects.
+//     *
+//     * @param serializedFireEvent A String containing a serialized FireEvent object.
+//     */
+//    public FireEvent(String serializedFireEvent) {
+//
+//    }
 
     //getters
     public String getTime(){ return time; }
@@ -40,12 +51,19 @@ public class FireEvent {
                 targetX + ", TargetY=" + targetY + "]";
     }
 
-
-
-
-
+    /**
+     * Serializes the FireEvent object into a String.
+     *
+     * @return String representation of the FireEvent object.
+     */
+    @Override
+    public String serialize() {
+        String serializedFireEvent =    getTime() + DELIMITER +
+                                        getZoneId() + DELIMITER +
+                                        getEventType() + DELIMITER +
+                                        getSeverity() + DELIMITER +
+                                        getTargetX() + DELIMITER +
+                                        getTargetY() + DELIMITER;
+        return serializedFireEvent;
+    }
 }
-
-
-
-
