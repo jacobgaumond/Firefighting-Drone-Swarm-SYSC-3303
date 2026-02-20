@@ -42,16 +42,16 @@ class FireIncidentSubsystemTest {
         FireIncidentSubsystem subsystem =  new FireIncidentSubsystem(null, null);
 
         String line = "14:03:15,3,FIRE_DETECTED,High";
-        FireTask task = subsystem.parseFireEvent(line);
+        FireEvent event = subsystem.parseFireEvent(line);
 
-        assertNotNull(task);
-        assertEquals("14:03:15", task.getTime());
-        assertEquals(3, task.getZoneId());
-        assertEquals("FIRE_DETECTED", task.getEventType());
-        assertEquals("High", task.getSeverity());
+        assertNotNull(event);
+        assertEquals("14:03:15", event.getTime());
+        assertEquals(3, event.getZoneId());
+        assertEquals("FIRE_DETECTED", event.getEventType());
+        assertEquals("High", event.getSeverity());
 
         //check target coordinates
-        assertEquals(ZoneMap.getX(3), task.getTargetX());
-        assertEquals(ZoneMap.getY(3), task.getTargetY());
+        assertEquals(ZoneMap.getX(3), event.getTargetX());
+        assertEquals(ZoneMap.getY(3), event.getTargetY());
     }
 }

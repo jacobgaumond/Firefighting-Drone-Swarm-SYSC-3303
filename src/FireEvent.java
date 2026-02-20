@@ -1,4 +1,4 @@
-public class FireTask {
+public class FireEvent {
     private String time; //14:03:15
     private int zoneId; //1
     private String eventType; //fire detected
@@ -6,7 +6,7 @@ public class FireTask {
     private int targetX; //x coordinate of fire
     private int targetY; //y coordinate of fire
 
-    public FireTask(String time, int zoneId, String eventType, String severity, int targetX, int targetY){
+    public FireEvent(String time, int zoneId, String eventType, String severity, int targetX, int targetY){
         this.time = time;
         this.zoneId = zoneId;
         this.eventType = eventType;

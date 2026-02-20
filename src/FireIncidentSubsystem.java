@@ -60,26 +60,26 @@ public class FireIncidentSubsystem implements Runnable {
 
 
             //parse the event CSV
-            FireTask fireTask = parseFireEvent(event);
-            if(fireTask == null) {
-                System.out.println("FireTask is null, skipping.");
+            FireEvent fireEvent = parseFireEvent(event);
+            if(fireEvent == null) {
+                System.out.println("FireEvent is null, skipping.");
                 continue;
             }
 
             //check the parsed info
-            String messageInfo = fireTask.toString();
+            String messageInfo = fireEvent.toString();
             System.out.println(messageInfo);
 
 
             //create a Message for the Scheduler -> DroneSubsystem
-            Message fireTaskMessage = new Message(
+            Message fireEventMessage = new Message(
                     "Scheduler",
                     "FireIncidentSubsystem",
                     messageInfo,
                     Message.MessageType.FireEvent
             );
 
-            schedulerMessageBox.putMessage(fireTaskMessage);
+            schedulerMessageBox.putMessage(fireEventMessage);
         }
 
         boolean boxOpen = true;
@@ -130,7 +130,7 @@ public class FireIncidentSubsystem implements Runnable {
 
 
     //parse the csv file
-    public FireTask parseFireEvent(String line){
+    public FireEvent parseFireEvent(String line){
         String[] parts = line.split(",");
         if(parts.length != 4){
             System.err.println("Error: FireIncidentSubsystem: Invalid FireEvent");
@@ -154,7 +154,7 @@ public class FireIncidentSubsystem implements Runnable {
         int targetX = ZoneMap.getX(zoneId);
         int targetY = ZoneMap.getY(zoneId);
 
-        return new FireTask(time, zoneId, eventType, severity, targetX, targetY);
+        return new FireEvent(time, zoneId, eventType, severity, targetX, targetY);
     }
 
 
