@@ -77,6 +77,7 @@ public class DroneSubsystem implements Runnable {
             }
             else {
                 System.out.println("[DroneSubsystem] Received from " + message.getSourceName() + ": " + message.getMessageData());
+
                 if (!message.getMessageData().equals("Acknowledged")) {
                     message = new Message("FireIncidentSubsystem", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent);
                     System.out.println("[DroneSubsystem] Sending to FireIncidentSubsystem, through Scheduler: " + message.getMessageData());
@@ -87,9 +88,24 @@ public class DroneSubsystem implements Runnable {
     }
 
 
-    public Message getStatus(){ // returns state, coords, fluid amounts, fuel, id
-        return null;
+    public void handleMessage(Message message){
+
+
     }
+
+    public Message sendStatus(){ // int ID: statemachine drone: int x: int y: int fluidAmount: int battery
+        String statusData = String.format("%d~%s~%d~%d~%d~%d",
+                this.drone_ID,
+                this.droneSM.getCurrentState().toString(),
+                this.x_coord,
+                this.y_coord,
+                this.fluidAmount,
+                this.batteryTravelDistance);
+        // Return a new Message object intended for the Scheduler
+        return new Message("DroneSubsystem", "Scheduler", statusData, Message.MessageType.DroneResponse);
+    }
+
+
 
     public int getDrone_ID() {return drone_ID;}
 
