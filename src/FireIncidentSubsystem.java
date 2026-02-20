@@ -66,16 +66,16 @@ public class FireIncidentSubsystem implements Runnable {
                 continue;
             }
 
-            //check the parsed info
-            String messageInfo = fireEvent.toString();
-            System.out.println(messageInfo);
+            //convert object into serialized string
+            String serializedEvent = fireEvent.serialize();
+            System.out.println("Serialized: " + serializedEvent);
 
 
             //create a Message for the Scheduler -> DroneSubsystem
             Message fireEventMessage = new Message(
                     "Scheduler",
                     "FireIncidentSubsystem",
-                    messageInfo,
+                    serializedEvent,
                     Message.MessageType.FireEvent
             );
 

@@ -119,11 +119,21 @@ public class Scheduler implements Runnable {
 
 
 
-    private void assignTaskToDrone(Message task){
+    private void assignTaskToDrone(FireEvent fireEvent) {
+
+        //send to droneSubsystem
+        Message droneMessage = new Message(
+                "DroneSubsystem",
+                "Scheduler",
+                fireEvent.serialize(),
+                Message.MessageType.FireEvent
+        );
+
+
         //change its state
         drone.setCurrentState(DroneState.EN_ROUTE); //dron is busy
-        System.out.println("[Scheduler] Assigning task to Drone: " + task.getMessageData());
-        droneMessageBox.putMessage(task); //send task to droneSubsystem
+        System.out.println("[Scheduler] Assigning task to Drone: \n" + fireEvent.toString());
+        droneMessageBox.putMessage(droneMessage); //send task to droneSubsystem
     }
 
     //handles if the (task finished) -> assigns next task in the queue or marks drone as idle
@@ -133,7 +143,9 @@ public class Scheduler implements Runnable {
 
             //check for queued tasks
             if(!taskQueue.isEmpty()){
-                Message nextTask = taskQueue.poll();
+                Message nextTaskMessage = taskQueue.poll();
+
+                FireEvent nextTask = new FireEvent(nextTaskMessage.getMessageData());
                 assignTaskToDrone(nextTask);
             } else  {
                 drone.setCurrentState(DroneState.IDLE);
@@ -146,12 +158,17 @@ public class Scheduler implements Runnable {
         System.out.println("[Scheduler] Handling fire message: " + message.getMessageData());
 
         //only handle FireEvent or DroneRequest messages
-        if(message.getMessageType() == Message.MessageType.FireEvent || message.getMessageType() == Message.MessageType.DroneRequest){
+        if(message.getMessageType() == Message.MessageType.FireEvent){
+
+
+            //deserialize the Fire event
+            String serializedEvent = message.getMessageData();
+            FireEvent fireEvent = new FireEvent(serializedEvent);
 
             //handles assigning of tasks for now
             switch(drone.getCurrentState()){
                 case IDLE:
-                    assignTaskToDrone(message);
+                    assignTaskToDrone(fireEvent);
                     break;
 
                 case EN_ROUTE:

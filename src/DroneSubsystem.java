@@ -76,20 +76,42 @@ public class DroneSubsystem implements Runnable {
                 boxOpen = false;
             }
             else {
-                System.out.println("[DroneSubsystem] Received from " + message.getSourceName() + ": " + message.getMessageData());
 
-                if (!message.getMessageData().equals("Acknowledged")) {
-                    message = new Message("FireIncidentSubsystem", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent);
-                    System.out.println("[DroneSubsystem] Sending to FireIncidentSubsystem, through Scheduler: " + message.getMessageData());
-                    schedulerMessageBox.putMessage(message);
-                }
+                System.out.println("====================================");
+                System.out.println("[DroneSubsystem " + drone_ID + "] Received (" + message.getMessageType() + ") from "
+                        + message.getSourceName() + ": " + message.getMessageData());
+
+//
+//                if (!message.getMessageData().equals("Acknowledged")) {
+//                    message = new Message("FireIncidentSubsystem", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent);
+//                    System.out.println("[DroneSubsystem] Sending to FireIncidentSubsystem, through Scheduler: " + message.getMessageData());
+//                    schedulerMessageBox.putMessage(message);
+//                }
+                handleMessage(message);
             }
         } while (boxOpen);
     }
 
 
     public void handleMessage(Message message){
+        if(message.getMessageType() == Message.MessageType.FireEvent) {
+            FireEvent fireEvent = new FireEvent(message.getMessageData());
+            System.out.println("[DroneSubsystem] Received FireEvent: " + fireEvent);
 
+            //simulate the fire event
+            handleFireEvent(fireEvent);
+
+            //send acknowledgment to Scheduler
+            sendAcknowledgement();
+
+            //send the current status
+            schedulerMessageBox.putMessage(sendStatus());
+        } else if(message.getMessageType() == Message.MessageType.DroneResponse) {
+            //handle other types
+            System.out.println("[DroneSubsystem] Received response: " + message.getMessageData());
+        } else {
+            System.out.println("[DroneSubsystem] Received unknown message type: " + message.getMessageType());
+        }
 
     }
 
@@ -103,6 +125,27 @@ public class DroneSubsystem implements Runnable {
                 this.batteryTravelDistance);
         // Return a new Message object intended for the Scheduler
         return new Message("DroneSubsystem", "Scheduler", statusData, Message.MessageType.DroneResponse);
+    }
+
+
+    //simulate drone action
+    private void handleFireEvent(FireEvent fireEvent){
+        System.out.println("[DroneSubsystem] Drone " + drone_ID
+        + " handling FireEvent at zone " + fireEvent.getZoneId()
+        + " (severity: " + fireEvent.getSeverity() + ")");
+
+        //implement movement, fluid etc. later
+    }
+
+    private void sendAcknowledgement(){
+        Message message = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                "Acknowledged",
+                Message.MessageType.DroneResponse
+        );
+        System.out.println("[DroneSubsystem] Sending DroneSubsystem to Scheduler");
+        schedulerMessageBox.putMessage(message);
     }
 
 

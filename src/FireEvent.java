@@ -22,9 +22,16 @@ public class FireEvent extends SimulationEvent {
 //     *
 //     * @param serializedFireEvent A String containing a serialized FireEvent object.
 //     */
-//    public FireEvent(String serializedFireEvent) {
-//
-//    }
+    public FireEvent(String serializedFireEvent){
+        String[] parts = serializedFireEvent.split(DELIMITER);
+        this.time = parts[0];
+        this.zoneId = Integer.parseInt(parts[1]);
+        this.eventType = parts[2];
+        this.severity = parts[3];
+        this.targetX = Integer.parseInt(parts[4]);
+        this.targetY = Integer.parseInt(parts[5]);
+    }
+
 
     //getters
     public String getTime(){ return time; }
@@ -63,7 +70,7 @@ public class FireEvent extends SimulationEvent {
                                         getEventType() + DELIMITER +
                                         getSeverity() + DELIMITER +
                                         getTargetX() + DELIMITER +
-                                        getTargetY() + DELIMITER;
+                                        getTargetY();
         return serializedFireEvent;
     }
 }
