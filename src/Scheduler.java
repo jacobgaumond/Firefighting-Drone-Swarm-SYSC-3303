@@ -42,6 +42,10 @@ public class Scheduler implements Runnable {
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
 
+    private int activeFireCount;
+
+    private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
+
     //Data Tracking//
     private Queue<FireEvent> taskQueue = new LinkedList<>();
     private Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
@@ -90,33 +94,24 @@ public class Scheduler implements Runnable {
     private void processIncomingMessageBox(Message message) {
         System.out.println("\n[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
 
-        switch (message.getDestinationName()) {
-            case "DroneSubsystem":
-                if (message.getMessageType() == Message.MessageType.DroneRegistration) {
-                    int id = Integer.parseInt(message.getMessageData());
-                    registerDrone(id);
-                    return;
-                } else processDroneMessage(message);
-                break;
-            case "FireIncidentSubsystem":
-                processEvent(message);
-                break;
-            case "Scheduler":
-                //checks if the incoming message is a fire task
-                if (message.getMessageType() == Message.MessageType.FireEvent) {
-                    processEvent(message); //assign or queue task
-                } else if (message.getMessageType() == Message.MessageType.DroneResponse) {
-                    processDroneMessage(message); //drone finished a task
-                } else if (message.getMessageType() == Message.MessageType.DroneRegistration) {
-                    int id = Integer.parseInt(message.getMessageData());
-                    registerDrone(id);
-                }
-                break;
-            default:
-                System.out.println("[Scheduler] Unknown destination: " + message.getDestinationName());
+        if (message.getMessageType() == Message.MessageType.DroneRegistration) {
+            registerDrone(Integer.parseInt(message.getMessageData()));
+            return;
         }
 
+        if (message.getMessageType() == Message.MessageType.DroneResponse) {
+            processDroneMessage(message);
+            return;
+        }
+
+        if (message.getMessageType() == Message.MessageType.FireEvent) {
+            processEvent(message);
+            return;
+        }
+
+        System.out.println("[Scheduler] Unknown destination: " + message.getDestinationName());
     }
+
 
     // -------------------------
     // Drone and Task Logic
@@ -127,7 +122,7 @@ public class Scheduler implements Runnable {
         System.out.println("[Scheduler] Registered drone " + droneId);
     }
 
-    private void tryAssignTask() {
+    public void tryAssignTask() {
         while (!taskQueue.isEmpty()) {
             FireEvent next = taskQueue.peek();
             DroneInfo available = findAvailableDrone(next);
@@ -135,7 +130,11 @@ public class Scheduler implements Runnable {
                 taskQueue.poll();
                 assignFireTaskToDrone(available, next);
             } else {
+                schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
                 break; // no drones available, wait
+            }
+            if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
+                schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
             }
         }
     }
@@ -202,6 +201,10 @@ public class Scheduler implements Runnable {
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() + " EXTINGUISHED!");
                         activeFires.remove(activeTask.fireEvent.getZoneId());
+
+                        if (taskQueue.isEmpty() && activeFires.isEmpty()) {
+                            schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
+                        }
                     } else {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() +
                                 " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
@@ -242,7 +245,8 @@ public class Scheduler implements Runnable {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         System.out.println("[Scheduler] Handling fire event: " + fireEvent);
         taskQueue.add(fireEvent);
-        tryAssignTask();
+        //tryAssignTask();
+        schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 
 
@@ -299,7 +303,7 @@ public class Scheduler implements Runnable {
         }
 
         public boolean canHandleTask(FireEvent fire) {
-            boolean isRightState = state.equals("IDLE") || state.equals("EN_ROUTE_BASE")|| state.equals("FIRE_HANDLED");
+            boolean isRightState = state.equals("IDLE") || state.equals("EN_ROUTE_BASE") || state.equals("FIRE_HANDLED");
             if (!isRightState) return false;
 
             // 1. Fluid Check: Does it have enough to even make a dent?
