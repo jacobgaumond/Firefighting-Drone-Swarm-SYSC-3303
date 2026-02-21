@@ -127,13 +127,14 @@ public class DroneSubsystem implements Runnable {
     }
 
     public Message sendStatus(){ // int ID: statemachine drone: int x: int y: int fluidAmount: int battery
-        String statusData = String.format("%d~%s~%d~%d~%d~%d",
+        String statusData = String.format("%d~%s~%d~%d~%d~%d~%d",
                 this.drone_ID,
                 this.droneSM.getCurrentState().toString(),
                 this.x_coord,
                 this.y_coord,
                 this.fluidAmount,
-                this.batteryTravelDistance);
+                this.batteryTravelDistance,
+                this.fluidAmountToDrop);
         // Return a new Message object intended for the Scheduler
         return new Message("Scheduler", "DroneSubsystem", statusData, Message.MessageType.DroneResponse);
     }

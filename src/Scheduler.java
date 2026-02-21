@@ -42,11 +42,12 @@ public class Scheduler implements Runnable {
 
     private Queue<FireEvent> taskQueue =  new LinkedList<>();
     private Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
+    private Map<Integer, FireTask> activeFires = new HashMap<>();
     private static class DroneInfo {
         int droneId;
         String state;
         int x, y, fluid, battery;
-
+        int assignedZoneID =-1;
         public DroneInfo(int droneId) {
             this.droneId = droneId;
             this.state = "IDLE";
@@ -55,21 +56,37 @@ public class Scheduler implements Runnable {
             this.fluid = 15;
             this.battery = 1000;
         }
-
         public boolean isAvailable() {
             return state.equals("IDLE") || state.equals("EN_ROUTE_BASE");
         }
     }
 
+        private static class FireTask {
+            FireEvent fireEvent;
+            int fluidRequired;
+            int fluidDropped;
+
+            public FireTask(FireEvent fireEvent, int fluidRequired) {
+                this.fireEvent = fireEvent;
+                this.fluidRequired = fluidRequired;
+                this.fluidDropped = 0;
+            }
+
+            public boolean isExtinguished() {
+                return fluidDropped >= fluidRequired;
+            }
+
+            public int remainingFluidNeeded() {
+                return fluidRequired - fluidDropped;
+            }
+        }
+
+
+
     public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
         this.incomingMessageBox     = incomingMessageBox;
         this.fireIncidentMessageBox = fireIncidentMessageBox;
         this.droneMessageBox        = droneMessageBox;
-    }
-
-    public void registerDrone(int droneId) {
-        droneRegistry.put(droneId, new DroneInfo(droneId));
-        System.out.println("[Scheduler] Registered drone " + droneId);
     }
 
     @Override
@@ -105,8 +122,8 @@ public class Scheduler implements Runnable {
         } while (boxOpen);
     }
 
-
-
+//** MESSAGE ROUTING **//
+//Processes all incoming messages and sends to desination
     private void processIncomingMessageBox(Message message) {
         System.out.println("\n[Scheduler] Received from " + message.getSourceName() + ": \n" + message.getMessageData());
 
@@ -141,8 +158,37 @@ public class Scheduler implements Runnable {
 
     }
 
+    public void registerDrone(int droneId) {
+        droneRegistry.put(droneId, new DroneInfo(droneId));
+        System.out.println("[Scheduler] Registered drone " + droneId);
+    }
 
-    private void assignTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
+
+    // -------------------------
+    // Task Assignment
+    // -------------------------
+
+    private void tryAssignTask() {
+        while (!taskQueue.isEmpty()) {
+            FireEvent next = taskQueue.peek();
+            DroneInfo available = findAvailableDrone(next);
+            if (available != null) {
+                taskQueue.poll();
+                assignFireTaskToDrone(available, next);
+            } else {
+                break; // no drones available, wait
+            }
+        }
+    }
+    private void assignFireTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
+        FireTask fireTask = activeFires.computeIfAbsent(
+                fireEvent.getZoneId(),
+                id -> new FireTask(fireEvent, getAmountNeededForFire(fireEvent.getSeverity()))
+        );
+        int amountToDrop = Math.min(drone.fluid, fireTask.remainingFluidNeeded());
+        drone.assignedZoneID = fireEvent.getZoneId();
+        drone.state = "EN_ROUTE_FIRE";
+
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,
                 fireEvent.getTime(),
@@ -151,7 +197,7 @@ public class Scheduler implements Runnable {
                 fireEvent.getSeverity(),
                 fireEvent.getTargetX(),
                 fireEvent.getTargetY(),
-                10,
+                amountToDrop,
                 drone.droneId  // assign to specific drone
         );
 
@@ -165,16 +211,6 @@ public class Scheduler implements Runnable {
         droneMessageBox.putMessage(droneMessage);
     }
 
-    private int getAmountNeededForFire(String severity) {
-        switch (severity.toLowerCase()) {
-            case "high":    return 30;
-            case "moderate": return 20;  // adjust these
-            case "low":   return 10;
-            default:
-                System.out.println("[Scheduler] Unknown severity: " + severity + ", defaulting to 10");
-                return 10;
-        }
-    }
     //handles if the (task finished) -> assigns next task in the queue or marks drone as idle
     private void processDroneMessage(Message message) {
         String[] parts = message.getMessageData().split("~");
@@ -185,6 +221,7 @@ public class Scheduler implements Runnable {
         int y = Integer.parseInt(parts[3]);
         int fluid = Integer.parseInt(parts[4]);
         int battery = Integer.parseInt(parts[5]);
+        int fluidDroppedThisRun = Integer.parseInt(parts[6]);
 
         // Update drone registry
         DroneInfo drone = droneRegistry.get(droneId);
@@ -205,21 +242,28 @@ public class Scheduler implements Runnable {
 
         switch (state) {
             case "ARRIVED_AT_FIRE":
-                sendToDrone(droneId, DroneEvent.EXTINGUISH_REQUEST, "");
+                sendEventToDrone(droneId, DroneEvent.EXTINGUISH_REQUEST, "");
                 break;
 
             case "FIRE_HANDLED":
-                if (!taskQueue.isEmpty()) {
-                    assignTaskToDrone(drone, taskQueue.poll());
-                } else {
-                    sendToDrone(droneId, DroneEvent.RETURN_BASE_REQUEST, "");
+                FireTask activeTask = activeFires.get(drone.assignedZoneID);
+                if (activeTask != null) {
+                    activeTask.fluidDropped += fluidDroppedThisRun;
+                    if (activeTask.isExtinguished()) {
+                        System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() + " EXTINGUISHED!");
+                        activeFires.remove(activeTask.fireEvent.getZoneId());
+                    } else {
+                        System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() +
+                                " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
+                        taskQueue.add(activeTask.fireEvent);
+                    }
                 }
+                drone.assignedZoneID = -1;
+                sendEventToDrone(droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                 break;
 
             case "IDLE":
-                if (!taskQueue.isEmpty()) {
-                    assignTaskToDrone(drone, taskQueue.poll());
-                }
+                tryAssignTask();
                 break;
 
             case "FAULTED":
@@ -228,7 +272,7 @@ public class Scheduler implements Runnable {
         }
     }
 
-    private void sendToDrone(int droneId, DroneEvent event, String payload) {
+    private void sendEventToDrone(int droneId, DroneEvent event, String payload) {
         DroneRequest request = new DroneRequest(
                 event, "", 0, "", "", 0, 0, 0, droneId
         );
@@ -247,17 +291,22 @@ public class Scheduler implements Runnable {
 
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         System.out.println("[Scheduler] Handling fire event: " + fireEvent);
-
-        DroneInfo available = findAvailableDrone(fireEvent);
-        if (available != null) {
-            assignTaskToDrone(available, fireEvent);
-            System.out.println("assigning available drone");
-        } else {
-            taskQueue.add(fireEvent);
-            System.out.println("[Scheduler] No drones available, task queued. Queue size: " + taskQueue.size());
-        }
+        taskQueue.add(fireEvent);
+        tryAssignTask();
     }
 
+
+    //HELPER FUNCTIONS
+    private int getAmountNeededForFire(String severity) {
+        switch (severity.toLowerCase()) {
+            case "high":    return 30;
+            case "moderate": return 20;  // adjust these
+            case "low":   return 10;
+            default:
+                System.out.println("[Scheduler] Unknown severity: " + severity + ", defaulting to 10");
+                return 0;
+        }
+    }
     // Find best available drone for the task
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
         DroneInfo best = null;
@@ -265,15 +314,19 @@ public class Scheduler implements Runnable {
 
         for (DroneInfo drone : droneRegistry.values()) {
             if (drone.state.equals("IDLE")) {
-                    best = drone;
+                best = drone;
             }
         }
         return best;
     }
 
-    public Queue<FireEvent> getTaskQueue() {
-        return taskQueue;
-    }
 
+    // -------------------------
+    // Getters
+    // -------------------------
+
+    public Queue<FireEvent> getTaskQueue() { return taskQueue; }
+    public Map<Integer, DroneInfo> getDroneRegistry() { return droneRegistry; }
+    public Map<Integer, FireTask> getActiveFires() { return activeFires; }
 
 }
