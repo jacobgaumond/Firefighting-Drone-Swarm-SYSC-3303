@@ -213,42 +213,32 @@ public class Scheduler implements Runnable {
 
     //handles if the (task finished) -> assigns next task in the queue or marks drone as idle
     private void processDroneMessage(Message message) {
-        String[] parts = message.getMessageData().split("~");
-
-        int droneId = Integer.parseInt(parts[0]);
-        String state = parts[1];
-        int x = Integer.parseInt(parts[2]);
-        int y = Integer.parseInt(parts[3]);
-        int fluid = Integer.parseInt(parts[4]);
-        int battery = Integer.parseInt(parts[5]);
-        int fluidDroppedThisRun = Integer.parseInt(parts[6]);
+        DroneResponse status = new DroneResponse(message.getMessageData());
 
         // Update drone registry
-        DroneInfo drone = droneRegistry.get(droneId);
+        DroneInfo drone = droneRegistry.get(status.getDroneID());
         if (drone == null) {
-            System.out.println("[Scheduler] Unknown drone ID: " + droneId + ", registering.");
-            drone = new DroneInfo(droneId);
-            droneRegistry.put(droneId, drone);
+            drone = new DroneInfo(status.getDroneID());
+            droneRegistry.put(status.getDroneID(), drone);
         }
 
-        drone.state = state;
-        drone.x = x;
-        drone.y = y;
-        drone.fluid = fluid;
-        drone.battery = battery;
+        drone.state = status.getState();
+        drone.x = status.getX();
+        drone.y = status.getY();
+        drone.fluid = status.getFluidAmount();
+        drone.battery = status.getBattery();
 
-        System.out.println("[Scheduler] Drone " + droneId + " status: " + state +
-                " | pos(" + x + "," + y + ") | fluid: " + fluid + " | battery: " + battery);
+        System.out.println("[Scheduler] " + status);
 
-        switch (state) {
+        switch (drone.state) {
             case "ARRIVED_AT_FIRE":
-                sendEventToDrone(droneId, DroneEvent.EXTINGUISH_REQUEST, "");
+                sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
                 break;
 
             case "FIRE_HANDLED":
                 FireTask activeTask = activeFires.get(drone.assignedZoneID);
                 if (activeTask != null) {
-                    activeTask.fluidDropped += fluidDroppedThisRun;
+                    activeTask.fluidDropped += status.getFluidDropped();
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() + " EXTINGUISHED!");
                         activeFires.remove(activeTask.fireEvent.getZoneId());
@@ -259,7 +249,7 @@ public class Scheduler implements Runnable {
                     }
                 }
                 drone.assignedZoneID = -1;
-                sendEventToDrone(droneId, DroneEvent.RETURN_BASE_REQUEST, "");
+                sendEventToDrone(status.getDroneID(), DroneEvent.RETURN_BASE_REQUEST, "");
                 break;
 
             case "IDLE":
@@ -267,7 +257,7 @@ public class Scheduler implements Runnable {
                 break;
 
             case "FAULTED":
-                System.out.println("[Scheduler] Drone " + droneId + " has faulted!");
+                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted!");
                 break;
         }
     }
