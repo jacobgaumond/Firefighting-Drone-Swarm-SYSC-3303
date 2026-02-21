@@ -112,9 +112,6 @@ public class DroneSubsystem implements Runnable {
                 this.fluidAmountToDrop = droneEvent.getAmountToDrop();
                 this.fluidReleasedAtZone = 0;
             }
-            if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED) {
-                this.fluidAmountToDrop = droneEvent.getAmountToDrop();
-            }
             //sends the message to the statemachine
             droneSM.handleEvent(droneEvent.getDroneEvent(), droneEvent.serialize(), this);
 

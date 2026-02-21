@@ -103,7 +103,7 @@ public class Scheduler implements Runnable {
         }
 
         if (message.getMessageType() == Message.MessageType.FireEvent) {
-            processEvent(message);
+            processFireEvent(message);
             return;
         }
 
@@ -138,10 +138,10 @@ public class Scheduler implements Runnable {
             if (allWillBeExtinguished) {
                 schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
             } else {
+
                 schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
             }
         }
-
     }
 
     private void assignFireTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
@@ -202,7 +202,7 @@ public class Scheduler implements Runnable {
 
             case "FIRE_HANDLED":
                 FireTask activeTask = activeFires.get(drone.assignedZoneID);
-                if (activeTask != null) {
+                if (activeTask != null) { //Checks to see if the zoneFire is fully out or not
                     activeTask.fluidDropped += status.getFluidDropped();
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() + " EXTINGUISHED!");
@@ -245,13 +245,12 @@ public class Scheduler implements Runnable {
         droneMessageBox.putMessage(message);
     }
 
-    private void processEvent(Message message) {
+    private void processFireEvent(Message message) {
         if (message.getMessageType() != Message.MessageType.FireEvent) return;
 
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         System.out.println("[Scheduler] Handling fire event: " + fireEvent);
         taskQueue.add(fireEvent);
-        //tryAssignTask();
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 
@@ -262,7 +261,7 @@ public class Scheduler implements Runnable {
         double bestDistance = Double.MAX_VALUE;
         for (DroneInfo drone : droneRegistry.values()) {
             if (drone.canHandleTask(fireEvent)) {
-                best = drone;
+                best = drone; //This to be modified in future
             }
         }
         return best;
@@ -280,7 +279,8 @@ public class Scheduler implements Runnable {
         return switch (severity.toLowerCase()) {
             case "high" -> 30;
             case "moderate" -> 20;
-            default -> 10;
+            case "low" -> 10;
+            default -> 0;
         };
     }
 
@@ -320,26 +320,20 @@ public class Scheduler implements Runnable {
         public boolean canHandleTask(FireEvent fire) {
             boolean isRightState = state.equals("IDLE") || state.equals("EN_ROUTE_BASE") || state.equals("FIRE_HANDLED");
             if (!isRightState) return false;
-
-            // 1. Fluid Check: Does it have enough to even make a dent?
             if (this.fluid <= 0) return false;
 
-            // 2. Battery Check: Current -> Fire -> Base
-           /* int distToFire = calculateDistance(this.x, this.y, fire.getTargetX(), fire.getTargetY());
-            int distBackToBase = calculateDistance(fire.getTargetX(), fire.getTargetY(), 0, 0);
-            int totalDistanceRequired = distToFire + distBackToBase;
+            double distToFire = calculateDistance(this.x, this.y, fire.getTargetX(), fire.getTargetY());
+            double distBackToBase = calculateDistance(fire.getTargetX(), fire.getTargetY(), 0, 0);
+            double totalDistance = distToFire + distBackToBase;
 
-            return this.battery >= totalDistanceRequired;*/
-            return true;
+            int batteryNeeded = (int) ((totalDistance / 5048.0) * 100);
+            return this.battery >= batteryNeeded;
         }
-        /*
-        private int calculateDistance(int x1, int y1, int x2, int y2) {
-            return (int) Math.ceil(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)));
-        }
-        */
 
+        private double calculateDistance(int x1, int y1, int x2, int y2) {
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        }
     }
-
     private static class FireTask {
         FireEvent fireEvent;
         int fluidRequired;
