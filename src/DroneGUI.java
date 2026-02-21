@@ -22,6 +22,7 @@ public class DroneGUI extends JFrame {
     
     private Map<Integer, JLabel> fireLabels = new HashMap<>();
     private Map<Integer, JLabel> droneLabels = new HashMap<>();
+    private Map<Integer, Thread> droneAnimationThreads = new HashMap<>();
     
     private final static Color activeFireColor = new Color(255, 0, 0);
     private final static Color extinguishedFireColor = new Color(77, 167, 46);
@@ -381,11 +382,17 @@ public class DroneGUI extends JFrame {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
+        // Cancel current animation
+        Thread existingThread = droneAnimationThreads.get(droneId);
+        if (existingThread != null && existingThread.isAlive()) {
+            existingThread.interrupt();
+        }
+        
         // Set to outbound color
         droneLabel.setVisible(true);
         droneLabel.setBackground(droneOutboundColor);
         
-        logMessage("Drone " + droneId + " moving outbound to Zone " + zoneId);
+        logMessage("Drone " + droneId + " outbound to Zone " + zoneId);
         
         // Current position (important later when interrupted on return)
         int startX = droneLabel.getX();
@@ -400,7 +407,7 @@ public class DroneGUI extends JFrame {
         final int fps = (int) Math.max(1, travelTimeMs / delay); // frames needed to match travel time
         
         // Thread for asynchronous animation
-        new Thread(() -> {
+        Thread animationThread = new Thread(() -> {
             for (int step = 0; step <= fps; step++) {
                 // animation completion %
                 double progress = (double) step / fps;
@@ -410,24 +417,57 @@ public class DroneGUI extends JFrame {
                 int newY = (int) (startY + (targetY - startY) * progress);
                 
                 updateDronePosition(droneId, newX, newY);
-                    
-                // onComplete
-                if (step >= fps) {
-                    droneLabel.setBackground(droneExtinguishingColor);
-                    logMessage("Drone " + droneId + " extinguishing fire in Zone " + zoneId);
-                }
                 
                 try {
                     Thread.sleep(delay); // delay between animation steps
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                    break; // stop animation if interrupted
+                }
             }
-        }).start();
+            droneAnimationThreads.remove(droneId);
+        });
+        // reference in case of needed interruption
+        droneAnimationThreads.put(droneId, animationThread);
+        animationThread.start();
+    }
+    
+    // Extinguish fire
+    public void extinguishFire(int droneId, int zoneId, long dropTimeMs) {
+        JLabel droneLabel = droneLabels.get(droneId);
+        if (droneLabel == null) return;
+        
+        // Cancel current animation
+        Thread existingThread = droneAnimationThreads.get(droneId);
+        if (existingThread != null && existingThread.isAlive()) {
+            existingThread.interrupt();
+        }
+        
+        // Change color to extinguishing
+        droneLabel.setBackground(droneExtinguishingColor);
+        logMessage("Drone " + droneId + " extinguishing fire in Zone " + zoneId);
+        
+        // Wait for drop time
+        Thread animationThread = new Thread(() -> {
+            try {
+                Thread.sleep(dropTimeMs);
+            } catch (InterruptedException e) {}
+            droneAnimationThreads.remove(droneId);
+        });
+        // reference in case of needed interruption
+        droneAnimationThreads.put(droneId, animationThread);
+        animationThread.start();
     }
     
     // Return drone to origin
     public void returnDrone(int droneId, long travelTimeMs) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
+        
+        // Cancel current animation
+        Thread existingThread = droneAnimationThreads.get(droneId);
+        if (existingThread != null && existingThread.isAlive()) {
+            existingThread.interrupt();
+        }
         
         // Set returning color
         droneLabel.setVisible(true);
@@ -448,7 +488,7 @@ public class DroneGUI extends JFrame {
         final int steps = (int) Math.max(1, travelTimeMs / delay); 
         
         // Thread for asynchronous animation
-        new Thread(() -> {
+        Thread animationThread = new Thread(() -> {
             for (int step = 0; step <= steps; step++) {
                 // animation completion %
                 double progress = (double) step / steps;
@@ -466,9 +506,15 @@ public class DroneGUI extends JFrame {
                 
                 try {
                     Thread.sleep(delay); // delay between animation steps
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                    break; // Stop animation if interrupted
+                }
             }
-        }).start();
+            droneAnimationThreads.remove(droneId);
+        });
+        // reference in case of needed interruption
+        droneAnimationThreads.put(droneId, animationThread);
+        animationThread.start();
     }
 
     // ========== MAIN ==========

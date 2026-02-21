@@ -46,7 +46,11 @@ public class FireIncidentSubsystem implements Runnable {
         loadFromFile(fileName);
     }
 
-    //constructor just for testing [FireIncidentSub -> testParseFireEvent] (doesn't load file)
+    // Testing constructor (no GUI, with file)
+    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, String fileName) {
+        this(incomingMessageBox, schedulerMessageBox, fileName, null);
+    }
+    // Testing constructor (no GUI, no file)
     public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
         this.incomingMessageBox = incomingMessageBox;
         this.schedulerMessageBox = schedulerMessageBox;
@@ -83,7 +87,9 @@ public class FireIncidentSubsystem implements Runnable {
             );
 
             // Update GUI with fire status
-            gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
+            if (gui != null) {
+                gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
+            }
 
             schedulerMessageBox.putMessage(fireEventMessage);
             try {

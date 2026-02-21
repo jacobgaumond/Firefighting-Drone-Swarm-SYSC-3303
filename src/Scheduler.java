@@ -58,6 +58,11 @@ public class Scheduler implements Runnable {
         this.gui = gui;
     }
 
+    // Testing constructor (no GUI)
+    public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
+        this(incomingMessageBox, fireIncidentMessageBox, droneMessageBox, null);
+    }
+
     @Override
     public void run() {
         boolean boxOpen = true;
@@ -207,27 +212,30 @@ public class Scheduler implements Runnable {
 
             case "FIRE_HANDLED":
                 FireTask activeTask = activeFires.get(drone.assignedZoneID);
+
                 if (activeTask != null) { //Checks to see if the zoneFire is fully out or not
                     activeTask.fluidDropped += status.getFluidDropped();
+                    int zoneId = activeTask.fireEvent.getZoneId();
 
                     if (activeTask.isExtinguished()) {
-                        System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() + " EXTINGUISHED!");
-                        activeFires.remove(activeTask.fireEvent.getZoneId());
+                        System.out.println("[Scheduler] Zone " + zoneId + " EXTINGUISHED!");
+                        activeFires.remove(zoneId);
                         
                         // Update GUI: extinguished
-                        gui.fireStatusChange(activeTask.fireEvent.getZoneId(), "");
+                        if (gui != null) {
+                            gui.fireStatusChange(zoneId, "");
+                        }
 
                         if (taskQueue.isEmpty() && activeFires.isEmpty()) {
                             schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
                         }
                     } else {
-                        System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() +
+                        System.out.println("[Scheduler] Zone " + zoneId +
                                 " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
-                        
-                        // TODO: Update GUI: reduced severity
-                        // gui.fireStatusChange(activeTask.fireEvent.getZoneId(), reducedSeverity);
-                        
-                        // taskQueue.add(activeTask.fireEvent);
+
+                        if (gui != null) {
+                            gui.fireStatusChange(zoneId, getFireSeverity(activeTask));
+                        }
                     }
                 }
                 drone.assignedZoneID = -1;
@@ -268,10 +276,12 @@ public class Scheduler implements Runnable {
     }
 
 
-    // -- Utiliy Functions --//
+    // ========== Helper Functions ========== //
+
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
         DroneInfo best = null;
         double bestDistance = Double.MAX_VALUE;
+
         for (DroneInfo drone : droneRegistry.values()) {
             if (drone.canHandleTask(fireEvent)) {
                 best = drone; //This to be modified in future
@@ -294,6 +304,7 @@ public class Scheduler implements Runnable {
                 .filter(d -> d.assignedZoneID == fireTask.fireEvent.getZoneId())
                 .mapToInt(d -> d.fluidAssigned)
                 .sum();
+
         return totalFluidEnRoute >= fireTask.remainingFluidNeeded();
     }
 
@@ -305,8 +316,25 @@ public class Scheduler implements Runnable {
             default -> 0;
         };
     }
+    
+    private String getFireSeverity(FireTask fireTask) {
+        int remaining = fireTask.remainingFluidNeeded();
 
-    //--Getters and Setters --//-
+        if(remaining >= 30) {
+            return "high";
+        }
+        else if(remaining >= 20) {
+            return "moderate";
+        }
+        else if(remaining > 0) {
+            return "low";
+        }
+        else {
+            return "";
+        }
+    }
+
+    // ========== Getters and Setters ==========
 
     public Queue<FireEvent> getTaskQueue() {
         return taskQueue;
@@ -321,7 +349,7 @@ public class Scheduler implements Runnable {
     }
 
 
-    //--Inner Classes DroneInfo and FireTask --//
+    // ========== Sub Classes ==========
 
     private static class DroneInfo {
         int droneId;
@@ -356,6 +384,7 @@ public class Scheduler implements Runnable {
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
         }
     }
+
     private static class FireTask {
         FireEvent fireEvent;
         int fluidRequired;
@@ -375,6 +404,4 @@ public class Scheduler implements Runnable {
             return fluidRequired - fluidDropped;
         }
     }
-
-
 }
