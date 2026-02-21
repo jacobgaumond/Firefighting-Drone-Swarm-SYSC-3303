@@ -24,10 +24,28 @@ before it was realized that they would only be usable in future iterations.
   A class used as a shared resource to pass Message objects between threads. The Server and Client classes each have
   a MessageBox used to receive incoming Message objects.
 
+- `src/FireEvent.java`
+  A data carrying class that parses fireEvents made from the FireSubsystem to the Scheduler.
+
+- `src/DroneRequest.java`
+  A data carrying class that parses DroneRequests made from the Scheduler to the DroneSubsystem.
+
+- `src/DroneResponse.java`
+  A data carrying class that parses DroneResponses made from the drones back to the Scheduler.
+
+- `src/SimulationEvent.java`
+  Abstract base class for all serializable message data objects. Defines the shared delimiter.
+
+- `src/ZoneMap`
+  A utility class that loads and stores zone data from a CSV file.
+
 - `src/Scheduler.java`
-  This class represents the Server in the Client-Server model. It has an incoming MessageBox, and has access to the
-  MessageBox objects of both the FireIncidentSubsystem and DroneSubsystem. Currently, it processes messages sent to
-  its incoming MessageBox to decide if it needs to forward the message to one of its clients.
+  This class represents the Server in the Client-Server model. Receives fire events from the FireIncidentSubsystem and
+  assigns them to the best available drone. Maintains a registry of all drones tracking their
+  state, position, fluid, and battery. Tracks active fires per zone and how much fluid has been
+  dropped, requeuing fires that require more fluid than a single drone can carry. Drones
+  automatically register themselves on startup and the Scheduler processes their status updates
+  to coordinate task assignment.
 
 - `src/FireIncidentSubsystem.java`
   This class represents one of the Clients in the Client-Server model. It has an incoming MessageBox, and has access to
@@ -37,11 +55,15 @@ before it was realized that they would only be usable in future iterations.
   DroneSubsystem, it sends an acknowledgement back (unless the message was an acknowledgement itself).
 
 - `src/DroneSubsystem.java`
-  This class represents one of the Clients in the Client-Server model. It has an incoming MessageBox, and has access to
-  the MessageBox object of the Scheduler; it does **not** have access to any other client's MessageBox. Currently, it
-  parses an input file for events to raise, and passes them as Message objects to the FireIncidentSubsystem. Once it has
-  finished with the input file, it processes messages sent to its incoming MessageBox. If it receives a message from the
-  FireIncidentSubsystem, it sends an acknowledgement back (unless the message was an acknowledgement itself).
+  This class represents one of the Clients in the Client-Server model. Registers itself with the Scheduler on startup
+  and listens for incoming DroneRequest messages. 
+  Uses a state machine to manage its lifecycle from idle, to flying, dropping agent, and returning to base. 
+  Tracks its own position, fluid, level, battery, and fluid released per run. 
+  Reports status back to the Scheduler after every state change.
+
+- `src/DroneStateMachine.java`
+  This class acts as the logical controller for the `DroneSubsystem`.
+  It implements a state machine that follows a drones sequence of operations
 
 - `src/Main.java`
   This class is exclusively used to start the program. It creates threads to execute code for the Scheduler,
