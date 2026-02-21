@@ -103,7 +103,7 @@ public class DroneStateMachine {
                 break;
 
             default:
-                System.out.println("Error: Drone is in an unknown state: " + state);
+                System.out.println("[DSM][Error]: Drone is in an unknown state: " + state);
         }
     }
 

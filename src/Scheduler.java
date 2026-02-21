@@ -276,6 +276,15 @@ public class Scheduler implements Runnable {
             if (drone.canHandleTask(fireEvent)) {
                 best = drone; //This to be modified in future
             }
+
+            //best distance selection
+//            if(!drone.canHandleTask(fireEvent)) continue;
+//
+//            double dist = drone.calculateDistance(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY());
+//            if(dist < bestDistance) {
+//                bestDistance = dist;
+//                best = drone;
+//            }
         }
         return best;
     }
