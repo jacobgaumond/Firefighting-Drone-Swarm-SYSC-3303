@@ -42,8 +42,6 @@ public class Scheduler implements Runnable {
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
 
-    private int activeFireCount;
-
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
 
     //Data Tracking//
@@ -133,10 +131,17 @@ public class Scheduler implements Runnable {
                 schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
                 break; // no drones available, wait
             }
-            if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
+        }
+        if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
+            boolean allWillBeExtinguished = activeFires.values().stream()
+                    .allMatch(this::willBeExtinguishedByAssignedDrones);
+            if (allWillBeExtinguished) {
                 schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
+            } else {
+                schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
             }
         }
+
     }
 
     private void assignFireTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
@@ -147,6 +152,8 @@ public class Scheduler implements Runnable {
         int amountToDrop = Math.min(drone.fluid, fireTask.remainingFluidNeeded());
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
+        drone.fluidAssigned = amountToDrop;
+        System.out.println("Drone will drop" + drone.fluidAssigned);
 
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,
@@ -262,6 +269,17 @@ public class Scheduler implements Runnable {
         return best;
     }
 
+    private boolean willBeExtinguishedByAssignedDrones(FireTask fireTask) {
+        int totalFluidEnRoute = droneRegistry.values().stream()
+                .filter(d -> d.assignedZoneID == fireTask.fireEvent.getZoneId())
+                .mapToInt(d -> d.fluidAssigned)
+                .sum();
+        System.out.println("[Scheduler] Zone " + fireTask.fireEvent.getZoneId() +
+                " | totalFluidEnRoute: " + totalFluidEnRoute +
+                " | remaining: " + fireTask.remainingFluidNeeded());
+        return totalFluidEnRoute >= fireTask.remainingFluidNeeded();
+    }
+
     private int getRequiredFluid(String severity) {
         return switch (severity.toLowerCase()) {
             case "high" -> 30;
@@ -290,7 +308,7 @@ public class Scheduler implements Runnable {
     private static class DroneInfo {
         int droneId;
         String state;
-        int x, y, fluid, battery;
+        int x, y, fluid, fluidAssigned, battery;
         int assignedZoneID = -1;
 
         public DroneInfo(int droneId) {
@@ -300,6 +318,7 @@ public class Scheduler implements Runnable {
             this.y = 0;
             this.fluid = 15;
             this.battery = 1000;
+            this.fluidAssigned = 0;
         }
 
         public boolean canHandleTask(FireEvent fire) {

@@ -54,6 +54,8 @@ public class SchedulerStateMachine {
                 } else if (event == SchedulerEvent.DRONE_UPDATED) {
                     transitionTo(SchedulerState.DISPATCHING, event);
                     scheduler.tryAssignTask();
+                }else if (event == SchedulerEvent.DRONES_AVAILABLE) {
+                    transitionTo(SchedulerState.ALL_FIRES_ATTENDED_TO, event);
                 }
                 break;
 
