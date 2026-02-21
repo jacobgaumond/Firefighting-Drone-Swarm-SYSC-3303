@@ -1,5 +1,5 @@
 
-enum DroneEvent{
+enum DroneEvent {
     FIRE_ASSIGNED, //request going to fire
     ARRIVAL, // I've arrived at destination
     EXTINGUISH_REQUEST,// I've been allowed to extinguish
@@ -9,7 +9,7 @@ enum DroneEvent{
     FAILURE // Drone is broken
 }
 
-enum DroneState{
+enum DroneState {
     IDLE, //waiting for a task at base
     EN_ROUTE_FIRE, //flying to fire
     ARRIVED_AT_FIRE, //arrival at fire
@@ -18,17 +18,20 @@ enum DroneState{
     DROPPING_AGENT, //release the substance
     FAULTED
 }
+
 public class DroneStateMachine {
 
     public DroneState state;
-    public DroneStateMachine() {//Null Constructor
 
+    public DroneStateMachine() {//Default Constructor
         this.state = DroneState.IDLE;
     }
+
     private void transitionTo(DroneState next, DroneEvent cause) {
         System.out.println("[DSM] " + state + " --(" + cause + ")--> " + next);
         state = next;
     }
+
     public synchronized void handleEvent(DroneEvent ev, String payload, DroneSubsystem drone) {
         switch (state) {
             case IDLE:
@@ -42,8 +45,7 @@ public class DroneStateMachine {
                 if (ev == DroneEvent.FAILURE) {
                     transitionTo(DroneState.FAULTED, ev);
                     drone.handleFault();
-                }
-                else if (ev == DroneEvent.ARRIVAL) {
+                } else if (ev == DroneEvent.ARRIVAL) {
                     transitionTo(DroneState.ARRIVED_AT_FIRE, ev);
                 }
                 break;
@@ -57,13 +59,12 @@ public class DroneStateMachine {
 
             case DROPPING_AGENT:
                 if (ev == DroneEvent.FAILURE) {
-                    drone.closeNozzle(payload);
                     transitionTo(DroneState.FAULTED, ev);
-                    drone.handleFault();
-                }
-                else if (ev == DroneEvent.FIRE_EXTINGUISHED) {
                     drone.closeNozzle(payload);
+                    drone.handleFault();
+                } else if (ev == DroneEvent.FIRE_EXTINGUISHED) {
                     transitionTo(DroneState.FIRE_HANDLED, ev);
+                    drone.closeNozzle(payload);
                 }
                 break;
 
@@ -71,8 +72,7 @@ public class DroneStateMachine {
                 if (ev == DroneEvent.RETURN_BASE_REQUEST) {
                     transitionTo(DroneState.EN_ROUTE_BASE, ev);
                     drone.returnToBase(payload);
-                }
-                else if (ev == DroneEvent.FIRE_ASSIGNED) {
+                } else if (ev == DroneEvent.FIRE_ASSIGNED) {
                     if (drone.hasBattery() && drone.hasAgent()) {
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
                         drone.flyToFire(payload);
@@ -84,12 +84,10 @@ public class DroneStateMachine {
                 if (ev == DroneEvent.FAILURE) {
                     transitionTo(DroneState.FAULTED, ev);
                     drone.handleFault();
-                }
-                else if (ev == DroneEvent.ARRIVAL) {
+                } else if (ev == DroneEvent.ARRIVAL) {
                     transitionTo(DroneState.IDLE, ev);
                     drone.restore();
-                }
-                else if (ev == DroneEvent.FIRE_ASSIGNED) {
+                } else if (ev == DroneEvent.FIRE_ASSIGNED) {
                     if (drone.hasBattery() && drone.hasAgent()) {
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
                         drone.flyToFire(payload);
@@ -107,13 +105,14 @@ public class DroneStateMachine {
             default:
                 System.out.println("Error: Drone is in an unknown state: " + state);
         }
-
-        drone.sendStatus(); //notifies the scheduler after each state change
     }
 
     // --- Getters and Setters ---
-    public DroneState  getCurrentState() {
+    public DroneState getCurrentState() {
         return state;
     }
-    public void setCurrentState(DroneState state) { this.state = state; }
+
+    public void setCurrentState(DroneState state) {
+        this.state = state;
+    }
 }

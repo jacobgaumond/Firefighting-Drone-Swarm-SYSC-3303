@@ -47,6 +47,7 @@ public class DroneSubsystem implements Runnable {
     private int fluidAmount;
 
     private int fluidAmountToDrop;
+    private int fluidReleasedAtZone;
 
     private final DroneStateMachine droneSM;
 
@@ -103,6 +104,8 @@ public class DroneSubsystem implements Runnable {
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED || droneEvent.getDroneEvent() == DroneEvent.RETURN_BASE_REQUEST) {
                 this.targetCoordX = droneEvent.getTargetX();
                 this.targetCoordY = droneEvent.getTargetY();
+                this.fluidAmountToDrop = droneEvent.getAmountToDrop();
+                this.fluidReleasedAtZone= 0;
             }
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED) {
                 this.fluidAmountToDrop = droneEvent.getAmountToDrop();
@@ -126,7 +129,7 @@ public class DroneSubsystem implements Runnable {
                 coordX, coordY,
                 fluidAmount,
                 batteryTravelDistance,
-                fluidAmountToDrop
+                fluidReleasedAtZone
         );
         // Return a new Message object intended for the Scheduler
         return new Message("Scheduler", "DroneSubsystem", status.serialize(), Message.MessageType.DroneResponse);
@@ -162,8 +165,8 @@ public class DroneSubsystem implements Runnable {
         }
         coordX = 0;
         coordY = 0;
-        droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
         System.out.println("[Drone " + droneId + "] Returning to base.");
+        droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
     }
 
     public void openNozzle() {
@@ -175,6 +178,7 @@ public class DroneSubsystem implements Runnable {
             throw new RuntimeException(e);
         }
         fluidAmount -= fluidAmountToDrop;
+        fluidReleasedAtZone += fluidAmountToDrop;
         System.out.println("[Drone " + droneId + "] extinguishing fire.");
         droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
     }

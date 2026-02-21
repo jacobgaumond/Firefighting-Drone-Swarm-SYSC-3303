@@ -81,7 +81,7 @@ public class FireIncidentSubsystem implements Runnable {
 
             schedulerMessageBox.putMessage(fireEventMessage);
             try {
-                Thread.sleep(1000); // wait 1 second between events
+                Thread.sleep(100000); // wait 1 second between events
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
