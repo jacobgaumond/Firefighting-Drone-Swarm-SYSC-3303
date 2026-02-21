@@ -8,11 +8,27 @@ import java.util.HashMap;
 import java.util.Objects;
 
 public class DroneGUI extends JFrame {
-    private GridPanel grid;
+    private JPanel gridPanel;
+    private JPanel droneOverlay; 
     private JTextArea logArea;
 
     private int activeFires;
     private JLabel activeFireLabel;
+    
+    private int cols;
+    private int rows;
+    private int cellWidth;
+    private int cellHeight;
+    
+    private Map<Integer, JLabel> fireLabels = new HashMap<>();
+    private Map<Integer, JLabel> droneLabels = new HashMap<>();
+    
+    private final static Color activeFireColor = new Color(255, 0, 0);
+    private final static Color extinguishedFireColor = new Color(77, 167, 46);
+        
+    private final static Color droneOutboundColor = new Color(255, 191, 0);
+    private final static Color droneExtinguishingColor = new Color(77, 167, 46);
+    private final static Color droneReturningColor = new Color(216, 109, 205);
 
     // GUI Constructor
     public DroneGUI() {
@@ -22,7 +38,7 @@ public class DroneGUI extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // calculate dynamic grid dimensions using zones
+        // Calculate grid dimensions using zones maxes
         int maxX = 0, maxY = 0;
         for (ZoneMap.Zone zone : ZoneMap.getAllZones().values()) {
             if (zone != null) {
@@ -30,176 +46,196 @@ public class DroneGUI extends JFrame {
                 maxY = Math.max(maxY, zone.endY / 100);
             }
         }
-        grid = new GridPanel(maxX, maxY);
+        this.cols = maxX;
+        this.rows = maxY;
+        
+        // Pane to hold both grid and drone overlay
+        JLayeredPane layeredPane = new JLayeredPane();
+        
+        // Create grid
+        this.gridPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                DroneGUI.this.paintGrid(g);
+            }
+        };
+        gridPanel.setLayout(null);
+        gridPanel.setBackground(Color.WHITE);
+        layeredPane.add(gridPanel, Integer.valueOf(0));   
+        
+        // Create drone overlay
+        this.droneOverlay = new JPanel();
+        droneOverlay.setLayout(null);
+        droneOverlay.setOpaque(false);
+        layeredPane.add(droneOverlay, Integer.valueOf(1));
+        
+        // Add resize listener to layered pane
+        layeredPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                // Resize both panels to match layered pane
+                gridPanel.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
+                droneOverlay.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
+                
+                // Update cell dimensions
+                cellWidth = gridPanel.getWidth() / cols;
+                cellHeight = gridPanel.getHeight() / rows;
+                
+                repositionComponents();
+            }
+        });
+        
+        // create zones
+        initializeZones(); 
 
         // create sidebar
-        JPanel sideBar = createRightSideContainer();
+        JPanel sideBar = createSidebar();
 
         // add to UI
-        add(grid, BorderLayout.CENTER); 
+        add(layeredPane, BorderLayout.CENTER); 
         add(sideBar, BorderLayout.EAST);
-
-        // startListening();
     }
 
-    // === UI COMPONENTS ===
-    // Grid Manager (Zone, Drone, and Fire creation/handling)
-    class GridPanel extends JPanel {
-        private final int cols;
-        private final int rows;
-
-        public Map<Integer, JLabel> fireLabels = new HashMap<>();
-
-        // Grid Constructor
-        public GridPanel(int cols, int rows) {
-            this.cols = cols;
-            this.rows = rows;
-
-            this.setLayout(null);
-            this.setBackground(Color.WHITE);
+    // ========== UI COMPONENTS ==========
+    // Zones
+    public void initializeZones() {
+        // For each Zone in ZoneMap
+        for (Entry<Integer, ZoneMap.Zone> entry : ZoneMap.getAllZones().entrySet()) {
+            int zoneId = entry.getKey();
+            ZoneMap.Zone zone = entry.getValue();
             
-            initializeZones(); // create zones
-
-            this.addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    repositionComponents(); // handle resizing
-                }
-            });
-        }
-
-        // Create Zones
-        public void initializeZones() {
-            for (Entry<Integer, ZoneMap.Zone> entry : ZoneMap.getAllZones().entrySet()) {
-                int zoneId = entry.getKey();
-                ZoneMap.Zone zone = entry.getValue();
-                
-                int gridStartX = zone.startX / 100;
-                int gridStartY = zone.startY / 100;
-                
-                // Add zone label at grid's first cell
-                this.addZoneLabel(gridStartX, gridStartY, "Z(" + zoneId + ")", new Color(158, 194, 211), Color.BLACK);
-                
-                // Add fire label at center of zone
-                this.createFireLabel(zoneId);
-            }
-        }
-
-        // Zone Label at top left
-        public void addZoneLabel(int gridX, int gridY, String text, Color bg, Color fg) {
-            JLabel label = new JLabel(text);
+            int gridStartX = zone.startX / 100;
+            int gridStartY = zone.startY / 100;
             
-            label.setOpaque(true);
-            label.setBackground(bg);
-            label.setForeground(fg);
-            label.setHorizontalAlignment(SwingConstants.CENTER);
-            label.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-            label.putClientProperty("gridX", gridX);
-            label.putClientProperty("gridY", gridY);
-
-            this.add(label);
-            repositionComponents();
-        }
-
-        // Fire Label at center
-        public void createFireLabel(int zoneId) {
-            JLabel label = new JLabel();
-
-            label.setOpaque(true);
-            label.setBackground(new Color(130, 255, 95));
-            label.setForeground(Color.BLACK);
-            label.setHorizontalAlignment(SwingConstants.CENTER);
-
-            // place Label in center cell (scale down by 100)
-            label.putClientProperty("gridX", ZoneMap.getX(zoneId) / 100);
-            label.putClientProperty("gridY", ZoneMap.getY(zoneId) / 100);
-
-            // Keep track for updating
-            fireLabels.put(zoneId, label);
-
-            this.add(label);
-            repositionComponents();
-        }
-
-        // Update fire status
-        private void fireStatusChange(int zone, String fireLevel) {
-            JLabel fireLabel = fireLabels.get(zone);
-            if (fireLabel == null) return;
+            // Add zone label at grid's first cell
+            this.createZoneLabel(gridStartX, gridStartY, "Z(" + zoneId + ")");
             
-            if (Objects.equals(fireLevel, "")) { 
-                // Extinguished Fires
-                fireLabel.setBackground(new Color(130, 255, 95));
-                fireLabel.setText(fireLevel);
-                if (activeFires > 0) activeFires--;
-            } else {
-                // Active Fires
-                fireLabel.setBackground(new Color(255, 103, 95));
-                fireLabel.setText(fireLevel);
-                activeFires++;
+            // Add fire label at center of zone
+            this.createFireLabel(zoneId);
+        }
+    }
+
+    // Zone Label
+    public void createZoneLabel(int gridX, int gridY, String text) {
+        JLabel label = new JLabel(text);
+        
+        label.setOpaque(true);
+        label.setBackground(new Color(158, 194, 211));
+        label.setForeground(Color.BLACK);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        label.putClientProperty("gridX", gridX);
+        label.putClientProperty("gridY", gridY);
+
+        this.gridPanel.add(label);
+    }
+
+    // Fire Label
+    public void createFireLabel(int zoneId) {
+        JLabel label = new JLabel();
+
+        label.setOpaque(true);
+        label.setBackground(extinguishedFireColor);
+        label.setForeground(Color.BLACK);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Center cell
+        label.putClientProperty("gridX", ZoneMap.getX(zoneId) / 100);
+        label.putClientProperty("gridY", ZoneMap.getY(zoneId) / 100);
+
+        // Hashmap for future referencing 
+        fireLabels.put(zoneId, label);
+
+        this.gridPanel.add(label);
+    }
+
+    // Drone Label
+    public void createDroneLabel(int droneId) {
+        JLabel label = new JLabel("D(" + droneId + ")");
+        
+        label.setOpaque(true);
+        label.setBackground(droneOutboundColor);
+        label.setForeground(Color.BLACK);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setVerticalAlignment(SwingConstants.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 10));
+        label.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        
+        // Start invisible at (0,0)
+        label.setVisible(false);
+        label.setBounds(0, 0, cellWidth, cellHeight);
+        
+        // Hashmap for future referencing 
+        droneLabels.put(droneId, label);
+        
+        this.droneOverlay.add(label);
+        this.logMessage("Drone " + droneId + " created at (0,0)");
+    }
+
+    // Dynamic components resizing
+    private void repositionComponents() {
+        if (this.gridPanel == null) return;
+        
+        // Update cell dimensions
+        cellWidth = this.gridPanel.getWidth() / cols;
+        cellHeight = this.gridPanel.getHeight() / rows;
+
+        // Fix grid
+        for (Component c : this.gridPanel.getComponents()) {
+            if (c instanceof JLabel) {
+                int gx = (int) ((Integer) ((JLabel) c).getClientProperty("gridX"));
+                int gy = (int) ((Integer) ((JLabel) c).getClientProperty("gridY"));
+                c.setBounds(gx * cellWidth, gy * cellHeight, cellWidth, cellHeight);
             }
-            activeFireLabel.setText("Active Fires: " + activeFires);
+        }
+        
+        // fix drone labels
+        for (Component c : this.droneOverlay.getComponents()) {
+            if (c instanceof JLabel) {
+                c.setSize(cellWidth, cellHeight);
+            }
+        }
+    }
+
+    // Draw gridlines and zone boundaries
+    private void paintGrid(Graphics g) {
+        if (this.gridPanel == null) return;
+        
+        Graphics2D g2 = (Graphics2D) g;
+
+        Color lightGrid = new Color(83, 83, 83, 50);
+        Color darkGrid = new Color(30, 30, 30);
+
+        // Whole Grid
+        g2.setStroke(new BasicStroke(1));
+        g2.setColor(lightGrid);
+        for (int i = 0; i <= cols; i++) {
+            int x = (i * cellWidth);
+            g2.drawLine(x, 0, x, this.gridPanel.getHeight());
+        }
+        for (int i = 0; i <= rows; i++) {
+            int y = (i * cellHeight);
+            g2.drawLine(0, y, this.gridPanel.getWidth(), y);
+        }
+        g2.setStroke(new BasicStroke(3));
+        g2.setColor(darkGrid);
+
+        // Zone boundaries
+        for (ZoneMap.Zone zone : ZoneMap.getAllZones().values()) {
+            int x1 = ((zone.startX / 100) * cellWidth);
+            int y1 = ((zone.startY / 100) * cellHeight);
+            int x2 = ((zone.endX / 100) * cellWidth);
+            int y2 = ((zone.endY / 100) * cellHeight);
+            
+            g2.drawRect(x1, y1, x2 - x1, y2 - y1);
         }
 
-        // TODO
-        private void createDroneLabel() { }
-        private void trackDeployedDrone() { }
-
-        // dynamic components resizing
-        private void repositionComponents() {
-            double unitW = (double) getWidth() / cols;
-            double unitH = (double) getHeight() / rows;
-
-            for (Component c : getComponents()) {
-                if (c instanceof JLabel) {
-                    int gx = (int) ((Integer) ((JLabel) c).getClientProperty("gridX"));
-                    int gy = (int) ((Integer) ((JLabel) c).getClientProperty("gridY"));
-                    c.setBounds((int) (gx * unitW), (int) (gy * unitH), (int) unitW, (int) unitH);
-                }
-            }
-        }
-
-        @Override
-        // Draw gridlines and zone boundaries
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-
-            Color lightGrid = new Color(83, 83, 83, 50);
-            Color darkGrid = new Color(30, 30, 30);
-
-            double unitW = (double) getWidth() / cols;
-            double unitH = (double) getHeight() / rows;
-
-            // Whole Grid
-            g2.setStroke(new BasicStroke(1));
-            g2.setColor(lightGrid);
-            for (int i = 0; i <= cols; i++) {
-                int x = (int) (i * unitW);
-                g2.drawLine(x, 0, x, getHeight());
-            }
-            for (int i = 0; i <= rows; i++) {
-                int y = (int) (i * unitH);
-                g2.drawLine(0, y, getWidth(), y);
-            }
-            g2.setStroke(new BasicStroke(3));
-            g2.setColor(darkGrid);
-
-            // Zone boundaries
-            for (ZoneMap.Zone zone : ZoneMap.getAllZones().values()) {
-                int x1 = (int) ((zone.startX / 100) * unitW);
-                int y1 = (int) ((zone.startY / 100) * unitH);
-                int x2 = (int) ((zone.endX / 100) * unitW);
-                int y2 = (int) ((zone.endY / 100) * unitH);
-                
-                g2.drawRect(x1, y1, x2 - x1, y2 - y1);
-            }
-
-            g2.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-        }
+        g2.drawRect(0, 0, this.gridPanel.getWidth() - 1, this.gridPanel.getHeight() - 1);
     }
 
     // Right-side sidebar
-    private JPanel createRightSideContainer() {
+    private JPanel createSidebar() {
         // Side bar
         JPanel sideWrapper = new JPanel(new GridBagLayout());
         
@@ -240,12 +276,11 @@ public class DroneGUI extends JFrame {
         p.setBackground(new Color(245, 245, 245));
 
         p.add(createLegendItem("Zone Label", new Color(158, 194, 211), "Z(n)"));
-        p.add(createLegendItem("Active Fire", new Color(255, 103, 95), ""));
-        p.add(createLegendItem("Extinguished Fire", new Color(130, 255, 95), ""));
-        p.add(createLegendItem("Drone Outbound", new Color(255, 180, 95), "D(n)"));
-        p.add(createLegendItem("Drone Extinguishing fire", new Color(106, 131, 95), "D(n)"));
-        p.add(createLegendItem("Drone returning", new Color(201, 95, 255), "D(n)"));
-
+        p.add(createLegendItem("Active Fire", activeFireColor, ""));
+        p.add(createLegendItem("Extinguished Fire", extinguishedFireColor, ""));
+        p.add(createLegendItem("Drone Outbound", droneOutboundColor, "D(n)"));
+        p.add(createLegendItem("Drone Extinguishing fire", droneExtinguishingColor, "D(n)"));
+        p.add(createLegendItem("Drone returning", droneReturningColor, "D(n)"));
         return p;
     }
     private JPanel createLegendItem(String text, Color color, String boxText) {
@@ -256,14 +291,14 @@ public class DroneGUI extends JFrame {
         box.setOpaque(true);
         box.setPreferredSize(new Dimension(30, 30));
         box.setBackground(color);
-        box.setForeground(Color.BLACK); // Text
-        box.setHorizontalAlignment(SwingConstants.CENTER); // Center text horizontally
-        box.setVerticalAlignment(SwingConstants.CENTER); // Center text vertically
+        box.setForeground(Color.BLACK);
+        box.setHorizontalAlignment(SwingConstants.CENTER); 
+        box.setVerticalAlignment(SwingConstants.CENTER); 
         box.setFont(new Font("SansSerif", Font.BOLD, 10));
         box.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         p.add(box);
-        p.add(new JLabel(text)); // The descriptive text next to box
+        p.add(new JLabel(text)); // descriptive text next to box
 
         return p;
     }
@@ -290,7 +325,7 @@ public class DroneGUI extends JFrame {
         p.setBorder(BorderFactory.createTitledBorder("Logs"));
 
         logArea = new JTextArea();
-        logArea.setEditable(false); // Recommended for logs
+        logArea.setEditable(false);
         logArea.setLineWrap(true);
 
         JScrollPane scroll = new JScrollPane(logArea);
@@ -299,47 +334,141 @@ public class DroneGUI extends JFrame {
         return p;
     }
 
-    // === MAIN ===
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            // For testing, create a dummy zone map
-            ZoneMap.addZone(1, new ZoneMap.Zone(0, 0, 700, 700));
-            ZoneMap.addZone(2, new ZoneMap.Zone(700, 0, 1200, 700));
-            ZoneMap.addZone(3, new ZoneMap.Zone(0, 700, 500, 1400));
-            ZoneMap.addZone(4, new ZoneMap.Zone(500, 700, 1200, 1400));
-            ZoneMap.addZone(5, new ZoneMap.Zone(1200, 0, 2100, 1400));
-            
-            DroneGUI gui = new DroneGUI();
-            gui.setVisible(true);
+    // ========== METHODS ==========
+    // Log a message
+    public void logMessage(String message) {
+        // Remove trailing X's and whitespace, then append
+        String cleanMsg = message.replaceAll("X+$", "").trim();
+        logArea.append(cleanMsg + "\n");
 
-            //quick test for fireStatusChange and logging messag
-            Timer timer1 = new Timer(1000, e -> {
-                gui.logMessage("FIRE_DETECTED_3_H");
-                gui.grid.fireStatusChange(3, "H");
-            });
-
-            Timer timer2 = new Timer(3000, e -> {
-                gui.logMessage("FIRE_EXTINGUISHED_3");
-                gui.grid.fireStatusChange(3, "");
-            });
-            timer1.setRepeats(false);
-            timer1.start();
-            timer2.setRepeats(false);
-            timer2.start();
-        });
+        // Auto-scroll to the bottom
+        logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 
-    // === HELPERS ===
-    // update logs
-    public void logMessage(String message) {
-        SwingUtilities.invokeLater(() -> {
-            // Remove trailing X's and whitespace, then append
-            String cleanMsg = message.replaceAll("X+$", "").trim();
-            logArea.append(cleanMsg + "\n");
+    // Update fire status
+    public void fireStatusChange(int zoneId, String fireLevel) {
+        JLabel fireLabel = fireLabels.get(zoneId);
+        if (fireLabel == null) return;
+        
+        if (Objects.equals(fireLevel, "")) { 
+            // Extinguished
+            fireLabel.setBackground(extinguishedFireColor);
+            fireLabel.setText(fireLevel);
 
-            // Auto-scroll to the bottom
-            logArea.setCaretPosition(logArea.getDocument().getLength());
+            if (activeFires > 0) activeFires--;
+            logMessage("Fire in Zone " + zoneId + " extinguished");
+        } else {
+            // Active
+            fireLabel.setBackground(activeFireColor);
+            fireLabel.setText(fireLevel);
+
+            activeFires++;
+            logMessage("Fire detected in Zone " + zoneId + " (Level: " + fireLevel + ")");
+        }
+        activeFireLabel.setText("Active Fires: " + activeFires);
+    }
+    
+    // Update drone position (animate movement)
+    public void updateDronePosition(int droneId, int pixelX, int pixelY) {
+        JLabel droneLabel = droneLabels.get(droneId);
+        if (droneLabel == null) return;
+        
+        droneLabel.setLocation(pixelX, pixelY);
+    }
+    
+    // Send drone to zone
+    public void moveDroneToZone(int droneId, int zoneId) {
+        JLabel droneLabel = droneLabels.get(droneId);
+        if (droneLabel == null) return;
+        
+        // Set to outbound color
+        droneLabel.setVisible(true);
+        droneLabel.setBackground(droneOutboundColor);
+        
+        logMessage("Drone " + droneId + " moving outbound to Zone " + zoneId);
+        
+        // Current position (important later when interrupted on return)
+        int startX = droneLabel.getX();
+        int startY = droneLabel.getY();
+        
+        // Calculate target zone center
+        int targetX = (int)((ZoneMap.getX(zoneId) / 100.0) * cellWidth - cellWidth / 2); // centering
+        int targetY = (int)((ZoneMap.getY(zoneId) / 100.0) * cellHeight);
+        
+        // Animation parameters (TODO: time should be sent from drone)
+        final int fps = 100; // refresh rate
+        final int delay = 10; // ms between frames 
+        final int[] currentStep = {0}; // obj to enable referencing in lambda
+        
+        Timer animationTimer = new Timer(delay, e -> {
+            currentStep[0]++;
+            double progress = (double) currentStep[0] / fps;
+            
+            // step
+            int newX = (int) (startX + (targetX - startX) * progress);
+            int newY = (int) (startY + (targetY - startY) * progress);
+            
+            updateDronePosition(droneId, newX, newY);
+            
+            // Stop when animation complete
+            if (currentStep[0] >= fps) {
+                ((Timer) e.getSource()).stop();
+                droneLabel.setBackground(droneExtinguishingColor);
+                logMessage("Drone " + droneId + " extinguishing fire in Zone " + zoneId);
+            }
         });
+
+        animationTimer.start();
+    }
+    
+    // Return drone to origin
+    public void returnDrone(int droneId) {
+        JLabel droneLabel = droneLabels.get(droneId);
+        if (droneLabel == null) return;
+        
+        // Set returning color
+        droneLabel.setVisible(true);
+        droneLabel.setBackground(droneReturningColor);
+        
+        logMessage("Drone " + droneId + " returning to origin");
+        
+        // Current position
+        int startX = droneLabel.getX();
+        int startY = droneLabel.getY();
+        
+        // Target is origin
+        int targetX = 0;
+        int targetY = 0;
+        
+        // Animation parameters (TODO)
+        final int steps = 100;
+        final int delay = 10;
+        final int[] currentStep = {0};
+        
+        Timer animationTimer = new Timer(delay, e -> {
+            currentStep[0]++;
+            double progress = (double) currentStep[0] / steps;
+            
+            // step
+            int newX = (int) (startX + (targetX - startX) * progress);
+            int newY = (int) (startY + (targetY - startY) * progress);
+            
+            updateDronePosition(droneId, newX, newY);
+            
+            // Hide when back at origin
+            if (currentStep[0] >= steps) {
+                ((Timer) e.getSource()).stop();
+                droneLabel.setVisible(false);
+            }
+        });
+        
+        animationTimer.start();
+    }
+
+    // ========== MAIN ==========
+    public static void main(String[] args) {
+        DroneGUI gui = new DroneGUI();
+        gui.setVisible(true);
     }
 }
 

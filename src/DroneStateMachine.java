@@ -1,11 +1,10 @@
 
 enum DroneEvent{
-    FIRE_ASSIGNED, // I'm going to a fire
-    FIRE_REACHED, // I've arrived at a fire
-    BASE_REACHED, //I've arrived at home base
-    TANK_EMPTY, //my tanks is empty
-    FIRE_EXTINGUISHED, // the fire is extinguished (I've dropped enough)
-    REFILL_COMPLETE,// TODO; do we need this as refill's are instant
+    FIRE_ASSIGNED, //request going to fire
+    ARRIVAL, // I've arrived at destination
+    EXTINGUISH_REQUEST,// I've been allowed to extinguish
+    FIRE_EXTINGUISHED, // finished extinguishing
+    RETURN_BASE_REQUEST, // I'm going home or I'm doing a task
     REPAIRED, // Drone is fixed
     FAILURE // Drone is broken
 }
@@ -13,10 +12,11 @@ enum DroneEvent{
 enum DroneState{
     IDLE, //waiting for a task at base
     EN_ROUTE_FIRE, //flying to fire
-    EN_ROUTE, // TODO; remove based on scheduler logic
+    ARRIVED_AT_FIRE, //arrival at fire
+
+    FIRE_HANDLED, //fire has been handled
     EN_ROUTE_BASE, //back to base emptystate
     DROPPING_AGENT, //release the substance
-    REFILLING,// TODO; discuss if this is needed
     FAULTED
 }
 public class DroneStateMachine {
@@ -26,56 +26,90 @@ public class DroneStateMachine {
 
         this.state = DroneState.IDLE;
     }
-    public DroneStateMachine(int x_coord, int y_coord, int fluidAmount) {
-
-        this.state = DroneState.IDLE;
-    }
     private void transitionTo(DroneState next, DroneEvent cause) {
-        System.out.println("[FSM] " + state + " --(" + cause + ")--> " + next);
+        System.out.println("[DSM] " + state + " --(" + cause + ")--> " + next);
         state = next;
     }
-    public synchronized void handleEvent(DroneEvent ev, String payload ){ //this is all valid
-
-        switch(state){
+    public synchronized void handleEvent(DroneEvent ev, String payload, DroneSubsystem drone) {
+        switch (state) {
             case IDLE:
-                if(ev == DroneEvent.FIRE_ASSIGNED)
+                if (ev == DroneEvent.FIRE_ASSIGNED) {
                     transitionTo(DroneState.EN_ROUTE_FIRE, ev);
-            break;
+                    drone.flyToFire(payload);
+                }
+                break;
 
             case EN_ROUTE_FIRE:
-                if( ev == DroneEvent.FAILURE)  transitionTo(DroneState.FAULTED, ev);
+                if (ev == DroneEvent.FAILURE) {
+                    transitionTo(DroneState.FAULTED, ev);
+                    drone.handleFault();
+                }
+                else if (ev == DroneEvent.ARRIVAL) {
+                    transitionTo(DroneState.ARRIVED_AT_FIRE, ev);
+                }
+                break;
 
-                else if( ev == DroneEvent.FIRE_REACHED) transitionTo(DroneState.DROPPING_AGENT,ev);
-
-            break;
-
-            case EN_ROUTE_BASE:
-                if( ev == DroneEvent.FAILURE)  transitionTo(DroneState.FAULTED, ev);
-
-                else  if(ev == DroneEvent.FIRE_ASSIGNED) transitionTo (DroneState.EN_ROUTE_FIRE, ev);
-
-                else if (ev == DroneEvent.BASE_REACHED) transitionTo(DroneState.IDLE, ev);
-
-            break;
+            case ARRIVED_AT_FIRE:
+                if (ev == DroneEvent.EXTINGUISH_REQUEST) {
+                    transitionTo(DroneState.DROPPING_AGENT, ev);
+                    drone.openNozzle();
+                }
+                break;
 
             case DROPPING_AGENT:
-                if( ev == DroneEvent.FAILURE)  transitionTo(DroneState.FAULTED, ev);
+                if (ev == DroneEvent.FAILURE) {
+                    drone.closeNozzle();
+                    transitionTo(DroneState.FAULTED, ev);
+                    drone.handleFault();
+                }
+                else if (ev == DroneEvent.FIRE_EXTINGUISHED) {
+                    drone.closeNozzle();
+                    transitionTo(DroneState.FIRE_HANDLED, ev);
+                }
+                break;
 
-                else if (ev == DroneEvent.TANK_EMPTY) transitionTo(DroneState.EN_ROUTE_BASE, ev);
+            case FIRE_HANDLED:
+                if (ev == DroneEvent.RETURN_BASE_REQUEST) {
+                    transitionTo(DroneState.EN_ROUTE_BASE, ev);
+                    drone.returnToBase();
+                }
+                else if (ev == DroneEvent.FIRE_ASSIGNED) {
+                    if (drone.hasBattery(1, 1) && drone.hasAgent()) {
+                        transitionTo(DroneState.EN_ROUTE_FIRE, ev);
+                        drone.flyToFire(payload);
+                    }
+                }
+                break;
 
-                else if (ev == DroneEvent.FIRE_EXTINGUISHED) transitionTo(DroneState.IDLE, ev); //this logic might be changed to route back to base
-            break;
+            case EN_ROUTE_BASE:
+                if (ev == DroneEvent.FAILURE) {
+                    transitionTo(DroneState.FAULTED, ev);
+                    drone.handleFault();
+                }
+                else if (ev == DroneEvent.ARRIVAL) {
+                    transitionTo(DroneState.IDLE, ev);
+                    drone.restore();
+                }
+                else if (ev == DroneEvent.FIRE_ASSIGNED) {
+                    if (drone.hasBattery(1, 1) && drone.hasAgent()) {
+                        transitionTo(DroneState.EN_ROUTE_FIRE, ev);
+                        drone.flyToFire(payload);
+                    }
+                }
+                break;
 
             case FAULTED:
-
-                if (ev == DroneEvent.REPAIRED) transitionTo (DroneState.IDLE, ev);
-
-            break;
+                if (ev == DroneEvent.REPAIRED) {
+                    transitionTo(DroneState.IDLE, ev);
+                    drone.restore();
+                }
+                break;
 
             default:
-                System.out.println("Error Drone is is an unknown state:"+state);
-
+                System.out.println("Error: Drone is in an unknown state: " + state);
         }
+
+        drone.sendStatus(); //notifies the scheduler after each state change
     }
 
     // --- Getters and Setters ---

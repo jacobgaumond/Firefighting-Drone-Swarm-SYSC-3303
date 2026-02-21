@@ -149,10 +149,67 @@ public class DroneSubsystem implements Runnable {
     }
 
     public void handleEvent(DroneEvent event, String payload) {
-        droneSM.handleEvent(event, payload);
+        droneSM.handleEvent(event, payload,this);
+    }
+
+    // Drone Movement functions
+    public void flyToFire(String payload) {
+        // TODO: parse coordinates from payload, update x/y toward fire location
+        System.out.println("[Drone " + drone_ID + "] Flying to fire: " + payload);
+    }
+
+    public void returnToBase() {
+        // TODO: set target coordinates to (0,0) and begin travel
+        System.out.println("[Drone " + drone_ID + "] Returning to base.");
+    }
+
+    public void openNozzle() {
+        // TODO: begin releasing fire suppressant, decrement fluidAmount over time
+        System.out.println("[Drone " + drone_ID + "] Nozzle opened, dropping agent.");
+    }
+
+    public void closeNozzle() {
+        // TODO: stop releasing fire suppressant
+        System.out.println("[Drone " + drone_ID + "] Nozzle closed.");
+    }
+
+    public void restore() {//restores battery and restores fuel level
+        System.out.println("[Drone " + drone_ID + "] restocking drone.");
+        this.batteryTravelDistance = 1000;
+        this.fluidAmount = 15;
     }
 
 
+    public void updateScheduler() { //updates scheduling logic
+        System.out.println("[Drone " + drone_ID + "] Notifying scheduler of status.");
+        schedulerMessageBox.putMessage(sendStatus());
+    }
+
+    public void handleFault() {
+        // TODO: log fault, notify scheduler, await repair event
+        System.out.println("[Drone " + drone_ID + "] FAULTED. Awaiting repair.");
+        schedulerMessageBox.putMessage(sendStatus());
+    }
+
+
+    // Specific checks to be done
+
+    public boolean hasBattery(int fireX, int fireY) {
+        // Distance from drone's current position to the fire
+        double droneToFire = Math.sqrt(Math.pow(fireX - x_coord, 2) + Math.pow(fireY - y_coord, 2));
+
+        // Distance from fire back to base (0,0)
+        double fireToBase = Math.sqrt(Math.pow(fireX, 2) + Math.pow(fireY, 2));
+
+        // Total trip distance
+        double totalDistance = droneToFire + fireToBase;
+
+        return batteryTravelDistance >= totalDistance;
+    }
+
+    public boolean hasAgent() {
+        return fluidAmount > 0;
+    }
     public int getDrone_ID() {return drone_ID;}
 
     public int getX_coord() { return x_coord; }
