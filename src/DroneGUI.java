@@ -23,6 +23,8 @@ public class DroneGUI extends JFrame {
     private Map<Integer, JLabel> fireLabels = new HashMap<>();
     private Map<Integer, JLabel> droneLabels = new HashMap<>();
     private Map<Integer, Thread> droneAnimationThreads = new HashMap<>();
+    private final static int animationDelay = 20;
+    private final static int buffer = 120; 
     
     private final static Color activeFireColor = new Color(255, 0, 0);
     private final static Color extinguishedFireColor = new Color(77, 167, 46);
@@ -325,11 +327,13 @@ public class DroneGUI extends JFrame {
         JPanel p = new JPanel(new BorderLayout());
         p.setBorder(BorderFactory.createTitledBorder("Logs"));
 
-        logArea = new JTextArea();
+        logArea = new JTextArea(10, 30);
         logArea.setEditable(false);
         logArea.setLineWrap(true);
 
         JScrollPane scroll = new JScrollPane(logArea);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         p.add(scroll, BorderLayout.CENTER);
 
         return p;
@@ -378,7 +382,7 @@ public class DroneGUI extends JFrame {
     }
     
     // Send drone to zone
-    public void moveDroneToZone(int droneId, int zoneId, long travelTimeMs) {
+    public void moveDroneToZone(int droneId, int zoneId, long travelTime) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
@@ -399,18 +403,17 @@ public class DroneGUI extends JFrame {
         int startY = droneLabel.getY();
         
         // Calculate target zone center
-        int targetX = (int)((ZoneMap.getX(zoneId) / 100.0) * cellWidth - cellWidth / 2); // centering
-        int targetY = (int)((ZoneMap.getY(zoneId) / 100.0) * cellHeight);
+        int targetX = (ZoneMap.getX(zoneId) / 100) * cellWidth; // centering
+        int targetY = (ZoneMap.getY(zoneId) / 100) * cellHeight;
         
         // Animation based on travel time
-        final int delay = 10; // refresh rate
-        final int fps = (int) Math.max(1, travelTimeMs / delay); // frames needed to match travel time
+        final int steps = (int) Math.max(1, (travelTime-buffer) / animationDelay);  // frames needed to match travel time
         
         // Thread for asynchronous animation
         Thread animationThread = new Thread(() -> {
-            for (int step = 0; step <= fps; step++) {
+            for (int step = 0; step <= steps; step++) {
                 // animation completion %
-                double progress = (double) step / fps;
+                double progress = (double) step / steps;
                 
                 // step
                 int newX = (int) (startX + (targetX - startX) * progress);
@@ -419,7 +422,7 @@ public class DroneGUI extends JFrame {
                 updateDronePosition(droneId, newX, newY);
                 
                 try {
-                    Thread.sleep(delay); // delay between animation steps
+                    Thread.sleep(animationDelay); // delay between animation steps
                 } catch (InterruptedException e) {
                     break; // stop animation if interrupted
                 }
@@ -432,7 +435,7 @@ public class DroneGUI extends JFrame {
     }
     
     // Extinguish fire
-    public void extinguishFire(int droneId, int zoneId, long dropTimeMs) {
+    public void extinguishFire(int droneId, int zoneId, long dropTime) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
@@ -449,7 +452,7 @@ public class DroneGUI extends JFrame {
         // Wait for drop time
         Thread animationThread = new Thread(() -> {
             try {
-                Thread.sleep(dropTimeMs);
+                Thread.sleep(dropTime);
             } catch (InterruptedException e) {}
             droneAnimationThreads.remove(droneId);
         });
@@ -459,7 +462,7 @@ public class DroneGUI extends JFrame {
     }
     
     // Return drone to origin
-    public void returnDrone(int droneId, long travelTimeMs) {
+    public void returnDrone(int droneId, long travelTime) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
@@ -484,8 +487,7 @@ public class DroneGUI extends JFrame {
         int targetY = 0;
         
         // Animation based on travel time
-        final int delay = 10;
-        final int steps = (int) Math.max(1, travelTimeMs / delay); 
+        final int steps = (int) Math.max(1, (travelTime-buffer) / animationDelay); 
         
         // Thread for asynchronous animation
         Thread animationThread = new Thread(() -> {
@@ -505,7 +507,7 @@ public class DroneGUI extends JFrame {
                 }
                 
                 try {
-                    Thread.sleep(delay); // delay between animation steps
+                    Thread.sleep(animationDelay); // delay between animation steps
                 } catch (InterruptedException e) {
                     break; // Stop animation if interrupted
                 }
