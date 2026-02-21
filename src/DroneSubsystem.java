@@ -29,8 +29,13 @@ public class DroneSubsystem implements Runnable {
 
     private static final int NOZZLE_OPEN_DELAY_MS = 100;
     private static final int NOZZLE_CLOSE_DELAY_MS = 100;
+    private static final int FLUID_MAX = 15;
+    private static final int BATTERY_MAX = 100;
 
-    private static final double FLUID_RATE_ML_MS= 0.25;
+    private static final double MS_PER_UNIT = 0.15;
+    private static final double MAX_DRONE_RANGE = 5048.0; // 2524 * 2 round trip
+
+    private static final double FLUID_RATE_ML_MS = 0.25;
 
     private MessageBox incomingMessageBox;
     private MessageBox schedulerMessageBox;
@@ -68,8 +73,8 @@ public class DroneSubsystem implements Runnable {
         //Default starting values
         this.coordX = 0;
         this.coordY = 0;
-        this.fluidAmount = 15;
-        this.batteryTravelDistance = 1000;  // TravelDistanceLevel change eventually
+        this.fluidAmount = FLUID_MAX;
+        this.batteryTravelDistance = BATTERY_MAX;  // TravelDistanceLevel change eventually
     }
 
     @Override
@@ -105,7 +110,7 @@ public class DroneSubsystem implements Runnable {
                 this.targetCoordX = droneEvent.getTargetX();
                 this.targetCoordY = droneEvent.getTargetY();
                 this.fluidAmountToDrop = droneEvent.getAmountToDrop();
-                this.fluidReleasedAtZone= 0;
+                this.fluidReleasedAtZone = 0;
             }
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED) {
                 this.fluidAmountToDrop = droneEvent.getAmountToDrop();
@@ -145,24 +150,29 @@ public class DroneSubsystem implements Runnable {
         //batteryTravelDistance -= calculateBatteryUsage();
         System.out.println("[Drone " + droneId + "] Flying to fire: " + payload);
         //just for this iteration
-        coordX = targetCoordX;
-        coordY = targetCoordY;
+        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
+        long travelTime = (long) (distance * MS_PER_UNIT);
+
         try {
-            Thread.sleep(1000);
+            Thread.sleep(travelTime);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        batteryTravelDistance -= (int)((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
+        coordX = targetCoordX;
+        coordY = targetCoordY;
         droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
     }
 
     public void returnToBase(String payload) {
-        //batteryTravelDistance -= calculateBatteryUsage();
-        //for this iteration
+        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
+        long travelTime = (long) (distance * MS_PER_UNIT);
         try {
-            Thread.sleep(100);
+            Thread.sleep(travelTime);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        batteryTravelDistance -= (int)((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
         coordX = 0;
         coordY = 0;
         System.out.println("[Drone " + droneId + "] Returning to base.");
@@ -171,7 +181,7 @@ public class DroneSubsystem implements Runnable {
 
     public void openNozzle() {
         System.out.println("[Drone " + droneId + "] Nozzle opened, dropping agent.");
-        long dropTime = (long) (fluidAmountToDrop / FLUID_RATE_ML_MS)+ NOZZLE_OPEN_DELAY_MS;
+        long dropTime = (long) (fluidAmountToDrop / FLUID_RATE_ML_MS) + NOZZLE_OPEN_DELAY_MS;
         try {
             Thread.sleep(dropTime);
         } catch (InterruptedException e) {
@@ -194,8 +204,8 @@ public class DroneSubsystem implements Runnable {
 
     public void restore() {//restores battery and restores fuel level
         System.out.println("[Drone " + droneId + "] restocking drone.");
-        this.batteryTravelDistance = 1000;
-        this.fluidAmount = 15;
+        this.batteryTravelDistance = BATTERY_MAX;
+        this.fluidAmount = FLUID_MAX;
     }
 
     //This is to be decided later with different information//
