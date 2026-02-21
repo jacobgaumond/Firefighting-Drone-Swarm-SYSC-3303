@@ -28,6 +28,10 @@ Breakdown of responsibilities of each team member for this iteration
 - Peter:
   - GUI
     - Refactor
-    - Build Zones using csv data
+    - Build UI Zones using ZoneMap (csv data)
     - Update fire status
-    - Update drones
+    - Move drones
+    - Threaded/Interruptable animations
+  - Scheduler
+    - Update fire severity
+  - GUI calls throughout app where needed
