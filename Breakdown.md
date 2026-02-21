@@ -24,7 +24,14 @@ Breakdown of responsibilities of each team member for this iteration
 - Jacob:
 
 - Ulan:
-
+  - Fire event message parsing
+  - Parts of FireEvent class
+  - Updates on communication layer
+  - Csv zone loading
+  - Map to store zones
+  - Few tests
+  - Zone class implementation
+    
 - Peter:
   - GUI
     - Refactor
