@@ -39,6 +39,7 @@ public class DroneSubsystem implements Runnable {
 
     private MessageBox incomingMessageBox;
     private MessageBox schedulerMessageBox;
+    private DroneGUI gui;
 
     private static int nextIdValue = 1;//self ID creation
 
@@ -58,13 +59,14 @@ public class DroneSubsystem implements Runnable {
 
     // WITHOUT MESSAGE BOXING
     public DroneSubsystem() {
-        this(null, null);
+        this(null, null, null);
     }
 
     //WITH MESSAGEBOX
-    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
+    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, DroneGUI gui) {
         this.schedulerMessageBox = schedulerMessageBox;
         this.incomingMessageBox = incomingMessageBox;
+        this.gui = gui;
 
         //Core initlization
         this.droneSM = new DroneStateMachine();
@@ -75,6 +77,9 @@ public class DroneSubsystem implements Runnable {
         this.coordY = 0;
         this.fluidAmount = FLUID_MAX;
         this.batteryTravelDistance = BATTERY_MAX;  // TravelDistanceLevel change eventually
+        
+        // Create drone label in GUI
+        gui.createDroneLabel(droneId);
     }
 
     @Override
@@ -146,9 +151,14 @@ public class DroneSubsystem implements Runnable {
     public void flyToFire(String payload) {
         //batteryTravelDistance -= calculateBatteryUsage();
         System.out.println("[Drone " + droneId + "] Flying to fire: " + payload);
+        
         //just for this iteration
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        long travelTime = (long) (distance * MS_PER_UNIT);
+        long travelTime = (long) ((distance * MS_PER_UNIT) * 10);
+        
+        // GUI update to move drone with calculated travel time
+        DroneRequest request = new DroneRequest(payload);
+        gui.moveDroneToZone(droneId, request.getZoneId(), travelTime);
 
         try {
             Thread.sleep(travelTime);
@@ -163,7 +173,9 @@ public class DroneSubsystem implements Runnable {
 
     public void returnToBase(String payload) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        long travelTime = (long) (distance * MS_PER_UNIT);
+        long travelTime = (long) ((distance * MS_PER_UNIT) * 10);
+        
+        gui.returnDrone(droneId, travelTime);
         try {
             Thread.sleep(travelTime);
         } catch (InterruptedException e) {

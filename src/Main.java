@@ -9,29 +9,7 @@ public class Main {
 
         // Build GUI
         DroneGUI gui = new DroneGUI();
-        gui.setVisible(true);        
-
-        // GUI TEST TO BE REMOVED
-        gui.createDroneLabel(1);
-        javax.swing.Timer loopTimer = new javax.swing.Timer(6000, null);
-        final boolean[] isOutbound = {true};
-        loopTimer.addActionListener(e -> {
-            if (isOutbound[0]) {
-                gui.moveDroneToZone(1, 5);
-                isOutbound[0] = false;
-            } else {
-                gui.returnDrone(1);
-                isOutbound[0] = true;
-            }
-        });
-        javax.swing.Timer startTimer = new javax.swing.Timer(1500, e -> {
-            gui.moveDroneToZone(1, 5);
-            isOutbound[0] = false;
-            loopTimer.start();
-            ((javax.swing.Timer) e.getSource()).stop();
-        });
-        startTimer.setRepeats(false);
-        startTimer.start();
+        gui.setVisible(true);
 
         // Setup Message Boxes
         MessageBox schedulerBox = new MessageBox();
@@ -39,11 +17,11 @@ public class Main {
         MessageBox droneBox = new MessageBox();
 
         // Setup Threads
-        Thread scheduler = new Thread(new Scheduler(schedulerBox, fireIncidentBox, droneBox),
+        Thread scheduler = new Thread(new Scheduler(schedulerBox, fireIncidentBox, droneBox, gui),
                 "SchedulerThread");
-        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(fireIncidentBox, schedulerBox, inputFileName),
+        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(fireIncidentBox, schedulerBox, inputFileName, gui),
                 "FireIncidentSubsystemThread");
-        Thread droneSubsystem = new Thread(new DroneSubsystem(droneBox, schedulerBox),
+        Thread droneSubsystem = new Thread(new DroneSubsystem(droneBox, schedulerBox, gui),
                 "DroneSubsystemThread");
 
         // Start Threads

@@ -34,12 +34,14 @@ public class FireIncidentSubsystem implements Runnable {
 
     private MessageBox incomingMessageBox;
     private MessageBox schedulerMessageBox;
+    private DroneGUI gui;
 
     private ArrayList<String> fileEvents = new ArrayList<String>();
 
-    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, String fileName) {
+    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, String fileName, DroneGUI gui) {
         this.incomingMessageBox = incomingMessageBox;
         this.schedulerMessageBox = schedulerMessageBox;
+        this.gui = gui;
 
         loadFromFile(fileName);
     }
@@ -48,6 +50,7 @@ public class FireIncidentSubsystem implements Runnable {
     public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
         this.incomingMessageBox = incomingMessageBox;
         this.schedulerMessageBox = schedulerMessageBox;
+        this.gui = null;
     }
 
     @Override
@@ -78,6 +81,9 @@ public class FireIncidentSubsystem implements Runnable {
                     serializedEvent,
                     Message.MessageType.FireEvent
             );
+
+            // Update GUI with fire status
+            gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
 
             schedulerMessageBox.putMessage(fireEventMessage);
             try {

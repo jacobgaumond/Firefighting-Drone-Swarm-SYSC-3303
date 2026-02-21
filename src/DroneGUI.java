@@ -377,7 +377,7 @@ public class DroneGUI extends JFrame {
     }
     
     // Send drone to zone
-    public void moveDroneToZone(int droneId, int zoneId) {
+    public void moveDroneToZone(int droneId, int zoneId, long travelTimeMs) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
@@ -395,34 +395,37 @@ public class DroneGUI extends JFrame {
         int targetX = (int)((ZoneMap.getX(zoneId) / 100.0) * cellWidth - cellWidth / 2); // centering
         int targetY = (int)((ZoneMap.getY(zoneId) / 100.0) * cellHeight);
         
-        // Animation parameters (TODO: time should be sent from drone)
-        final int fps = 100; // refresh rate
-        final int delay = 10; // ms between frames 
-        final int[] currentStep = {0}; // obj to enable referencing in lambda
+        // Animation based on travel time
+        final int delay = 10; // refresh rate
+        final int fps = (int) Math.max(1, travelTimeMs / delay); // frames needed to match travel time
         
-        Timer animationTimer = new Timer(delay, e -> {
-            currentStep[0]++;
-            double progress = (double) currentStep[0] / fps;
-            
-            // step
-            int newX = (int) (startX + (targetX - startX) * progress);
-            int newY = (int) (startY + (targetY - startY) * progress);
-            
-            updateDronePosition(droneId, newX, newY);
-            
-            // Stop when animation complete
-            if (currentStep[0] >= fps) {
-                ((Timer) e.getSource()).stop();
-                droneLabel.setBackground(droneExtinguishingColor);
-                logMessage("Drone " + droneId + " extinguishing fire in Zone " + zoneId);
+        // Thread for asynchronous animation
+        new Thread(() -> {
+            for (int step = 0; step <= fps; step++) {
+                // animation completion %
+                double progress = (double) step / fps;
+                
+                // step
+                int newX = (int) (startX + (targetX - startX) * progress);
+                int newY = (int) (startY + (targetY - startY) * progress);
+                
+                updateDronePosition(droneId, newX, newY);
+                    
+                // onComplete
+                if (step >= fps) {
+                    droneLabel.setBackground(droneExtinguishingColor);
+                    logMessage("Drone " + droneId + " extinguishing fire in Zone " + zoneId);
+                }
+                
+                try {
+                    Thread.sleep(delay); // delay between animation steps
+                } catch (InterruptedException e) {}
             }
-        });
-
-        animationTimer.start();
+        }).start();
     }
     
     // Return drone to origin
-    public void returnDrone(int droneId) {
+    public void returnDrone(int droneId, long travelTimeMs) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
@@ -440,29 +443,32 @@ public class DroneGUI extends JFrame {
         int targetX = 0;
         int targetY = 0;
         
-        // Animation parameters (TODO)
-        final int steps = 100;
+        // Animation based on travel time
         final int delay = 10;
-        final int[] currentStep = {0};
+        final int steps = (int) Math.max(1, travelTimeMs / delay); 
         
-        Timer animationTimer = new Timer(delay, e -> {
-            currentStep[0]++;
-            double progress = (double) currentStep[0] / steps;
-            
-            // step
-            int newX = (int) (startX + (targetX - startX) * progress);
-            int newY = (int) (startY + (targetY - startY) * progress);
-            
-            updateDronePosition(droneId, newX, newY);
-            
-            // Hide when back at origin
-            if (currentStep[0] >= steps) {
-                ((Timer) e.getSource()).stop();
-                droneLabel.setVisible(false);
+        // Thread for asynchronous animation
+        new Thread(() -> {
+            for (int step = 0; step <= steps; step++) {
+                // animation completion %
+                double progress = (double) step / steps;
+                
+                // step
+                int newX = (int) (startX + (targetX - startX) * progress);
+                int newY = (int) (startY + (targetY - startY) * progress);
+                
+                updateDronePosition(droneId, newX, newY);
+                
+                // onComplete
+                if (step >= steps) {
+                    droneLabel.setVisible(false);
+                }
+                
+                try {
+                    Thread.sleep(delay); // delay between animation steps
+                } catch (InterruptedException e) {}
             }
-        });
-        
-        animationTimer.start();
+        }).start();
     }
 
     // ========== MAIN ==========

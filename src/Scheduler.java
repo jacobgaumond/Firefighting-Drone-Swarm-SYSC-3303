@@ -41,6 +41,7 @@ public class Scheduler implements Runnable {
     private MessageBox incomingMessageBox;
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
+    private DroneGUI gui;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
 
@@ -50,10 +51,11 @@ public class Scheduler implements Runnable {
     private Map<Integer, FireTask> activeFires = new HashMap<>();
 
     //Constructor//
-    public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
+    public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox, DroneGUI gui) {
         this.incomingMessageBox = incomingMessageBox;
         this.fireIncidentMessageBox = fireIncidentMessageBox;
         this.droneMessageBox = droneMessageBox;
+        this.gui = gui;
     }
 
     @Override
@@ -207,9 +209,13 @@ public class Scheduler implements Runnable {
                 FireTask activeTask = activeFires.get(drone.assignedZoneID);
                 if (activeTask != null) { //Checks to see if the zoneFire is fully out or not
                     activeTask.fluidDropped += status.getFluidDropped();
+
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() + " EXTINGUISHED!");
                         activeFires.remove(activeTask.fireEvent.getZoneId());
+                        
+                        // Update GUI: extinguished
+                        gui.fireStatusChange(activeTask.fireEvent.getZoneId(), "");
 
                         if (taskQueue.isEmpty() && activeFires.isEmpty()) {
                             schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
@@ -217,6 +223,11 @@ public class Scheduler implements Runnable {
                     } else {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() +
                                 " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
+                        
+                        // TODO: Update GUI: reduced severity
+                        // gui.fireStatusChange(activeTask.fireEvent.getZoneId(), reducedSeverity);
+                        
+                        // taskQueue.add(activeTask.fireEvent);
                     }
                 }
                 drone.assignedZoneID = -1;
