@@ -153,7 +153,6 @@ public class Scheduler implements Runnable {
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
         drone.fluidAssigned = amountToDrop;
-        System.out.println("Drone will drop" + drone.fluidAssigned);
 
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,
@@ -274,9 +273,6 @@ public class Scheduler implements Runnable {
                 .filter(d -> d.assignedZoneID == fireTask.fireEvent.getZoneId())
                 .mapToInt(d -> d.fluidAssigned)
                 .sum();
-        System.out.println("[Scheduler] Zone " + fireTask.fireEvent.getZoneId() +
-                " | totalFluidEnRoute: " + totalFluidEnRoute +
-                " | remaining: " + fireTask.remainingFluidNeeded());
         return totalFluidEnRoute >= fireTask.remainingFluidNeeded();
     }
 
