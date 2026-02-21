@@ -447,7 +447,7 @@ public class DroneGUI extends JFrame {
         
         // Change color to extinguishing
         droneLabel.setBackground(droneExtinguishingColor);
-        logMessage("Drone " + droneId + " extinguishing fire in Zone " + zoneId);
+        logMessage("Drone " + droneId + " extinguishing fire");
         
         // Wait for drop time
         Thread animationThread = new Thread(() -> {
