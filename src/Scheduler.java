@@ -125,8 +125,10 @@ public class Scheduler implements Runnable {
             FireEvent next = taskQueue.peek();
             DroneInfo available = findAvailableDrone(next);
             if (available != null) {
-                taskQueue.poll();
                 assignFireTaskToDrone(available, next);
+                if (willBeExtinguishedByAssignedDrones(activeFires.get(next.getZoneId()))) {
+                    taskQueue.poll();
+                }
             } else {
                 schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
                 break; // no drones available, wait
@@ -143,6 +145,7 @@ public class Scheduler implements Runnable {
             }
         }
     }
+
 
     private void assignFireTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
         FireTask fireTask = activeFires.computeIfAbsent(
@@ -214,7 +217,6 @@ public class Scheduler implements Runnable {
                     } else {
                         System.out.println("[Scheduler] Zone " + activeTask.fireEvent.getZoneId() +
                                 " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
-                        taskQueue.add(activeTask.fireEvent);
                     }
                 }
                 drone.assignedZoneID = -1;
