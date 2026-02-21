@@ -16,6 +16,8 @@
 //import java.io.*;
 //import java.net.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 import java.util.LinkedList;
 
@@ -38,16 +40,36 @@ public class Scheduler implements Runnable {
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
 
-    private Queue<Message> taskQueue =  new LinkedList<>();
-    private DroneSubsystem drone;
+    private Queue<FireEvent> taskQueue =  new LinkedList<>();
+    private Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
+    private static class DroneInfo {
+        int droneId;
+        String state;
+        int x, y, fluid, battery;
+
+        public DroneInfo(int droneId) {
+            this.droneId = droneId;
+            this.state = "IDLE";
+            this.x = 0;
+            this.y = 0;
+            this.fluid = 15;
+            this.battery = 1000;
+        }
+
+        public boolean isAvailable() {
+            return state.equals("IDLE") || state.equals("EN_ROUTE_BASE");
+        }
+    }
 
     public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
         this.incomingMessageBox     = incomingMessageBox;
-
         this.fireIncidentMessageBox = fireIncidentMessageBox;
         this.droneMessageBox        = droneMessageBox;
+    }
 
-        this.drone = new DroneSubsystem();
+    public void registerDrone(int droneId) {
+        droneRegistry.put(droneId, new DroneInfo(droneId));
+        System.out.println("[Scheduler] Registered drone " + droneId);
     }
 
     @Override
@@ -88,16 +110,15 @@ public class Scheduler implements Runnable {
     private void processIncomingMessageBox(Message message) {
         System.out.println("\n[Scheduler] Received from " + message.getSourceName() + ": \n" + message.getMessageData());
 
-        //if for droneSub or fireIncidentSub
-//        if(message.getDestinationName().equals("DroneSubsystem")) {
-//            handleDroneMessage(message);
-//        } else if(message.getDestinationName().equals("FireIncidentSubsystem")) {
-//            handleFireIncidentMessage(message);
-//        }
 
         switch (message.getDestinationName()) {
             case "DroneSubsystem":
-                processDroneAcknowledgement(message);
+                if (message.getMessageType() == Message.MessageType.DroneRegistration) {
+                    int id = Integer.parseInt(message.getMessageData());
+                    registerDrone(id);
+                    return;
+                }
+                else processDroneMessage(message);
                 break;
             case "FireIncidentSubsystem":
                 processEvent(message);
@@ -107,7 +128,11 @@ public class Scheduler implements Runnable {
                 if (message.getMessageType() == Message.MessageType.FireEvent) {
                     processEvent(message); //assign or queue task
                 } else if (message.getMessageType() == Message.MessageType.DroneResponse) {
-                    processDroneAcknowledgement(message); //drone finished a task
+                    processDroneMessage(message); //drone finished a task
+                }
+                else if (message.getMessageType() == Message.MessageType.DroneRegistration) {
+                    int id = Integer.parseInt(message.getMessageData());
+                    registerDrone(id);
                 }
                 break;
             default:
@@ -117,74 +142,136 @@ public class Scheduler implements Runnable {
     }
 
 
-    private void assignTaskToDrone(FireEvent fireEvent) {
+    private void assignTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
+        DroneRequest request = new DroneRequest(
+                DroneEvent.FIRE_ASSIGNED,
+                fireEvent.getTime(),
+                fireEvent.getZoneId(),
+                fireEvent.getEventType(),
+                fireEvent.getSeverity(),
+                fireEvent.getTargetX(),
+                fireEvent.getTargetY(),
+                10,
+                drone.droneId  // assign to specific drone
+        );
 
-        //send to droneSubsystem
+
         Message droneMessage = new Message(
                 "DroneSubsystem",
                 "Scheduler",
-                fireEvent.serialize(),
-                Message.MessageType.FireEvent
+                request.serialize(),
+                Message.MessageType.DroneRequest
         );
-
-        System.out.println("[Scheduler] Assigning task to Drone: \n" + fireEvent.toString());
-        droneMessageBox.putMessage(droneMessage); //send task to droneSubsystem
+        droneMessageBox.putMessage(droneMessage);
     }
 
+    private int getAmountNeededForFire(String severity) {
+        switch (severity.toLowerCase()) {
+            case "high":    return 30;
+            case "moderate": return 20;  // adjust these
+            case "low":   return 10;
+            default:
+                System.out.println("[Scheduler] Unknown severity: " + severity + ", defaulting to 10");
+                return 10;
+        }
+    }
     //handles if the (task finished) -> assigns next task in the queue or marks drone as idle
-    private void processDroneAcknowledgement(Message message){
-        //only handles drone acknowledged
-        if(!message.getMessageData().equals("Acknowledged")) return;
+    private void processDroneMessage(Message message) {
+        String[] parts = message.getMessageData().split("~");
 
-        System.out.println("[Scheduler] Drone finished task");
+        int droneId = Integer.parseInt(parts[0]);
+        String state = parts[1];
+        int x = Integer.parseInt(parts[2]);
+        int y = Integer.parseInt(parts[3]);
+        int fluid = Integer.parseInt(parts[4]);
+        int battery = Integer.parseInt(parts[5]);
 
-        if(!taskQueue.isEmpty()){
-            //take next task from the queue
-            Message nextTaskMessage = taskQueue.poll();
-            FireEvent nextTask = new FireEvent(nextTaskMessage.getMessageData());
-
-            //next task
-            drone.handleEvent(DroneEvent.FIRE_ASSIGNED, nextTask.serialize());
-
-            //send to drone nextTask
-            assignTaskToDrone(nextTask);
-            System.out.println("[Scheduler] Assigning task to Drone: \n" + nextTask);
-        } else {
-            drone.setCurrentState(DroneState.IDLE);
-            System.out.println("[Scheduler] No more task to process, drone is idle");
+        // Update drone registry
+        DroneInfo drone = droneRegistry.get(droneId);
+        if (drone == null) {
+            System.out.println("[Scheduler] Unknown drone ID: " + droneId + ", registering.");
+            drone = new DroneInfo(droneId);
+            droneRegistry.put(droneId, drone);
         }
 
+        drone.state = state;
+        drone.x = x;
+        drone.y = y;
+        drone.fluid = fluid;
+        drone.battery = battery;
+
+        System.out.println("[Scheduler] Drone " + droneId + " status: " + state +
+                " | pos(" + x + "," + y + ") | fluid: " + fluid + " | battery: " + battery);
+
+        switch (state) {
+            case "ARRIVED_AT_FIRE":
+                sendToDrone(droneId, DroneEvent.EXTINGUISH_REQUEST, "");
+                break;
+
+            case "FIRE_HANDLED":
+                if (!taskQueue.isEmpty()) {
+                    assignTaskToDrone(drone, taskQueue.poll());
+                } else {
+                    sendToDrone(droneId, DroneEvent.RETURN_BASE_REQUEST, "");
+                }
+                break;
+
+            case "IDLE":
+                if (!taskQueue.isEmpty()) {
+                    assignTaskToDrone(drone, taskQueue.poll());
+                }
+                break;
+
+            case "FAULTED":
+                System.out.println("[Scheduler] Drone " + droneId + " has faulted!");
+                break;
+        }
     }
 
-    private void processEvent(Message message){
-        //only handle FireEvent
-        if(message.getMessageType() != Message.MessageType.FireEvent) return;
-        //deserialize the fire event
+    private void sendToDrone(int droneId, DroneEvent event, String payload) {
+        DroneRequest request = new DroneRequest(
+                event, "", 0, "", "", 0, 0, 0, droneId
+        );
+        Message message = new Message(
+                "DroneSubsystem",
+                "Scheduler",
+                request.serialize(),
+                Message.MessageType.DroneRequest
+        );
+        System.out.println("[Scheduler] Sending " + event + " to Drone " + droneId);
+        droneMessageBox.putMessage(message);
+    }
+
+    private void processEvent(Message message) {
+        if (message.getMessageType() != Message.MessageType.FireEvent) return;
+
         FireEvent fireEvent = new FireEvent(message.getMessageData());
-        System.out.println("[Scheduler] Handling fire message: " + message.getMessageData());
+        System.out.println("[Scheduler] Handling fire event: " + fireEvent);
 
-        //check if drone is IDLE
-        if(drone.getCurrentState() == DroneState.IDLE){
-            //update FSM
-            drone.handleEvent(DroneEvent.FIRE_ASSIGNED, fireEvent.serialize());
-
-            assignTaskToDrone(fireEvent);
-            System.out.println("[Scheduler] Fire event send to drone: " + fireEvent);
-        } else{
-            //drone busy -> queue the task
-            taskQueue.add(message);
-            System.out.println("[Scheduler] Drone busy (" + drone.getCurrentState() + "), task queued: " + fireEvent);
-            System.out.println("[Scheduler] Current task queue size: " + taskQueue.size());
+        DroneInfo available = findAvailableDrone(fireEvent);
+        if (available != null) {
+            assignTaskToDrone(available, fireEvent);
+            System.out.println("assigning available drone");
+        } else {
+            taskQueue.add(fireEvent);
+            System.out.println("[Scheduler] No drones available, task queued. Queue size: " + taskQueue.size());
         }
     }
 
+    // Find best available drone for the task
+    private DroneInfo findAvailableDrone(FireEvent fireEvent) {
+        DroneInfo best = null;
+        double bestDistance = Double.MAX_VALUE;
 
-    //getters
-    public DroneSubsystem getDrone() {
-        return this.drone;
+        for (DroneInfo drone : droneRegistry.values()) {
+            if (drone.state.equals("IDLE")) {
+                    best = drone;
+            }
+        }
+        return best;
     }
 
-    public Queue<Message> getTaskQueue() {
+    public Queue<FireEvent> getTaskQueue() {
         return taskQueue;
     }
 

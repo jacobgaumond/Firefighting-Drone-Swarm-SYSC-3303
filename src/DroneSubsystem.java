@@ -35,8 +35,15 @@ public class DroneSubsystem implements Runnable {
     private int drone_ID;
     private int x_coord;
     private int y_coord;
+
+    private int x_targetcoords;
+    private int y_targetcoords;
     private int batteryTravelDistance;
     private int fluidAmount;
+
+    private int fluidAmountToDrop;
+
+    private static double fluidrate =0.25;
 
     private final DroneStateMachine droneSM;
 
@@ -49,6 +56,8 @@ public class DroneSubsystem implements Runnable {
         this.x_coord =0;
         this.y_coord = 0;
         this.fluidAmount = 15;
+        this.x_targetcoords=0;
+        this.y_targetcoords=0;
         this.batteryTravelDistance =1000;  // TravelDistanceLevel to be decided
 
     }
@@ -69,42 +78,44 @@ public class DroneSubsystem implements Runnable {
 
     @Override
     public void run() {
+
+        Message registerMessage = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                String.valueOf(drone_ID),
+                Message.MessageType.DroneRegistration
+        );
+        schedulerMessageBox.putMessage(registerMessage);
+
         boolean boxOpen = true;
         do {
             Message message = incomingMessageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
+            }  else {
+                    handleMessage(message);
             }
-            else {
 
-                System.out.println("====================================");
-                System.out.println("[DroneSubsystem " + drone_ID + "] Received (" + message.getMessageType() + ") from "
-                        + message.getSourceName() + ": " + message.getMessageData());
-
-//
-//                if (!message.getMessageData().equals("Acknowledged")) {
-//                    message = new Message("FireIncidentSubsystem", "DroneSubsystem", "Acknowledged", Message.MessageType.FireEvent);
-//                    System.out.println("[DroneSubsystem] Sending to FireIncidentSubsystem, through Scheduler: " + message.getMessageData());
-//                    schedulerMessageBox.putMessage(message);
-//                }
-                handleMessage(message);
-            }
         } while (boxOpen);
     }
 
 
     public void handleMessage(Message message){
-        if(message.getMessageType() == Message.MessageType.FireEvent) {
-            FireEvent fireEvent = new FireEvent(message.getMessageData());
-            System.out.println("[DroneSubsystem] Received FireEvent: " + fireEvent);
+        if(message.getMessageType() == Message.MessageType.DroneRequest) {
+            DroneRequest droneEvent = new DroneRequest(message.getMessageData());
+            System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
 
-            //simulate the fire event
-            handleFireEvent(fireEvent);
+            if(droneEvent.getDroneEvent()==DroneEvent.FIRE_ASSIGNED||droneEvent.getDroneEvent()==DroneEvent.RETURN_BASE_REQUEST) {
+                this.x_targetcoords = droneEvent.getTargetX();
+                this.y_targetcoords = droneEvent.getTargetY();
+            }
+            if(droneEvent.getDroneEvent()==DroneEvent.FIRE_ASSIGNED) {
+                this.fluidAmountToDrop = droneEvent.getAmountToDrop();
+            }
+            //sends the message to the statemachine
+            handleEvent(droneEvent.getDroneEvent(),droneEvent.serialize());
 
-            //send acknowledgment to Scheduler
-            sendAcknowledgement();
-
-            //send the current status
+            //sends the new status back to the Scheduler
             schedulerMessageBox.putMessage(sendStatus());
         } else if(message.getMessageType() == Message.MessageType.DroneResponse) {
             //handle other types
@@ -127,25 +138,9 @@ public class DroneSubsystem implements Runnable {
         return new Message("Scheduler", "DroneSubsystem", statusData, Message.MessageType.DroneResponse);
     }
 
-
-    //simulate drone action
-    private void handleFireEvent(FireEvent fireEvent){
-        System.out.println("[DroneSubsystem] Drone " + drone_ID
-        + " handling FireEvent at zone " + fireEvent.getZoneId()
-        + " (severity: " + fireEvent.getSeverity() + ")");
-
-        //implement movement, fluid etc. later
-    }
-
     private void sendAcknowledgement(){
-        Message message = new Message(
-                "Scheduler",
-                "DroneSubsystem",
-                "Acknowledged",
-                Message.MessageType.DroneResponse
-        );
         System.out.println("[DroneSubsystem] Sending DroneSubsystem to Scheduler");
-        schedulerMessageBox.putMessage(message);
+        schedulerMessageBox.putMessage(sendStatus());
     }
 
     public void handleEvent(DroneEvent event, String payload) {
@@ -154,22 +149,46 @@ public class DroneSubsystem implements Runnable {
 
     // Drone Movement functions
     public void flyToFire(String payload) {
-        // TODO: parse coordinates from payload, update x/y toward fire location
+        //batteryTravelDistance -= calculateBatteryUsage();
         System.out.println("[Drone " + drone_ID + "] Flying to fire: " + payload);
+        //just for this iteration
+        x_coord=x_targetcoords;
+        y_coord=y_targetcoords;
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        droneSM.handleEvent(DroneEvent.ARRIVAL,payload,this);
     }
 
-    public void returnToBase() {
-        // TODO: set target coordinates to (0,0) and begin travel
+    public void returnToBase(String payload) {
+        //batteryTravelDistance -= calculateBatteryUsage();
+       //for this iteration
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        x_coord=0;
+        y_coord=0;
+        droneSM.handleEvent(DroneEvent.ARRIVAL,payload,this);
         System.out.println("[Drone " + drone_ID + "] Returning to base.");
     }
 
     public void openNozzle() {
-        // TODO: begin releasing fire suppressant, decrement fluidAmount over time
         System.out.println("[Drone " + drone_ID + "] Nozzle opened, dropping agent.");
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        fluidAmount -= fluidAmountToDrop;
+        System.out.println("[Drone " + drone_ID + "] extinguishing fire.");
+        droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
     }
 
-    public void closeNozzle() {
-        // TODO: stop releasing fire suppressant
+    public void closeNozzle(String payload) {
         System.out.println("[Drone " + drone_ID + "] Nozzle closed.");
     }
 
@@ -194,17 +213,17 @@ public class DroneSubsystem implements Runnable {
 
     // Specific checks to be done
 
-    public boolean hasBattery(int fireX, int fireY) {
-        // Distance from drone's current position to the fire
-        double droneToFire = Math.sqrt(Math.pow(fireX - x_coord, 2) + Math.pow(fireY - y_coord, 2));
-
-        // Distance from fire back to base (0,0)
-        double fireToBase = Math.sqrt(Math.pow(fireX, 2) + Math.pow(fireY, 2));
-
-        // Total trip distance
+    public boolean hasBattery() {
+        double droneToFire = Math.sqrt(Math.pow(x_targetcoords - x_coord, 2) + Math.pow(y_targetcoords - y_coord, 2));
+        double fireToBase = Math.sqrt(Math.pow(x_targetcoords, 2) + Math.pow(y_targetcoords, 2));
         double totalDistance = droneToFire + fireToBase;
-
         return batteryTravelDistance >= totalDistance;
+    }
+
+    public int calculateBatteryUsage() {
+        double droneToFire = Math.sqrt(Math.pow(x_targetcoords - x_coord, 2) + Math.pow(y_targetcoords - y_coord, 2));
+        double fireToBase = Math.sqrt(Math.pow(x_targetcoords, 2) + Math.pow(y_targetcoords, 2));
+        return (int) Math.ceil(droneToFire + fireToBase);
     }
 
     public boolean hasAgent() {

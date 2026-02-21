@@ -13,7 +13,6 @@ enum DroneState{
     IDLE, //waiting for a task at base
     EN_ROUTE_FIRE, //flying to fire
     ARRIVED_AT_FIRE, //arrival at fire
-
     FIRE_HANDLED, //fire has been handled
     EN_ROUTE_BASE, //back to base emptystate
     DROPPING_AGENT, //release the substance
@@ -58,12 +57,12 @@ public class DroneStateMachine {
 
             case DROPPING_AGENT:
                 if (ev == DroneEvent.FAILURE) {
-                    drone.closeNozzle();
+                    drone.closeNozzle(payload);
                     transitionTo(DroneState.FAULTED, ev);
                     drone.handleFault();
                 }
                 else if (ev == DroneEvent.FIRE_EXTINGUISHED) {
-                    drone.closeNozzle();
+                    drone.closeNozzle(payload);
                     transitionTo(DroneState.FIRE_HANDLED, ev);
                 }
                 break;
@@ -71,10 +70,10 @@ public class DroneStateMachine {
             case FIRE_HANDLED:
                 if (ev == DroneEvent.RETURN_BASE_REQUEST) {
                     transitionTo(DroneState.EN_ROUTE_BASE, ev);
-                    drone.returnToBase();
+                    drone.returnToBase(payload);
                 }
                 else if (ev == DroneEvent.FIRE_ASSIGNED) {
-                    if (drone.hasBattery(1, 1) && drone.hasAgent()) {
+                    if (drone.hasBattery() && drone.hasAgent()) {
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
                         drone.flyToFire(payload);
                     }
@@ -91,7 +90,7 @@ public class DroneStateMachine {
                     drone.restore();
                 }
                 else if (ev == DroneEvent.FIRE_ASSIGNED) {
-                    if (drone.hasBattery(1, 1) && drone.hasAgent()) {
+                    if (drone.hasBattery() && drone.hasAgent()) {
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
                         drone.flyToFire(payload);
                     }
