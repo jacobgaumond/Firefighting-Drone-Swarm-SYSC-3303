@@ -142,6 +142,7 @@ public class DroneGUI extends JFrame {
         label.setBackground(extinguishedFireColor);
         label.setForeground(Color.BLACK);
         label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setText("");
 
         // Center cell
         label.putClientProperty("gridX", ZoneMap.getX(zoneId) / 100);
@@ -365,9 +366,13 @@ public class DroneGUI extends JFrame {
         } else {
             // Active
             fireLabel.setBackground(activeFireColor);
+
+            if(fireLabel.getText().equals("")){
+                activeFires++; // new fire, not update
+            }
+
             fireLabel.setText(fireLevel);
 
-            activeFires++;
             logMessage("Fire detected in Zone " + zoneId + " (Level: " + fireLevel + ")");
         }
         activeFireLabel.setText("Active Fires: " + activeFires);
