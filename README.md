@@ -99,6 +99,12 @@ The `png` files under `uml/` contain UML class and sequence diagrams for the sys
 The `drawio` files under `uml/drawio_files` contain the unflattened diagram files used to produce the `png` files under
 `uml/`.
 
+Specifically, the `uml/` directory contains `png` and `drawio` files for the following diagrams:
+
+- UML Class Diagram
+- UML Sequence Diagram
+- UML State Machine Diagram (displaying cooperating state machines for the Scheduler and DroneSubsystem state machines)
+
 ## Project Setup Instructions
 
 ### Downloading the git repository
