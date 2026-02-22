@@ -25,6 +25,7 @@ Breakdown of responsibilities of each team member for this iteration
   - UML
     - Scheduler & Drone Subsystem State Machine Diagrams
       - Designed state machines
+    - Updated UML Class Diagram
 
 - Ulan:
   - Fire event message parsing
