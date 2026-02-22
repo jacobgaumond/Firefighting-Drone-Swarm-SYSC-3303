@@ -22,6 +22,9 @@ Breakdown of responsibilities of each team member for this iteration
     - DroneRequest, DroneResponse, FireEvent
 
 - Jacob:
+  - UML
+    - Scheduler & Drone Subsystem State Machine Diagrams
+      - Designed state machines
 
 - Ulan:
   - Fire event message parsing
