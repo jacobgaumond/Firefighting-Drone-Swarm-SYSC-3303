@@ -96,6 +96,9 @@ Tests verify inter-thread communication, with a focus verifying passing Message 
 
 The `png` files under `uml/` contain UML class and sequence diagrams for the system.
 
+The `drawio` files under `uml/drawio_files` contain the unflattened diagram files used to produce the `png` files under
+`uml/`.
+
 ## Project Setup Instructions
 
 ### Downloading the git repository
