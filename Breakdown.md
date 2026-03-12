@@ -1,5 +1,5 @@
 # Responsibility Breakdown
-Breakdown of responsibilities of each team member for this iteration
+Breakdown of responsibilities of each team member for each iteration
 
 ## Iteration #1
 
@@ -46,3 +46,12 @@ Breakdown of responsibilities of each team member for this iteration
   - Scheduler
     - Update fire severity
   - GUI calls throughout app where needed
+
+## Iteration #3
+- Olivia:
+
+- Jacob:
+
+- Ulan:
+
+- Peter:
