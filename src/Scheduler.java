@@ -13,14 +13,10 @@
  *     DroneSubsystem:         updates on events and drone statuses
  */
 
-//import java.io.*;
-//import java.net.*;
-
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.LinkedList;
-
 
 public class Scheduler implements Runnable {
 //    SocketWrapper serverSocket;
@@ -36,8 +32,7 @@ public class Scheduler implements Runnable {
 //        }
 //    }
 
-
-    //Message Boxes//
+    // Message Boxes
     private MessageBox incomingMessageBox;
     private MessageBox fireIncidentMessageBox;
     private MessageBox droneMessageBox;
@@ -45,12 +40,12 @@ public class Scheduler implements Runnable {
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
 
-    //Data Tracking//
+    // Data Tracking
     private Queue<FireEvent> taskQueue = new LinkedList<>();
     private Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
     private Map<Integer, FireTask> activeFires = new HashMap<>();
 
-    //Constructor//
+    // Constructor
     public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox, DroneGUI gui) {
         this.incomingMessageBox = incomingMessageBox;
         this.fireIncidentMessageBox = fireIncidentMessageBox;
@@ -76,9 +71,7 @@ public class Scheduler implements Runnable {
 //                fireIncidentMessageBox.closeBox();
 //                droneMessageBox.closeBox();
             } else {
-//                System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
-//
-//                if (message.getDestinationName().equals("FireIncidentSubsystem")) {
+//                System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());//                if (message.getDestinationName().equals("FireIncidentSubsystem")) {
 //                    System.out.println("[Scheduler] Sending to FireIncidentSubsystem: " + message.getMessageData());
 //                    fireIncidentMessageBox.putMessage(message);
 //                }
@@ -131,8 +124,10 @@ public class Scheduler implements Runnable {
         while (!taskQueue.isEmpty()) {
             FireEvent next = taskQueue.peek();
             DroneInfo available = findAvailableDrone(next);
+
             if (available != null) {
                 assignFireTaskToDrone(available, next);
+
                 if (willBeExtinguishedByAssignedDrones(activeFires.get(next.getZoneId()))) {
                     taskQueue.poll();
                 }
@@ -142,17 +137,15 @@ public class Scheduler implements Runnable {
             }
         }
         if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
-            boolean allWillBeExtinguished = activeFires.values().stream()
-                    .allMatch(this::willBeExtinguishedByAssignedDrones);
+            boolean allWillBeExtinguished = activeFires.values().stream().allMatch(this::willBeExtinguishedByAssignedDrones);
+            // TODO CURRENTLY BUGS HERE
             if (allWillBeExtinguished) {
                 schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
             } else {
-
                 schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
             }
         }
     }
-
 
     private void assignFireTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
         FireTask fireTask = activeFires.computeIfAbsent(
@@ -163,6 +156,7 @@ public class Scheduler implements Runnable {
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
         drone.fluidAssigned = amountToDrop;
+        drone.dispatchCount++;
 
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,
@@ -176,13 +170,13 @@ public class Scheduler implements Runnable {
                 drone.droneId  // assign to specific drone
         );
 
-
         Message droneMessage = new Message(
                 "DroneSubsystem",
                 "Scheduler",
                 request.serialize(),
                 Message.MessageType.DroneRequest
         );
+        
         droneMessageBox.putMessage(droneMessage);
     }
 
@@ -276,25 +270,20 @@ public class Scheduler implements Runnable {
     }
 
 
-    // ========== Helper Functions ========== //
+    // ========== Helper Functions ==========
 
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
         DroneInfo best = null;
-        double bestDistance = Double.MAX_VALUE;
+        int leastDispatches = Integer.MAX_VALUE;
 
         for (DroneInfo drone : droneRegistry.values()) {
-            if (drone.canHandleTask(fireEvent)) {
-                best = drone; //This to be modified in future
-            }
+            if (!drone.canHandleTask(fireEvent)) continue; // busy
 
-            //best distance selection
-//            if(!drone.canHandleTask(fireEvent)) continue;
-//
-//            double dist = drone.calculateDistance(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY());
-//            if(dist < bestDistance) {
-//                bestDistance = dist;
-//                best = drone;
-//            }
+            // Select drone with least dispatches
+            if (drone.dispatchCount < leastDispatches) {
+                leastDispatches = drone.dispatchCount;
+                best = drone;
+            }
         }
         return best;
     }
@@ -335,27 +324,23 @@ public class Scheduler implements Runnable {
     }
 
     // ========== Getters and Setters ==========
-
     public Queue<FireEvent> getTaskQueue() {
         return taskQueue;
     }
-
     public Map<Integer, DroneInfo> getDroneRegistry() {
         return droneRegistry;
     }
-
     public Map<Integer, FireTask> getActiveFires() {
         return activeFires;
     }
 
-
     // ========== Sub Classes ==========
-
     private static class DroneInfo {
         int droneId;
         String state;
         int x, y, fluid, fluidAssigned, battery;
         int assignedZoneID = -1;
+        int dispatchCount = 0;
 
         public DroneInfo(int droneId) {
             this.droneId = droneId;
