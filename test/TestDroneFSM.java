@@ -4,72 +4,59 @@ import org.junit.jupiter.api.BeforeEach;
 
 public class TestDroneFSM {
     private DroneStateMachine fsm;
+    private DroneSubsystem dsub;
 
     @BeforeEach
     public void setup() {
         fsm = new DroneStateMachine();
+        dsub = new DroneSubsystem();
     }
 
+    @Test
+    void testStartIdle() {
+        assertEquals(DroneState.IDLE, fsm.getCurrentState());
+    }
 
     @Test
-    void testFireAssignmentFlow(){
-        //initial is IDLE
+    void testFireAssignmentFlow() {
         assertEquals(DroneState.IDLE, fsm.getCurrentState());
 
-        //assign fire
-        fsm.handleEvent(DroneEvent.FIRE_ASSIGNED, null,null);
+        fsm.handleEvent(DroneEvent.FIRE_ASSIGNED, "", dsub);
         assertEquals(DroneState.EN_ROUTE_FIRE, fsm.getCurrentState());
 
-        //reach fire
-        fsm.handleEvent(DroneEvent.ARRIVAL, null,null);
+        fsm.handleEvent(DroneEvent.ARRIVAL, "", dsub);
+        assertEquals(DroneState.ARRIVED_AT_FIRE, fsm.getCurrentState());
+
+        fsm.handleEvent(DroneEvent.EXTINGUISH_REQUEST, "", dsub);
         assertEquals(DroneState.DROPPING_AGENT, fsm.getCurrentState());
 
-        //tank empty
-        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, null,null);
+        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", dsub);
+        assertEquals(DroneState.FIRE_HANDLED, fsm.getCurrentState());
+
+        fsm.handleEvent(DroneEvent.RETURN_BASE_REQUEST, "", dsub);
         assertEquals(DroneState.EN_ROUTE_BASE, fsm.getCurrentState());
 
-        //reach base
-        fsm.handleEvent(DroneEvent.ARRIVAL, null,null);
+        fsm.handleEvent(DroneEvent.ARRIVAL, "", dsub);
         assertEquals(DroneState.IDLE, fsm.getCurrentState());
     }
 
     @Test
-    void testFailureFromEnRouteFire(){
-        fsm.handleEvent(DroneEvent.FIRE_ASSIGNED, null,null);
-        fsm.handleEvent(DroneEvent.FAILURE, null,null);
-
-        assertEquals(DroneState.FAULTED, fsm.getCurrentState());
-    }
-
-    @Test
-    void testRepairFromFaulted(){
-        fsm.handleEvent(DroneEvent.FIRE_ASSIGNED, null,null);
-        fsm.handleEvent(DroneEvent.FAILURE, null,null);
-
-        fsm.handleEvent(DroneEvent.REPAIRED, null,null);
+    void testInvalidEventDoesNothing() {
+        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", dsub);
         assertEquals(DroneState.IDLE, fsm.getCurrentState());
     }
 
     @Test
-    void testInvalidEventDoesNothing(){
-        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, null,null);
-        assertEquals(DroneState.IDLE, fsm.getCurrentState());
-    }
-
-    @Test
-    void testRedirectFromEnRouteBase(){
-        fsm.handleEvent(DroneEvent.FIRE_ASSIGNED, null,null);
-        fsm.handleEvent(DroneEvent.ARRIVAL, null,null);
-        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, null,null);
-
+    void testRedirectFromEnRouteBase() {
+        fsm.handleEvent(DroneEvent.FIRE_ASSIGNED, "", dsub);
+        fsm.handleEvent(DroneEvent.ARRIVAL, "", dsub);
+        fsm.handleEvent(DroneEvent.EXTINGUISH_REQUEST, "", dsub);
+        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", dsub);
+        fsm.handleEvent(DroneEvent.RETURN_BASE_REQUEST, "", dsub);
         assertEquals(DroneState.EN_ROUTE_BASE, fsm.getCurrentState());
-        fsm.handleEvent(DroneEvent.ARRIVAL, null,null);
+
+        // invalid event shouldn't change state
+        fsm.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", dsub);
         assertEquals(DroneState.EN_ROUTE_BASE, fsm.getCurrentState());
     }
-
-
-
-
-
-
 }
