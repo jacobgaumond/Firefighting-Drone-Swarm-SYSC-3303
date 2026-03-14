@@ -1,11 +1,11 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.HashMap;
 import java.util.Objects;
+import javax.swing.*;
 
 public class DroneGUI extends JFrame {
     private JPanel gridPanel;
@@ -522,6 +522,17 @@ public class DroneGUI extends JFrame {
         // reference in case of needed interruption
         droneAnimationThreads.put(droneId, animationThread);
         animationThread.start();
+    }
+
+    // ========== GETTERS ==========
+    // Get the current position of a drone (potentially in transit)
+    public int[] getCurrentDronePosition(int droneId) {
+        JLabel droneLabel = droneLabels.get(droneId);
+        
+        int x = (int) ((droneLabel.getX() / cellWidth) * 100);
+        int y = (int) ((droneLabel.getY() / cellHeight) * 100);
+        
+        return new int[]{x, y};
     }
 
     // ========== MAIN ==========

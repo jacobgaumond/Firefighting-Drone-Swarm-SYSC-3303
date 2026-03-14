@@ -22,12 +22,12 @@ public class Main {
         Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(fireIncidentBox, schedulerBox, inputFileName, gui),
                 "FireIncidentSubsystemThread");
 
-        // Create 5 drone threads
-        Thread[] droneThreads = new Thread[3];
-        for (int i = 0; i < 2; i++) {
+        // Create multiple drone threads
+        int TOTAL_DRONE_COUNT = 2;
+        Thread[] droneThreads = new Thread[TOTAL_DRONE_COUNT];
+        for (int i = 0; i < TOTAL_DRONE_COUNT; i++) {
             droneThreads[i] = new Thread(new DroneSubsystem(droneBox, schedulerBox, gui), "DroneSubsystemThread-" + (i + 1));
         }
-        // Thread droneSubsystem = new Thread(new DroneSubsystem(droneBox, schedulerBox, gui),"DroneSubsystemThread");
                 
         // Start all threads
         scheduler.start();
@@ -35,6 +35,5 @@ public class Main {
         for (Thread droneThread : droneThreads) {
                 droneThread.start();
         }
-        // droneSubsystem.start();
-        }
+    }       
 }

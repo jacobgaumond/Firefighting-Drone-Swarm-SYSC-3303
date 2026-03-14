@@ -275,16 +275,65 @@ public class Scheduler implements Runnable {
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
         DroneInfo best = null;
         int leastDispatches = Integer.MAX_VALUE;
+        double shortestDistance = Double.MAX_VALUE;
 
+        // Find least dispatched count
         for (DroneInfo drone : droneRegistry.values()) {
-            if (!drone.canHandleTask(fireEvent)) continue; // busy
-
-            // Select drone with least dispatches
+            if (!drone.canHandleTask(fireEvent)) continue;
+            
             if (drone.dispatchCount < leastDispatches) {
                 leastDispatches = drone.dispatchCount;
-                best = drone;
             }
         }
+
+        // Of drones with minimum dispatches, find the nearest to fire that is available
+        for (DroneInfo drone : droneRegistry.values()) {
+            if (!drone.canHandleTask(fireEvent)) continue;
+            
+            if (drone.dispatchCount == leastDispatches) {
+                // Get drone's current position
+                int x = 0;
+                int y = 0;
+                
+                if (gui != null) {
+                    int[] guiPosition = gui.getCurrentDronePosition(drone.droneId);
+                    x = guiPosition[0];
+                    y = guiPosition[1];
+                }
+                
+                double distance = calculateDistance(x, y, fireEvent.getTargetX(), fireEvent.getTargetY());
+
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    best = drone; // nearest drone
+                }
+            }
+        }
+
+        // Check for rerouting opportunities for drones in transit to lower severity fires
+        if (best == null) {
+            for (DroneInfo drone : droneRegistry.values()) {
+                if (drone.state.equals("EN_ROUTE_FIRE")) {
+                    FireTask currentTask = activeFires.get(drone.assignedZoneID);
+
+                    String currentFireSeverity = currentTask.fireEvent.getSeverity();
+                    String newFireSeverity = fireEvent.getSeverity();
+                    
+                    if (isHigherSeverity(newFireSeverity, currentFireSeverity)) {
+                        // Check if this drone can handle the new fire (battery/fuel requirements)
+                        if (drone.canHandleTask(fireEvent)) {
+                            // Remove drone's assignment from current fire task
+                            currentTask.fluidRequired += drone.fluidAssigned;
+                            drone.fluidAssigned = 0;
+                            
+                            best = drone;
+                            break; // Take the first available reroutable drone
+                        }
+                    }
+                }
+            }
+        }
+
         return best;
     }
 
@@ -304,6 +353,26 @@ public class Scheduler implements Runnable {
             case "low" -> 10;
             default -> 0;
         };
+    }
+    
+    private boolean isHigherSeverity(String severity1, String severity2) {
+        int priority1 = getSeverityPriority(severity1);
+        int priority2 = getSeverityPriority(severity2);
+        return priority1 > priority2;
+    }
+    
+    private int getSeverityPriority(String severity) {
+        return switch (severity.toLowerCase()) {
+            case "high" -> 3;
+            case "moderate" -> 2;
+            case "low" -> 1;
+            default -> 0;
+        };
+    }
+    
+    private double calculateDistance(int x1, int y1, int x2, int y2) {
+        // a^2 + b^2 = c^2
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     }
     
     private String getFireSeverity(FireTask fireTask) {
