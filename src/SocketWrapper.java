@@ -18,18 +18,20 @@ public class SocketWrapper {
         socket.close();
     }
 
-    public void receiveUDPPacket(DatagramPacket receivePacket, String sourceName) {
+    public void receiveUDPPacket(DatagramPacket receivePacket, String subsystemName, String sourceSubsystemName) {
         try {
-            System.out.println("WAITING ON " + sourceName);
+            System.out.println("UDP -- " + subsystemName + " WAITING ON (RECEIVING FROM) " + sourceSubsystemName);
             socket.receive(receivePacket); // wait
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
 
-        System.out.println("RECEIVED: " + new String(receivePacket.getData(), 0, receivePacket.getLength()) + "\n");
+        System.out.println("UDP -- " + subsystemName + " RECEIVED FROM " + sourceSubsystemName + ": " + new String(receivePacket.getData(), 0, receivePacket.getLength()) + "\n");
     }
-    public void sendUDPPacket(DatagramPacket sendPacket, String destinationName) {
+
+
+    public void sendUDPPacket(DatagramPacket sendPacket, String subsystemName, String destinationSubsystemName) {
         try {
             socket.send(sendPacket);
         } catch (IOException e) {
@@ -37,6 +39,6 @@ public class SocketWrapper {
             System.exit(1);
         }
 
-        System.out.println("SENT TO " + destinationName + ": " + new String(sendPacket.getData(), 0, sendPacket.getLength()) + "\n");
+        System.out.println("UDP -- " + subsystemName + " SENT TO " + destinationSubsystemName + ": " + new String(sendPacket.getData(), 0, sendPacket.getLength()) + "\n");
     }
 }
