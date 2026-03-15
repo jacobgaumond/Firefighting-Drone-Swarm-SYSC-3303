@@ -51,6 +51,12 @@ Breakdown of responsibilities of each team member for each iteration
 - Olivia:
 
 - Jacob:
+  - Code
+    - Created `src/SocketWrapper.java` in a previous iteration (unused until now). Updated/Polished in this iteration for UDP use.
+    - Created `src/UDPMessageBox.java`.
+    - Converted project to use UDP instead of local message passing (adapted FireIncidentSubsystem/Scheduler/DroneSubsystem to use UDPMessageBox instead of MessageBox).
+    - Contributed towards dividing the `src/Main.java` code amongst the (newly made) main methods of the 4 main classes (i.e., FireIncidentSubsystem, Scheduler, DroneSubsystem, DroneGUI).
+    - Documented changes in the `README.md`.
 
 - Ulan:
 
