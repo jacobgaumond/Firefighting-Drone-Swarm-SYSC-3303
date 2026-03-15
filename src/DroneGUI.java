@@ -543,45 +543,4 @@ public class DroneGUI extends JFrame {
         
         return new int[]{x, y};
     }
-
-    // ========== MAIN ==========
-    public static void main(String[] args) {
-        DroneGUI gui = new DroneGUI();
-        gui.setVisible(true);
-    }
 }
-
-// FUTURE ITERATIONS:
-            
-    // public static final int DRONE_GUI_PORT = 9503;
-
-    /**Listerner for later implentation
-    private void startListening() {
-        Thread listenerThread = new Thread(() -> {
-        // This is your fireIncident-style Receive Socket
-        try (DatagramSocket guiSocket = new DatagramSocket(DRONE_GUI_PORT)) {
-        byte[] buffer = new byte[100]; // Matching the project's 100-byte buffer
-
-        while (true) {
-        DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
-
-        // Block until a packet arrives (Just like FireIncidentSubsystem)
-        guiSocket.receive(receivePacket);
-
-        // Convert and Clean padding
-        String received = new String(receivePacket.getData(), 0, receivePacket.getLength());
-        String cleanMessage = received.trim();
-
-        // Display in GUI
-        logMessage("RECV: " + cleanMessage);
-
-
-        }
-        } catch (Exception e) {
-        logMessage("GUI Socket Error: " + e.getMessage());
-        }
-        });
-        listenerThread.setDaemon(true);
-        listenerThread.start();
-    }
-    **/

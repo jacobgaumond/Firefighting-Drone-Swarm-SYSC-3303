@@ -129,7 +129,7 @@ public class UDPMessageBox {
         }
 
         // Setup UDP
-            // Create source socket
+        // Create source socket
         socket = null;
         try {
             socket = new SocketWrapper(subsystemPort);
@@ -137,10 +137,13 @@ public class UDPMessageBox {
             e.printStackTrace();
             System.exit(1);
         }
-            // Create listener for the socket
+
+        // Create listener for the socket
         LISTENER_THREAD = new SocketListenerThread(this, socket);
-            // Initialize target port/address
+
+        // Initialize target port/address
         targetSubsystemAddress = null;
+
         try {
             targetSubsystemAddress = InetAddress.getLocalHost();
         } catch (UnknownHostException uhe) {
@@ -149,7 +152,7 @@ public class UDPMessageBox {
         }
         TARGET_SUBSYSTEM_PORT = targetSubsystemPort;
 
-        // Start the LISTENER_THREAD before finishing...
+        // Start the LISTENER_THREAD
         LISTENER_THREAD.start();
     }
 
@@ -213,9 +216,7 @@ public class UDPMessageBox {
                 return message; // Return message to mimic Message.putMessage() behavior
             }
         }
-        else {
-            return INCOMING_BOX.putMessage(message);
-        }
+        return INCOMING_BOX.putMessage(message);
     }
 
     /**

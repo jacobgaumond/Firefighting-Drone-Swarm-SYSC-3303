@@ -10,10 +10,6 @@ public class SocketWrapper {
         this.socket = new DatagramSocket(port);
     }
 
-//    public SocketWrapper() throws SocketException{
-//        this.socket = new DatagramSocket();
-//    }
-
     public void close() {
         socket.close();
     }

@@ -69,19 +69,9 @@ public class DroneSubsystem implements Runnable {
         for (Thread droneThread : droneThreads) {
             droneThread.start();
         }
-    }
-
-    // WITHOUT MESSAGE BOXING
-    public DroneSubsystem() {
-        this(null, null, null);
-    }
-
-    // Testing constructor (no GUI)
-    public DroneSubsystem() {
-        this(null);
-    }
-
-    //WITH MESSAGEBOX
+    }    
+    
+    // Constructor
     public DroneSubsystem(DroneGUI gui) {
         schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.SCHEDULER);;
         incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.VOID);;
@@ -102,10 +92,12 @@ public class DroneSubsystem implements Runnable {
             gui.createDroneLabel(droneId);
         }
     }
+    
+    // Testing constructor (no GUI)
+    public DroneSubsystem() { this(null); }
 
     @Override
     public void run() {
-
         Message registerMessage = new Message(
                 "Scheduler",
                 "DroneSubsystem",
@@ -125,7 +117,6 @@ public class DroneSubsystem implements Runnable {
 
         } while (boxOpen);
     }
-
 
     public void handleMessage(Message message) {
         if (message.getMessageType() == Message.MessageType.DroneRequest) {
@@ -256,8 +247,7 @@ public class DroneSubsystem implements Runnable {
         schedulerMessageBox.putMessage(sendStatus());
     }
 
-
-    // DRONE CHECKING//
+    // ========== Helpers ==========
     public boolean hasBattery() {
         double droneToFire = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
         double fireToBase = Math.sqrt(Math.pow(targetCoordX, 2) + Math.pow(targetCoordY, 2));
@@ -275,46 +265,35 @@ public class DroneSubsystem implements Runnable {
         return fluidAmount > 0;
     }
 
-    //** GETTERS AND SETTERS **//
+    // ========== GETTERS AND SETTERS ==========
     public int getDroneId() {
         return droneId;
     }
-
     public int getCoordX() {
         return coordX;
     }
-
     public void setCoordX(int coordX) {
         this.coordX = coordX;
     }
-
     public int getCoordY() {
         return coordY;
     }
-
     public void setCoordY(int coordY) {
         this.coordY = coordY;
     }
-
     public int getFluidAmount() {
         return fluidAmount;
     }
-
     public void setFluidAmount(int fluidAmount) {
         this.fluidAmount = fluidAmount;
     }
-
     public void setCurrentState(DroneState state) {
         droneSM.setCurrentState(state);
     }
-
     public DroneState getCurrentState() {
         return droneSM.getCurrentState();
     }
-
-    // Static method to check how many drones have been created
     public static int getTotalDronesCreated() {
         return nextIdValue - 1;
     }
-
 }

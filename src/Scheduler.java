@@ -19,24 +19,10 @@ import java.util.Map;
 import java.util.Queue;
 
 public class Scheduler implements Runnable {
-//    SocketWrapper serverSocket;
-//
-//    public final static int SCHEDULER_PORT = 9500;
-//
-//    public Scheduler() {
-//        try {
-//            serverSocket = new SocketWrapper(SCHEDULER_PORT);
-//        } catch (SocketException e) {
-//            e.printStackTrace();
-//            System.exit(1);
-//        }
-//    }
-
-    // Message Boxes
+    private DroneGUI gui;
     private UDPMessageBox incomingMessageBox;
     private UDPMessageBox fireIncidentMessageBox;
     private UDPMessageBox droneMessageBox;
-    private DroneGUI gui;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
 
@@ -56,48 +42,30 @@ public class Scheduler implements Runnable {
 
     // Constructor
     public Scheduler(DroneGUI gui) {
+        this.gui = gui;
         incomingMessageBox      = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER, UDPMessageBox.Subsystem.VOID);
         fireIncidentMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.FIRE_INCIDENT);
         droneMessageBox         = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.DRONE);
-        this.gui = gui;
     }
 
     // Testing constructor (no GUI)
-    public Scheduler() {
-        this(null);
-    }
+    public Scheduler() { this(null); }
 
     @Override
     public void run() {
         boolean boxOpen = true;
-        do {
+        while(boxOpen){
             Message message = incomingMessageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
-
-//                // In case one or the other is still open...
-//                incomingMessageBox.closeBox();
-//                fireIncidentMessageBox.closeBox();
-//                droneMessageBox.closeBox();
             } else {
-//                System.out.println("[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());//                if (message.getDestinationName().equals("FireIncidentSubsystem")) {
-//                    System.out.println("[Scheduler] Sending to FireIncidentSubsystem: " + message.getMessageData());
-//                    fireIncidentMessageBox.putMessage(message);
-//                }
-//                else if (message.getDestinationName().equals("DroneSubsystem")) {
-//                    System.out.println("[Scheduler] Sending to DroneSubsystem: " + message.getMessageData());
-//                    droneMessageBox.putMessage(message);
-//                }
-
-
                 processIncomingMessageBox(message);
-
             }
-        } while (boxOpen);
+        }
     }
 
-    //** MESSAGE ROUTING **//
-//Processes all incoming messages and sends to desination
+    // ========== Message Routing ==========
+    // Processes all incoming messages and sends to desination
     private void processIncomingMessageBox(Message message) {
         System.out.println("\n[Scheduler] Received from " + message.getSourceName() + ": " + message.getMessageData());
 
@@ -105,12 +73,10 @@ public class Scheduler implements Runnable {
             registerDrone(Integer.parseInt(message.getMessageData()));
             return;
         }
-
         if (message.getMessageType() == Message.MessageType.DroneResponse) {
             processDroneMessage(message);
             return;
         }
-
         if (message.getMessageType() == Message.MessageType.FireEvent) {
             processFireEvent(message);
             return;
@@ -119,11 +85,7 @@ public class Scheduler implements Runnable {
         System.out.println("[Scheduler] Unknown destination: " + message.getDestinationName());
     }
 
-
-    // -------------------------
-    // Drone and Task Logic
-    // -------------------------
-
+    // ========== Drone and Task Logic ==========
     public void registerDrone(int droneId) {
         droneRegistry.put(droneId, new DroneInfo(droneId));
         System.out.println("[Scheduler] Registered drone " + droneId);
@@ -147,7 +109,7 @@ public class Scheduler implements Runnable {
         }
         if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
             boolean allWillBeExtinguished = activeFires.values().stream().allMatch(this::willBeExtinguishedByAssignedDrones);
-            // TODO CURRENTLY BUGS HERE
+            // TODO: Visual getting stuck bugs
             if (allWillBeExtinguished) {
                 schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
             } else {
@@ -189,7 +151,7 @@ public class Scheduler implements Runnable {
         droneMessageBox.putMessage(droneMessage);
     }
 
-    //handles if the (task finished) -> assigns next task in the queue or marks drone as idle
+    // task finished -> assign next in the queue or mark drone as idle
     private void processDroneMessage(Message message) {
         DroneResponse status = new DroneResponse(message.getMessageData());
 
@@ -295,9 +257,7 @@ public class Scheduler implements Runnable {
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 
-
     // ========== Helper Functions ==========
-
     private FireEvent findNearbyFire(DroneInfo drone) {
         FireEvent nearest = null;
         double shortestDistance = Double.MAX_VALUE;
@@ -315,7 +275,6 @@ public class Scheduler implements Runnable {
 
         return nearest;
     }
-
 
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
         DroneInfo best = null;
