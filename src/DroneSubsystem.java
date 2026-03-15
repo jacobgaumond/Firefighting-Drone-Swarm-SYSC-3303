@@ -15,18 +15,6 @@
 //import java.net.*;
 
 public class DroneSubsystem implements Runnable {
-//    SocketWrapper clientSocket;
-//
-//    public final static int DRONE_PORT = 5901;
-//
-//    public DroneSubsystem() {
-//        try {
-//            clientSocket = new SocketWrapper(DRONE_PORT);
-//        } catch (SocketException se) {
-//            throw new RuntimeException(se);
-//        }
-//    }
-
     private static final int NOZZLE_OPEN_DELAY_MS = 100;
     private static final int NOZZLE_CLOSE_DELAY_MS = 100;
     private static final int FLUID_MAX = 15;
@@ -39,7 +27,6 @@ public class DroneSubsystem implements Runnable {
 
     private UDPMessageBox messageBox;
     private UDPMessageBox schedulerMessageBox;
-    private DroneGUI gui;
 
     private static int nextIdValue = 1;//self ID creation
 
@@ -155,17 +142,18 @@ public class DroneSubsystem implements Runnable {
 
     //** Drone Movement & Modification Functions **//
     public void flyToFire(String payload) {
-        //batteryTravelDistance -= calculateBatteryUsage();
+        // batteryTravelDistance -= calculateBatteryUsage();
         System.out.println("[Drone " + droneId + "] Flying to fire: " + payload);
         
-        //just for this iteration
+        // travel time
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
         long travelTime = (long) ((distance * MS_PER_UNIT) * 10);
         
-        if (gui != null) {
-            DroneRequest request = new DroneRequest(payload);
-            gui.moveDroneToZone(droneId, request.getZoneId(), travelTime, fluidAmount);
-        }
+        // TODO remove
+        // if (gui != null) {
+        //     DroneRequest request = new DroneRequest(payload);
+        //     gui.moveDroneToZone(droneId, request.getZoneId(), travelTime, fluidAmount);
+        // }
 
         try {
             Thread.sleep(travelTime);
@@ -182,9 +170,10 @@ public class DroneSubsystem implements Runnable {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
         long travelTime = (long) ((distance * MS_PER_UNIT) * 10);
         
-        if (gui != null) {
-            gui.returnDrone(droneId, travelTime);
-        }
+        // TODO Remove
+        // if (gui != null) {
+        //     gui.returnDrone(droneId, travelTime);
+        // }
         try {
             Thread.sleep(travelTime);
         } catch (InterruptedException e) {
@@ -201,10 +190,11 @@ public class DroneSubsystem implements Runnable {
         System.out.println("[Drone " + droneId + "] Nozzle opened, dropping agent.");
         long dropTime = (long) ((fluidAmountToDrop / FLUID_RATE_ML_MS) + NOZZLE_OPEN_DELAY_MS)*10;
 
-        if (gui != null) {
-            DroneRequest request = new DroneRequest(payload);
-            gui.extinguishFire(droneId, request.getZoneId(), dropTime);
-        }
+        // TODO remove
+        // if (gui != null) {
+        //     DroneRequest request = new DroneRequest(payload);
+        //     gui.extinguishFire(droneId, request.getZoneId(), dropTime);
+        // }
 
         System.out.println("[Drone " + droneId + "] extinguishing fire.");
         try {

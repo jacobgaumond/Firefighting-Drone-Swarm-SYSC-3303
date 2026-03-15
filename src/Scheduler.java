@@ -109,7 +109,6 @@ public class Scheduler implements Runnable {
         }
         if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
             boolean allWillBeExtinguished = activeFires.values().stream().allMatch(this::willBeExtinguishedByAssignedDrones);
-            // TODO: Visual getting stuck bugs
             if (allWillBeExtinguished) {
                 schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
             } else {
@@ -140,7 +139,7 @@ public class Scheduler implements Runnable {
                 amountToDrop,
                 drone.droneId  // assign to specific drone
         );
-        if(gui!=null)gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(),1,drone.fluid);//TODO need an actual calculation on how much time it sshould take
+        if(gui!=null) gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(),1000, drone.fluid); // TODO time
 
         Message droneMessage = new Message(
                 "DroneSubsystem",
@@ -174,7 +173,7 @@ public class Scheduler implements Runnable {
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
-                if(gui!=null)gui.extinguishFire(drone.droneId,drone.assignedZoneID,1 );//TODO implement fluid drop rate function
+                if(gui!=null)gui.extinguishFire(drone.droneId,drone.assignedZoneID,1000 );//TODO time
                 break;
 
             case "FIRE_HANDLED":
@@ -219,7 +218,7 @@ public class Scheduler implements Runnable {
                     // no leftover -> return to base
                     drone.assignedZoneID = -1;
                     drone.state = "EN_ROUTE_BASE";
-                    if (gui!=null) gui.returnDrone(drone.droneId, 1 ); // TODO Add A drone travel time function in
+                    if (gui!=null) gui.returnDrone(drone.droneId, 1000); // TODO time
                     sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                 }
                 break;

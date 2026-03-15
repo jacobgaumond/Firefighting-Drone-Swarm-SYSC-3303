@@ -18,14 +18,12 @@ import java.util.Scanner;
 
 public class FireIncidentSubsystem implements Runnable {
     private UDPMessageBox messageBox;
-    private UDPMessageBox schedulerMessageBox;
 
     private ArrayList<String> fileEvents = new ArrayList<String>();
 
     public static void main(String[] args) {
-        String zoneFileName = "src/data/Sample_zone_file.csv"; // TODO: Fix ZoneMap
+        String zoneFileName = "src/data/Sample_zone_file.csv";
         ZoneMap.loadZones(zoneFileName);
-        ZoneMap.printZones();
 
         String inputFileName = "src/data/Sample_event_file.csv";
         Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(inputFileName), "FireIncidentSubsystemThread");
@@ -60,7 +58,6 @@ public class FireIncidentSubsystem implements Runnable {
                     serializedEvent,
                     Message.MessageType.FireEvent
             );
-
 
             messageBox.putMessage(fireEventMessage, UDPMessageBox.Subsystem.SCHEDULER);
 
