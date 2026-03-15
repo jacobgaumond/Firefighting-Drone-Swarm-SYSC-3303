@@ -1,4 +1,6 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -7,42 +9,29 @@ import static org.junit.jupiter.api.Assertions.*;
 class FireIncidentSubsystemTest {
 
     String inputFileName = "src/data/Sample_event_file.csv";
-
-
-
-    MessageBox fireIncidentBox = new MessageBox();
-    MessageBox schedulerBox = new MessageBox();
-
-
-
-    private void startFireSubsystem() {
-        FireIncidentSubsystem fireSys =
-                new FireIncidentSubsystem(inputFileName);
-        new Thread(fireSys, "FireIncidentSubsystemThread").start();
+    private UDPMessageBox schedulerBox;
+    private FireIncidentSubsystem fireSys;
+    @BeforeEach
+    void setup() {
+        schedulerBox = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER);
+        fireSys = new FireIncidentSubsystem();
     }
-
-    @Test
-    void toSchedulerMessageBox() throws InterruptedException {
-        startFireSubsystem();
-        Thread.sleep(500);
-
-        assertTrue(schedulerBox.isFull());
-    }
-
-
-    //setup zones is just for testing
     @BeforeAll
-    static void setupZones(){
-        ZoneMap.addZone(3, new ZoneMap.Zone(0,0,700,600));
-        ZoneMap.addZone(7, new ZoneMap.Zone(0,0,700,600));
+    static void setupZones() {
+        ZoneMap.loadZones("src/data/Sample_zone_file.csv");
+    }
+
+    @AfterEach
+    void teardown() {
+        if (schedulerBox != null) schedulerBox.closeBox();
+        if (fireSys != null) fireSys.closeBox();
     }
 
     @Test
     void testParseFireEvent(){
-        FireIncidentSubsystem subsystem =  new FireIncidentSubsystem(null, null);
 
         String line = "14:03:15,3,FIRE_DETECTED,High";
-        FireEvent event = subsystem.parseFireEvent(line);
+        FireEvent event = fireSys.parseFireEvent(line);
 
         assertNotNull(event);
         assertEquals("14:03:15", event.getTime());
@@ -54,4 +43,21 @@ class FireIncidentSubsystemTest {
         assertEquals(ZoneMap.getX(3), event.getTargetX());
         assertEquals(ZoneMap.getY(3), event.getTargetY());
     }
+    @Test
+    void toSchedulerMessageBox() throws InterruptedException {
+        FireEvent fireEvent = fireSys.parseFireEvent("14:03:15,3,FIRE_DETECTED,High");
+        Message message = new Message(
+                "Scheduler",
+                "FireIncidentSubsystem",
+                fireEvent.serialize(),
+                Message.MessageType.FireEvent
+        );
+        fireSys.sendMessage(message);
+        Thread.sleep(200);
+        Message received = schedulerBox.getMessage();
+        assertNotNull(received);
+        assertEquals(Message.MessageType.FireEvent, received.getMessageType());
+    }
+
+
 }

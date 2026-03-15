@@ -33,12 +33,16 @@ public class FireIncidentSubsystem implements Runnable {
 
     public FireIncidentSubsystem(String fileName) {
         messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
-        loadFromFile(fileName);
+        if (fileName != null) loadFromFile(fileName);
     }
 
     // Testing constructor (no file)
     public FireIncidentSubsystem() {
         messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
+    }
+
+    public void closeBox(){
+        messageBox.closeBox();
     }
 
     @Override
@@ -109,6 +113,10 @@ public class FireIncidentSubsystem implements Runnable {
 
             System.exit(1);
         }
+    }
+
+    public void sendMessage(Message message) {
+        messageBox.putMessage(message, UDPMessageBox.Subsystem.SCHEDULER);
     }
 
     //parse csv file
