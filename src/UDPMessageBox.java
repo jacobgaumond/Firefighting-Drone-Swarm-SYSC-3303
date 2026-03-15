@@ -24,8 +24,8 @@ public class UDPMessageBox {
         VOID // Used as the target subsystem for "incoming message boxes", which do not send outgoing messages over UDP.
     }
 
-    private Subsystem SUBSYSTEM;
-    private Subsystem TARGET_SUBSYSTEM;
+    private final Subsystem SUBSYSTEM;
+//    private Subsystem TARGET_SUBSYSTEM;
 
     private final MessageBox INCOMING_BOX;
 
@@ -47,8 +47,8 @@ public class UDPMessageBox {
      * Creates a UDPMessageBox to allow a subsystem to communicate with some other targetSubsystem.
      *
      * @param subsystem         The Subsystem which owns this UDPMessageBox.
-     * @param targetSubsystem   The Subsystem with which this UDPMessageBox is facilitating communication with.
      */
+//     * @param targetSubsystem   The Subsystem with which this UDPMessageBox is facilitating communication with.
     public UDPMessageBox(Subsystem subsystem) {
     // public UDPMessageBox(Subsystem subsystem, Subsystem targetSubsystem) {
         INCOMING_BOX = new MessageBox();
@@ -163,9 +163,9 @@ public class UDPMessageBox {
     public Subsystem getSubsystem() {
         return SUBSYSTEM;
     }
-    public Subsystem getTargetSubsystem() {
-        return TARGET_SUBSYSTEM;
-    }
+//    public Subsystem getTargetSubsystem() {
+//        return TARGET_SUBSYSTEM;
+//    }
 
     // ========== Helpers ==========
     private int getSubsystemPort(Subsystem subsystem) {
