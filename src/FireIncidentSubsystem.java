@@ -35,17 +35,13 @@ public class FireIncidentSubsystem implements Runnable {
 
         fireIncidentSubsystem.start();
     }
-
-    public FireIncidentSubsystem(String fileName, DroneGUI gui) {
+    // Testing constructor (no GUI, with file)
+    public FireIncidentSubsystem(String fileName) {
         incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
         schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
         loadFromFile(fileName);
     }
 
-    // Testing constructor (no GUI, with file)
-    public FireIncidentSubsystem(String fileName) {
-        this(fileName, null);
-    }
     // Testing constructor (no GUI, no file)
     public FireIncidentSubsystem() {
         incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
