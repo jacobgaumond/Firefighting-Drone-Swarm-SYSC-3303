@@ -57,11 +57,13 @@ Breakdown of responsibilities of each team member for each iteration
 - Peter:
   - GUI
     - Get current drone position
-    - Reroute based on fire priority
   - Scheduler
     - Drone dispatching priority logic
     - Checks number of times specific drone has been dispatched
-    - Between least dispatched, select nearest 
-    - If higher severity fire appears, potentially reroute if no drones available
+    - Between least dispatched, select available. 
+    - If none available, compare severities for potentially reroute
   - Main
     - Add multiple drone threads
+  - UDPMessageBox
+    - fix port assignment
+    - fix sending messages over UDP

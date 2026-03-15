@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FireIncidentSubsystem implements Runnable {
-    private UDPMessageBox incomingMessageBox;
+    private UDPMessageBox messageBox;
     private UDPMessageBox schedulerMessageBox;
 
     private ArrayList<String> fileEvents = new ArrayList<String>();
@@ -37,8 +37,7 @@ public class FireIncidentSubsystem implements Runnable {
     }
 
     public FireIncidentSubsystem(String fileName, DroneGUI gui) {
-        incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
-        schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
+        messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
         loadFromFile(fileName);
     }
 
@@ -48,8 +47,7 @@ public class FireIncidentSubsystem implements Runnable {
     }
     // Testing constructor (no GUI, no file)
     public FireIncidentSubsystem() {
-        incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
-        schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
+        messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
     }
 
     @Override
@@ -61,7 +59,6 @@ public class FireIncidentSubsystem implements Runnable {
 
             //convert object into serialized string
             String serializedEvent = fireEvent.serialize();
-            System.out.println("Serialized: " + serializedEvent);
 
             //create a Message for the Scheduler -> DroneSubsystem
             Message fireEventMessage = new Message(
@@ -72,7 +69,7 @@ public class FireIncidentSubsystem implements Runnable {
             );
 
 
-            schedulerMessageBox.putMessage(fireEventMessage);
+            messageBox.putMessage(fireEventMessage, UDPMessageBox.Subsystem.SCHEDULER);
 
             try {
                 Thread.sleep(3000); // wait between events
@@ -83,7 +80,7 @@ public class FireIncidentSubsystem implements Runnable {
 
         boolean boxOpen = true;
         do {
-            Message message = incomingMessageBox.getMessage();
+            Message message = messageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
             }
@@ -92,7 +89,7 @@ public class FireIncidentSubsystem implements Runnable {
                 if (!message.getMessageData().equals("Acknowledged")) {
                     message = new Message("DroneSubsystem", "FireIncidentSubsystem", "Acknowledged", Message.MessageType.FireEvent);
                     System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
-                    schedulerMessageBox.putMessage(message);
+                    messageBox.putMessage(message, UDPMessageBox.Subsystem.SCHEDULER);
                 }
             }
         } while (boxOpen);

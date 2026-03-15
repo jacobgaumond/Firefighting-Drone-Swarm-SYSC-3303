@@ -128,10 +128,9 @@ from a ZIP file, extract the file and open the resulting directory using the Int
 ### Usage
 
 To run the project, run the main methods of the following classes **in the specified order**:
-- DroneGUI.java
 - Scheduler.java
-- FireIncidentSubsystem.java
 - DroneSubsystem.java
+- FireIncidentSubsystem.java
 
 [//]: # (To run the project, run the main function of the Main class in `src/Main.java` &#40;e.g., by right-clicking the file and)
 

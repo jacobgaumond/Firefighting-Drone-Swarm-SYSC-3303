@@ -20,9 +20,7 @@ import java.util.Queue;
 
 public class Scheduler implements Runnable {
     private DroneGUI gui;
-    private UDPMessageBox incomingMessageBox;
-    private UDPMessageBox fireIncidentMessageBox;
-    private UDPMessageBox droneMessageBox;
+    private UDPMessageBox messageBox;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
 
@@ -32,34 +30,31 @@ public class Scheduler implements Runnable {
     private Map<Integer, FireTask> activeFires = new HashMap<>();
 
     public static void main(String[] args) {
-        DroneGUI gui = new DroneGUI(); // TODO: Fix gui.
+        DroneGUI gui = new DroneGUI();
         gui.setVisible(true);
-        Thread scheduler = new Thread(new Scheduler(gui),
-                "SchedulerThread");
 
+        Thread scheduler = new Thread(new Scheduler(gui), "SchedulerThread");
         scheduler.start();
     }
 
     // Constructor
     public Scheduler(DroneGUI gui) {
         this.gui = gui;
-        incomingMessageBox      = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER, UDPMessageBox.Subsystem.VOID);
-        fireIncidentMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.FIRE_INCIDENT);
-        droneMessageBox         = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.DRONE);
+        messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER);
     }
 
     // Testing constructor (no GUI)
-    public Scheduler() { this(null);
-        incomingMessageBox      = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER, UDPMessageBox.Subsystem.VOID);
-        fireIncidentMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.FIRE_INCIDENT);
-        droneMessageBox         = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.DRONE);
+    public Scheduler() {
+        this(null);
+        messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER);
     }
 
     @Override
     public void run() {
         boolean boxOpen = true;
+
         while(boxOpen){
-            Message message = incomingMessageBox.getMessage();
+            Message message = messageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
             } else {
@@ -93,7 +88,7 @@ public class Scheduler implements Runnable {
     public void registerDrone(int droneId) {
         droneRegistry.put(droneId, new DroneInfo(droneId));
         System.out.println("[Scheduler] Registered drone " + droneId);
-        if(gui!=null)gui.createDroneLabel(droneId);
+        if(gui!=null) gui.createDroneLabel(droneId);
     }
 
     public void tryAssignTask() {
@@ -154,7 +149,7 @@ public class Scheduler implements Runnable {
                 Message.MessageType.DroneRequest
         );
         
-        droneMessageBox.putMessage(droneMessage);
+        messageBox.putMessage(droneMessage, UDPMessageBox.Subsystem.DRONE);
     }
 
     // task finished -> assign next in the queue or mark drone as idle
@@ -211,9 +206,7 @@ public class Scheduler implements Runnable {
                     }
                 }
 
-
-
-                //only assign leftover if the drone actually dropped fluid at this fire
+                // only assign leftover if the drone actually dropped fluid at this fire
                 if (status.getFluidDropped() > 0 && drone.fluid > 0) {
                     FireEvent leftOverTarget = findNearbyFire(drone);
                     if (leftOverTarget != null) {
@@ -226,10 +219,9 @@ public class Scheduler implements Runnable {
                     // no leftover -> return to base
                     drone.assignedZoneID = -1;
                     drone.state = "EN_ROUTE_BASE";
-                    if(gui!=null)gui.returnDrone(drone.droneId, 1 ); //TODO Add A drone travel time function in
+                    if (gui!=null) gui.returnDrone(drone.droneId, 1 ); // TODO Add A drone travel time function in
                     sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                 }
-
                 break;
 
             case "IDLE":
@@ -253,7 +245,7 @@ public class Scheduler implements Runnable {
                 Message.MessageType.DroneRequest
         );
         System.out.println("[Scheduler] Sending " + event + " to Drone " + droneId);
-        droneMessageBox.putMessage(message);
+        messageBox.putMessage(message, UDPMessageBox.Subsystem.DRONE);
     }
 
     private void processFireEvent(Message message) {
@@ -262,7 +254,7 @@ public class Scheduler implements Runnable {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         System.out.println("[Scheduler] Handling fire event: " + fireEvent);
         taskQueue.add(fireEvent);
-        if(gui!=null)gui.fireStatusChange(fireEvent.getZoneId(),fireEvent.getSeverity());
+        if(gui!=null) gui.fireStatusChange(fireEvent.getZoneId(),fireEvent.getSeverity());
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 

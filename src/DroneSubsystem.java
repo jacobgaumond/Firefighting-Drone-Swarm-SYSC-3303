@@ -37,7 +37,7 @@ public class DroneSubsystem implements Runnable {
 
     private static final double FLUID_RATE_ML_MS = 0.25;
 
-    private UDPMessageBox incomingMessageBox;
+    private UDPMessageBox messageBox;
     private UDPMessageBox schedulerMessageBox;
     private DroneGUI gui;
 
@@ -73,8 +73,7 @@ public class DroneSubsystem implements Runnable {
     
     // Constructor
     public DroneSubsystem() {
-        schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.SCHEDULER);;
-        incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.VOID);;
+        messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE);
 
         //Core initlization
         this.droneSM = new DroneStateMachine();
@@ -99,11 +98,11 @@ public class DroneSubsystem implements Runnable {
                 String.valueOf(droneId),
                 Message.MessageType.DroneRegistration
         );
-        schedulerMessageBox.putMessage(registerMessage);
+        messageBox.putMessage(registerMessage, UDPMessageBox.Subsystem.SCHEDULER);
 
         boolean boxOpen = true;
         do {
-            Message message = incomingMessageBox.getMessage();
+            Message message = messageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
             } else {
@@ -151,7 +150,7 @@ public class DroneSubsystem implements Runnable {
 
     public void updateScheduler() { //updates scheduling logic
         System.out.println("[Drone " + droneId + "] Notifying scheduler of status.");
-        schedulerMessageBox.putMessage(sendStatus());
+        messageBox.putMessage(sendStatus(), UDPMessageBox.Subsystem.SCHEDULER);
     }
 
     //** Drone Movement & Modification Functions **//
@@ -239,7 +238,7 @@ public class DroneSubsystem implements Runnable {
     public void handleFault() {
         // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
-        schedulerMessageBox.putMessage(sendStatus());
+        messageBox.putMessage(sendStatus(), UDPMessageBox.Subsystem.SCHEDULER);
     }
 
     // ========== Helpers ==========
