@@ -44,6 +44,11 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
+
+    private boolean moving = false;
+    private double speedPertick = 1.0;
+    private boolean droppingFluid = false;
+
     public static void main(String[] args) {
         DroneGUI gui = null; // TODO: Fix gui.
 
@@ -244,6 +249,73 @@ public class DroneSubsystem implements Runnable {
         double fireToBase = Math.sqrt(Math.pow(targetCoordX, 2) + Math.pow(targetCoordY, 2));
         return (int) Math.ceil(droneToFire + fireToBase);
     }
+
+    private double calculateDistance(int x1, int y1, int x2, int y2) {
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
+
+    private void moveTowardsTarget(int targetX, int targetY, double speedPerTick) {
+        double dx = targetX - coordX;
+        double dy = targetY - coordY;
+        double distance = calculateDistance(coordX, coordY, targetX, targetY);
+
+        if (distance <= speedPerTick) {
+            coordX = targetX;
+            coordY = targetY;
+        } else {
+            double ratio = speedPerTick / distance;
+            coordX += (int) Math.round(dx * ratio);
+            coordY += (int) Math.round(dy * ratio);
+        }
+
+        batteryTravelDistance -= (int) Math.ceil(speedPerTick / MAX_DRONE_RANGE * BATTERY_MAX);
+    }
+
+
+    private void releaseFluidPerTick(double fluidPerTick) {
+        if (fluidReleasedAtZone + fluidPerTick >= fluidAmountToDrop) {
+            fluidPerTick = fluidAmountToDrop - fluidReleasedAtZone;
+        }
+
+        fluidReleasedAtZone += fluidPerTick;
+        fluidAmount -= fluidPerTick;
+
+        if (fluidReleasedAtZone >= fluidAmountToDrop) {
+            droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
+        }
+    }
+
+    // Called by the state machine instead of blocking methods
+    public void startFlyingTo(int x, int y, String payload) {
+        this.targetCoordX = x;
+        this.targetCoordY = y;
+        this.moving = true;
+    }
+
+    // Called by tick()
+    private void moveTick(double speed) {
+        if (!moving) return;
+
+        double dx = targetCoordX - coordX;
+        double dy = targetCoordY - coordY;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance <= speed) {
+            coordX = targetCoordX;
+            coordY = targetCoordY;
+            moving = false;
+            droneSM.handleEvent(DroneEvent.ARRIVAL, "", this);
+        } else {
+            coordX += (dx / distance) * speed;
+            coordY += (dy / distance) * speed;
+        }
+    }
+
+
+
+
+
 
     public boolean hasAgent() {
         return fluidAmount > 0;
