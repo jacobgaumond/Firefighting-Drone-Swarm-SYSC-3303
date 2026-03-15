@@ -387,7 +387,7 @@ public class DroneGUI extends JFrame {
     }
     
     // Send drone to zone
-    public void moveDroneToZone(int droneId, int zoneId, long travelTime) {
+    public void moveDroneToZone(int droneId, int zoneId, long travelTime, int fluidRemaining) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         
@@ -401,7 +401,7 @@ public class DroneGUI extends JFrame {
         droneLabel.setVisible(true);
         droneLabel.setBackground(droneOutboundColor);
         
-        logMessage("Drone " + droneId + " outbound to Zone " + zoneId);
+        logMessage("Drone " + droneId + " outbound to Zone " + zoneId + "| fluid remaining: " + fluidRemaining);
         
         // Current position (important later when interrupted on return)
         int startX = droneLabel.getX();

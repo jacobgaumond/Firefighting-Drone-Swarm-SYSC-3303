@@ -165,7 +165,7 @@ public class DroneSubsystem implements Runnable {
         
         if (gui != null) {
             DroneRequest request = new DroneRequest(payload);
-            gui.moveDroneToZone(droneId, request.getZoneId(), travelTime);
+            gui.moveDroneToZone(droneId, request.getZoneId(), travelTime, fluidAmount);
         }
 
         try {

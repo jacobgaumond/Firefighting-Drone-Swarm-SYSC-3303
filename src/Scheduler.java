@@ -232,8 +232,25 @@ public class Scheduler implements Runnable {
                         }
                     }
                 }
-                drone.assignedZoneID = -1;
-                sendEventToDrone(status.getDroneID(), DroneEvent.RETURN_BASE_REQUEST, "");
+
+
+
+                //only assign leftover if the drone actually dropped fluid at this fire
+                if (status.getFluidDropped() > 0 && drone.fluid > 0) {
+                    FireEvent leftOverTarget = findNearbyFire(drone);
+                    if (leftOverTarget != null) {
+                        System.out.println("[Scheduler] Drone " + drone.droneId + " using leftover water on nearby fire " + leftOverTarget.getZoneId());
+                        drone.assignedZoneID = leftOverTarget.getZoneId(); //mark fire
+                        drone.state = "EN_ROUTE_FIRE";                     //mark busy
+                        assignFireTaskToDrone(drone, leftOverTarget);
+                    }
+                } else {
+                    // no leftover -> return to base
+                    drone.assignedZoneID = -1;
+                    drone.state = "EN_ROUTE_BASE";
+                    sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
+                }
+
                 break;
 
             case "IDLE":
@@ -271,6 +288,25 @@ public class Scheduler implements Runnable {
 
 
     // ========== Helper Functions ==========
+
+    private FireEvent findNearbyFire(DroneInfo drone) {
+        FireEvent nearest = null;
+        double shortestDistance = Double.MAX_VALUE;
+
+        for (FireTask task : activeFires.values()) {
+            if (task.remainingFluidNeeded() <= 0) continue; // skip extinguished
+            double distance = calculateDistance(drone.x, drone.y,
+                    task.fireEvent.getTargetX(),
+                    task.fireEvent.getTargetY());
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                nearest = task.fireEvent;
+            }
+        }
+
+        return nearest;
+    }
+
 
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
         DroneInfo best = null;
