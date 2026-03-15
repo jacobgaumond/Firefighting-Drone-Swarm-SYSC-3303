@@ -22,9 +22,12 @@ public class SocketWrapper {
         try {
             System.out.println("UDP -- " + subsystemName + " WAITING ON (RECEIVING FROM) " + sourceSubsystemName);
             socket.receive(receivePacket); // wait
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
             System.exit(1);
+        } catch (SocketException se) {
+            System.out.println("UDP -- " + subsystemName + " CANCELED WAITING/RECEIVING (SOCKET HAS BEEN CLOSED)");
+            return;
         }
 
         System.out.println("UDP -- " + subsystemName + " RECEIVED FROM " + sourceSubsystemName + ": " + new String(receivePacket.getData(), 0, receivePacket.getLength()) + "\n");
