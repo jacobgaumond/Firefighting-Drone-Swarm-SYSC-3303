@@ -352,4 +352,7 @@ public class DroneSubsystem implements Runnable {
     public static int getTotalDronesCreated() {
         return nextIdValue - 1;
     }
+    public UDPMessageBox getMessageBox() {
+        return messageBox;
+    }
 }
