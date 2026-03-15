@@ -49,7 +49,12 @@ Breakdown of responsibilities of each team member for each iteration
 
 ## Iteration #3
 - Olivia:
-
+  -Code
+    - Scheduler routing for specific drone port calling
+    - GUI logic in the Scheduler subsystem
+    - Sequence Diagram
+    - State Machine Test Cases
+    - Refactoring of Test Cases
 - Jacob:
   - Code
     - Created `src/SocketWrapper.java` in a previous iteration (unused until now). Updated/Polished in this iteration for UDP use.
