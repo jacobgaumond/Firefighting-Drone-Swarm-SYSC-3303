@@ -33,9 +33,9 @@ public class Scheduler implements Runnable {
 //    }
 
     // Message Boxes
-    private MessageBox incomingMessageBox;
-    private MessageBox fireIncidentMessageBox;
-    private MessageBox droneMessageBox;
+    private UDPMessageBox incomingMessageBox;
+    private UDPMessageBox fireIncidentMessageBox;
+    private UDPMessageBox droneMessageBox;
     private DroneGUI gui;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
@@ -45,17 +45,26 @@ public class Scheduler implements Runnable {
     private Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
     private Map<Integer, FireTask> activeFires = new HashMap<>();
 
+    public static void main(String[] args) {
+        DroneGUI gui = null; // TODO: Fix gui.
+
+        Thread scheduler = new Thread(new Scheduler(gui),
+                "SchedulerThread");
+
+        scheduler.start();
+    }
+
     // Constructor
-    public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox, DroneGUI gui) {
-        this.incomingMessageBox = incomingMessageBox;
-        this.fireIncidentMessageBox = fireIncidentMessageBox;
-        this.droneMessageBox = droneMessageBox;
+    public Scheduler(DroneGUI gui) {
+        incomingMessageBox      = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER, UDPMessageBox.Subsystem.VOID);
+        fireIncidentMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.FIRE_INCIDENT);
+        droneMessageBox         = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.DRONE);
         this.gui = gui;
     }
 
     // Testing constructor (no GUI)
-    public Scheduler(MessageBox incomingMessageBox, MessageBox fireIncidentMessageBox, MessageBox droneMessageBox) {
-        this(incomingMessageBox, fireIncidentMessageBox, droneMessageBox, null);
+    public Scheduler() {
+        this(null);
     }
 
     @Override

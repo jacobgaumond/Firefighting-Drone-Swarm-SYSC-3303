@@ -11,7 +11,7 @@ Client threads.
 ## File/Class Descriptions
 
 It should be noted that not all of the code in the repository is being used in this iterable. Some functions -- like
-`MessageBox.closeBox()` -- were implemented but will not be used. Some classes -- like SocketWrapper -- were implemented
+`MessageBox.closeBox()` -- were implemented but will not be used. Some classes were implemented
 before it was realized that they would only be usable in future iterations.
 
 ### Main Code
@@ -74,6 +74,15 @@ before it was realized that they would only be usable in future iterations.
   Currently, it sets up the static pieces of the legend, the zone labels and gridlines. It also creates the zone fires
   in the middle of each zone and has a status change class to demonstrate switching between fire states.
 
+- `src/SocketWrapper.java`
+  This class is a wrapper around the `java.net.DatagramSocket` class. It is used as a place to write reusable code that
+  executes whenever sockets are used.
+
+- `src/UDPMessageBox.java`
+  This class is a wrapper around the `MessageBox` class that permits message passing via UDP. Functions the same as a
+  `MessageBox` object, except that when messages are put into a `UDPMessageBox` they are sent over UDP and stored in a
+  `UDPMessageBox` object that is owned by another subsystem.
+
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
 
@@ -118,9 +127,17 @@ from a ZIP file, extract the file and open the resulting directory using the Int
 
 ### Usage
 
-To run the project, run the main function of the Main class in `src/Main.java` (e.g., by right-clicking the file and
-selecting "Run Main.main()"). This will start 3 threads (i.e., one for the Scheduler (Server), one for the
-FireIncidentSubsystem (Client), and one for the DroneSubsystem (Client).
+To run the project, run the main methods of the following classes **in the specified order**:
+- DroneGUI.java
+- Scheduler.java
+- FireIncidentSubsystem.java
+- DroneSubsystem.java
+
+[//]: # (To run the project, run the main function of the Main class in `src/Main.java` &#40;e.g., by right-clicking the file and)
+
+[//]: # (selecting "Run Main.main&#40;&#41;"&#41;. This will start 3 threads &#40;i.e., one for the Scheduler &#40;Server&#41;, one for the)
+
+[//]: # (FireIncidentSubsystem &#40;Client&#41;, and one for the DroneSubsystem &#40;Client&#41;.)
 
 Once running, the project will not stop until it is manually stopped by the user (i.e., by pressing stop in IntelliJ).
 

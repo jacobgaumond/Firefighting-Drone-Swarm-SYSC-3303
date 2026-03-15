@@ -20,40 +20,44 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FireIncidentSubsystem implements Runnable {
-//    SocketWrapper clientSocket;
-//
-//    public final static int FIRE_INCIDENT_PORT = 9502;
-//
-//    public FireIncidentSubsystem() {
-//        try {
-//            clientSocket = new SocketWrapper(FIRE_INCIDENT_PORT);
-//        } catch (SocketException se) {
-//            throw new RuntimeException(se);
-//        }
-//    }
 
-    private MessageBox incomingMessageBox;
-    private MessageBox schedulerMessageBox;
+    private UDPMessageBox incomingMessageBox;
+    private UDPMessageBox schedulerMessageBox;
     private DroneGUI gui;
 
     private ArrayList<String> fileEvents = new ArrayList<String>();
 
-    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, String fileName, DroneGUI gui) {
-        this.incomingMessageBox = incomingMessageBox;
-        this.schedulerMessageBox = schedulerMessageBox;
+    public static void main(String[] args) {
+        String zoneFileName = "src/data/Sample_zone_file.csv"; // TODO: Fix ZoneMap
+        ZoneMap.loadZones(zoneFileName);
+        ZoneMap.printZones();
+
+        DroneGUI gui = null; // TODO: Fix gui
+
+        String inputFileName = "src/data/Sample_event_file.csv";
+
+        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(inputFileName, gui),
+                "FireIncidentSubsystemThread");
+
+        fireIncidentSubsystem.start()
+    }
+
+    public FireIncidentSubsystem(String fileName, DroneGUI gui) {
+        incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
+        schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
         this.gui = gui;
 
         loadFromFile(fileName);
     }
 
     // Testing constructor (no GUI, with file)
-    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, String fileName) {
-        this(incomingMessageBox, schedulerMessageBox, fileName, null);
+    public FireIncidentSubsystem(String fileName) {
+        this(fileName, null);
     }
     // Testing constructor (no GUI, no file)
-    public FireIncidentSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
-        this.incomingMessageBox = incomingMessageBox;
-        this.schedulerMessageBox = schedulerMessageBox;
+    public FireIncidentSubsystem() {
+        incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
+        schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
         this.gui = null;
     }
 

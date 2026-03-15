@@ -33,6 +33,15 @@ public class DroneGUI extends JFrame {
     private final static Color droneExtinguishingColor = new Color(77, 167, 46);
     private final static Color droneReturningColor = new Color(216, 109, 205);
 
+    public static void main(String[] args) {
+        String zoneFileName = "src/data/Sample_zone_file.csv"; // TODO: Fix ZoneMap
+        ZoneMap.loadZones(zoneFileName);
+        ZoneMap.printZones();
+
+        DroneGUI gui = new DroneGUI();
+        gui.setVisible(true);
+    }
+
     // GUI Constructor
     public DroneGUI() {
         setTitle("Group 2, Drone GUI");

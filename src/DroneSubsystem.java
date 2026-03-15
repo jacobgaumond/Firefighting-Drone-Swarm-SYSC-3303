@@ -37,8 +37,8 @@ public class DroneSubsystem implements Runnable {
 
     private static final double FLUID_RATE_ML_MS = 0.25;
 
-    private MessageBox incomingMessageBox;
-    private MessageBox schedulerMessageBox;
+    private UDPMessageBox incomingMessageBox;
+    private UDPMessageBox schedulerMessageBox;
     private DroneGUI gui;
 
     private static int nextIdValue = 1;//self ID creation
@@ -57,20 +57,34 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
+    public static void main(String[] args) {
+        DroneGUI gui = null; // TODO: Fix gui.
+
+        int TOTAL_DRONE_COUNT = 2;
+        Thread[] droneThreads = new Thread[TOTAL_DRONE_COUNT];
+        for (int i = 0; i < TOTAL_DRONE_COUNT; i++) {
+            droneThreads[i] = new Thread(new DroneSubsystem(gui), "DroneSubsystemThread-" + (i + 1));
+        }
+
+        for (Thread droneThread : droneThreads) {
+            droneThread.start();
+        }
+    }
+
     // WITHOUT MESSAGE BOXING
     public DroneSubsystem() {
         this(null, null, null);
     }
 
     // Testing constructor (no GUI)
-    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox) {
-        this(incomingMessageBox, schedulerMessageBox, null);
+    public DroneSubsystem() {
+        this(null);
     }
 
     //WITH MESSAGEBOX
-    public DroneSubsystem(MessageBox incomingMessageBox, MessageBox schedulerMessageBox, DroneGUI gui) {
-        this.schedulerMessageBox = schedulerMessageBox;
-        this.incomingMessageBox = incomingMessageBox;
+    public DroneSubsystem(DroneGUI gui) {
+        schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.SCHEDULER);;
+        incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.VOID);;
         this.gui = gui;
 
         //Core initlization
