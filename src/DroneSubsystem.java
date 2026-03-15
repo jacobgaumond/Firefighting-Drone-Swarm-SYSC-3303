@@ -63,7 +63,7 @@ public class DroneSubsystem implements Runnable {
         int TOTAL_DRONE_COUNT = 2;
         Thread[] droneThreads = new Thread[TOTAL_DRONE_COUNT];
         for (int i = 0; i < TOTAL_DRONE_COUNT; i++) {
-            droneThreads[i] = new Thread(new DroneSubsystem(gui), "DroneSubsystemThread-" + (i + 1));
+            droneThreads[i] = new Thread(new DroneSubsystem(), "DroneSubsystemThread-" + (i + 1));
         }
 
         for (Thread droneThread : droneThreads) {
@@ -72,10 +72,9 @@ public class DroneSubsystem implements Runnable {
     }    
     
     // Constructor
-    public DroneSubsystem(DroneGUI gui) {
+    public DroneSubsystem() {
         schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.SCHEDULER);;
         incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE, UDPMessageBox.Subsystem.VOID);;
-        this.gui = gui;
 
         //Core initlization
         this.droneSM = new DroneStateMachine();
@@ -86,15 +85,11 @@ public class DroneSubsystem implements Runnable {
         this.coordY = 0;
         this.fluidAmount = FLUID_MAX;
         this.batteryTravelDistance = BATTERY_MAX;  // TravelDistanceLevel change eventually
-        
-        // Create drone label
-        if (gui != null) {
-            gui.createDroneLabel(droneId);
-        }
+
     }
     
     // Testing constructor (no GUI)
-    public DroneSubsystem() { this(null); }
+    //public DroneSubsystem() { this(null); }
 
     @Override
     public void run() {

@@ -14,7 +14,7 @@ class DroneSubsystemTestNew {
     void setup() {
         droneBox = new MessageBox();
         schedulerBox = new MessageBox();
-        drone = new DroneSubsystem(droneBox, schedulerBox);
+        drone = new DroneSubsystem();
 
         // Start the drone in its own thread
         droneThread = new Thread(drone, "DroneThread");

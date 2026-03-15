@@ -7,7 +7,7 @@ class DroneSubsystemTest {
     MessageBox schedulerBox = new MessageBox();
 
     private void startDroneSubsystem() {
-        DroneSubsystem droneSys = new DroneSubsystem(droneBox, schedulerBox);
+        DroneSubsystem droneSys = new DroneSubsystem();
         new Thread(droneSys, "DroneSubsystemThread").start();
     }
 
