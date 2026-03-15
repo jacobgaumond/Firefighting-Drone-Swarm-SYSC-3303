@@ -38,7 +38,7 @@ public class UDPMessageBox {
 
                 if (SOCKET.receiveUDPPacket(receivePacket, UDP_MESSAGE_BOX.getSubsystem().toString(), UDP_MESSAGE_BOX.getTargetSubsystem().toString())) {
                     Message message = new Message(new String(dataBuffer, 0, receivePacket.getLength()));
-                    UDP_MESSAGE_BOX.putMessage(message);
+                    UDP_MESSAGE_BOX.putMessage(message, false);
                 }
             }
         }
