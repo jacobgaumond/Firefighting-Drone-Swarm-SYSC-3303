@@ -46,7 +46,9 @@ public class Scheduler implements Runnable {
     // Testing constructor (no GUI)
     public Scheduler() {
         this(null);
-        messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER);
+    }
+    public void closeBox() {
+        if (messageBox != null) messageBox.closeBox();
     }
 
     @Override

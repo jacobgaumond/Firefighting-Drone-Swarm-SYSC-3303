@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,10 +10,11 @@ public class TestSchedulerFSM {
     @BeforeEach
     public void setup() {
         fsm = new SchedulerStateMachine();
-        MessageBox incoming = new MessageBox();
-        MessageBox fireIncident = new MessageBox();
-        MessageBox drone = new MessageBox();
         scheduler = new Scheduler();
+    }
+    @AfterEach
+    public void teardown() {
+        scheduler.closeBox();
     }
 
     @Test
