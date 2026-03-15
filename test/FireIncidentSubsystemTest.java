@@ -17,7 +17,7 @@ class FireIncidentSubsystemTest {
 
     private void startFireSubsystem() {
         FireIncidentSubsystem fireSys =
-                new FireIncidentSubsystem(fireIncidentBox, schedulerBox, inputFileName);
+                new FireIncidentSubsystem(inputFileName);
         new Thread(fireSys, "FireIncidentSubsystemThread").start();
     }
 

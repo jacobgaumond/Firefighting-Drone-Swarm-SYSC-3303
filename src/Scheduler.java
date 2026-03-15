@@ -49,7 +49,11 @@ public class Scheduler implements Runnable {
     }
 
     // Testing constructor (no GUI)
-    public Scheduler() { this(null); }
+    public Scheduler() { this(null);
+        incomingMessageBox      = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER, UDPMessageBox.Subsystem.VOID);
+        fireIncidentMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.FIRE_INCIDENT);
+        droneMessageBox         = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.DRONE);
+    }
 
     @Override
     public void run() {
@@ -89,7 +93,7 @@ public class Scheduler implements Runnable {
     public void registerDrone(int droneId) {
         droneRegistry.put(droneId, new DroneInfo(droneId));
         System.out.println("[Scheduler] Registered drone " + droneId);
-        gui.createDroneLabel(droneId);
+        if(gui!=null)gui.createDroneLabel(droneId);
     }
 
     public void tryAssignTask() {
@@ -141,7 +145,7 @@ public class Scheduler implements Runnable {
                 amountToDrop,
                 drone.droneId  // assign to specific drone
         );
-        gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(),1,drone.fluid);//TODO need an actual calculation on how much time it sshould take
+        if(gui!=null)gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(),1,drone.fluid);//TODO need an actual calculation on how much time it sshould take
 
         Message droneMessage = new Message(
                 "DroneSubsystem",
@@ -175,7 +179,7 @@ public class Scheduler implements Runnable {
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
-                gui.extinguishFire(drone.droneId,drone.assignedZoneID,1 );//TODO implement fluid drop rate function
+                if(gui!=null)gui.extinguishFire(drone.droneId,drone.assignedZoneID,1 );//TODO implement fluid drop rate function
                 break;
 
             case "FIRE_HANDLED":
@@ -222,7 +226,7 @@ public class Scheduler implements Runnable {
                     // no leftover -> return to base
                     drone.assignedZoneID = -1;
                     drone.state = "EN_ROUTE_BASE";
-                    gui.returnDrone(drone.droneId, 1 ); //TODO Add A drone travel time function in
+                    if(gui!=null)gui.returnDrone(drone.droneId, 1 ); //TODO Add A drone travel time function in
                     sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                 }
 
@@ -258,7 +262,7 @@ public class Scheduler implements Runnable {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         System.out.println("[Scheduler] Handling fire event: " + fireEvent);
         taskQueue.add(fireEvent);
-        gui.fireStatusChange(fireEvent.getZoneId(),fireEvent.getSeverity());
+        if(gui!=null)gui.fireStatusChange(fireEvent.getZoneId(),fireEvent.getSeverity());
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 

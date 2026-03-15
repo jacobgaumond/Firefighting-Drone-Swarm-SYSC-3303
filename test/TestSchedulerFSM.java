@@ -12,7 +12,7 @@ public class TestSchedulerFSM {
         MessageBox incoming = new MessageBox();
         MessageBox fireIncident = new MessageBox();
         MessageBox drone = new MessageBox();
-        scheduler = new Scheduler(incoming, fireIncident, drone);
+        scheduler = new Scheduler();
     }
 
     @Test

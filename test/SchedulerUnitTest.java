@@ -15,7 +15,7 @@ public class SchedulerUnitTest {
         schedulerBox = new MessageBox();
         fireIncidentBox = new MessageBox();
         droneBox = new MessageBox();
-        scheduler = new Scheduler(schedulerBox, fireIncidentBox, droneBox);
+        scheduler = new Scheduler();
         new Thread(scheduler, "SchedulerThread").start();
 
         // Register a drone

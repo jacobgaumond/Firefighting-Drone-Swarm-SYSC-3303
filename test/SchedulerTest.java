@@ -9,7 +9,7 @@ class SchedulerTest {
 
     @Test
     void toFireIncidentMessageBox() throws InterruptedException {
-        Scheduler scheduler = new Scheduler(schedulerBox, fireIncidentBox, droneBox);
+        Scheduler scheduler = new Scheduler();
         new Thread(scheduler, "SchedulerThread").start();
 
         Message testMessage = new Message("FireIncidentSubsystem", "Scheduler", "TEST MESSAGE", Message.MessageType.FireEvent);
@@ -24,7 +24,7 @@ class SchedulerTest {
 
     @Test
     void toDroneMessageBox() throws InterruptedException {
-        Scheduler scheduler = new Scheduler(schedulerBox, fireIncidentBox, droneBox);
+        Scheduler scheduler = new Scheduler();
         new Thread(scheduler, "SchedulerThread").start();
 
         Message testMessage = new Message("DroneSubsystem", "Scheduler", "TEST MESSAGE", Message.MessageType.FireEvent);

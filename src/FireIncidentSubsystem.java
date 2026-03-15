@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FireIncidentSubsystem implements Runnable {
-    private DroneGUI gui;
     private UDPMessageBox incomingMessageBox;
     private UDPMessageBox schedulerMessageBox;
 
@@ -28,11 +27,10 @@ public class FireIncidentSubsystem implements Runnable {
         ZoneMap.loadZones(zoneFileName);
         ZoneMap.printZones();
 
-        DroneGUI gui = null; // TODO: Fix gui
 
         String inputFileName = "src/data/Sample_event_file.csv";
 
-        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(inputFileName, gui),
+        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(inputFileName),
                 "FireIncidentSubsystemThread");
 
         fireIncidentSubsystem.start();
@@ -41,8 +39,6 @@ public class FireIncidentSubsystem implements Runnable {
     public FireIncidentSubsystem(String fileName, DroneGUI gui) {
         incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
         schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
-        this.gui = gui;
-
         loadFromFile(fileName);
     }
 
@@ -54,7 +50,6 @@ public class FireIncidentSubsystem implements Runnable {
     public FireIncidentSubsystem() {
         incomingMessageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.VOID);
         schedulerMessageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT, UDPMessageBox.Subsystem.SCHEDULER);
-        this.gui = null;
     }
 
     @Override
@@ -76,10 +71,6 @@ public class FireIncidentSubsystem implements Runnable {
                     Message.MessageType.FireEvent
             );
 
-            // Update GUI with fire status
-            if (gui != null) {
-                gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
-            }
 
             schedulerMessageBox.putMessage(fireEventMessage);
 
