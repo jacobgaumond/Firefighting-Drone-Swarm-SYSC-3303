@@ -32,8 +32,8 @@ public class Scheduler implements Runnable {
     private Map<Integer, FireTask> activeFires = new HashMap<>();
 
     public static void main(String[] args) {
-        DroneGUI gui = null; // TODO: Fix gui.
-
+        DroneGUI gui = new DroneGUI(); // TODO: Fix gui.
+        gui.setVisible(true);
         Thread scheduler = new Thread(new Scheduler(gui),
                 "SchedulerThread");
 
@@ -89,6 +89,7 @@ public class Scheduler implements Runnable {
     public void registerDrone(int droneId) {
         droneRegistry.put(droneId, new DroneInfo(droneId));
         System.out.println("[Scheduler] Registered drone " + droneId);
+        gui.createDroneLabel(droneId);
     }
 
     public void tryAssignTask() {
@@ -140,6 +141,7 @@ public class Scheduler implements Runnable {
                 amountToDrop,
                 drone.droneId  // assign to specific drone
         );
+        gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(),1,drone.fluid);//TODO need an actual calculation on how much time it sshould take
 
         Message droneMessage = new Message(
                 "DroneSubsystem",
@@ -173,6 +175,7 @@ public class Scheduler implements Runnable {
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
+                gui.extinguishFire(drone.droneId,drone.assignedZoneID,1 );//TODO implement fluid drop rate function
                 break;
 
             case "FIRE_HANDLED":
@@ -219,6 +222,7 @@ public class Scheduler implements Runnable {
                     // no leftover -> return to base
                     drone.assignedZoneID = -1;
                     drone.state = "EN_ROUTE_BASE";
+                    gui.returnDrone(drone.droneId, 1 ); //TODO Add A drone travel time function in
                     sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                 }
 
@@ -254,6 +258,7 @@ public class Scheduler implements Runnable {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         System.out.println("[Scheduler] Handling fire event: " + fireEvent);
         taskQueue.add(fireEvent);
+        gui.fireStatusChange(fireEvent.getZoneId(),fireEvent.getSeverity());
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 

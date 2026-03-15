@@ -50,6 +50,11 @@ public class DroneGUI extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
+        //make zone map
+        String zoneFileName = "src/data/Sample_zone_file.csv"; // TODO: Fix ZoneMap
+        ZoneMap.loadZones(zoneFileName);
+        ZoneMap.printZones();
+
         // Calculate grid dimensions using zones maxes
         int maxX = 0, maxY = 0;
         for (ZoneMap.Zone zone : ZoneMap.getAllZones().values()) {
