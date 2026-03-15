@@ -27,25 +27,18 @@ public class FireIncidentSubsystem implements Runnable {
         ZoneMap.loadZones(zoneFileName);
         ZoneMap.printZones();
 
-
         String inputFileName = "src/data/Sample_event_file.csv";
-
-        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(inputFileName),
-                "FireIncidentSubsystemThread");
+        Thread fireIncidentSubsystem = new Thread(new FireIncidentSubsystem(inputFileName), "FireIncidentSubsystemThread");
 
         fireIncidentSubsystem.start();
     }
 
-    public FireIncidentSubsystem(String fileName, DroneGUI gui) {
+    public FireIncidentSubsystem(String fileName) {
         messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
         loadFromFile(fileName);
     }
 
-    // Testing constructor (no GUI, with file)
-    public FireIncidentSubsystem(String fileName) {
-        this(fileName, null);
-    }
-    // Testing constructor (no GUI, no file)
+    // Testing constructor (no file)
     public FireIncidentSubsystem() {
         messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
     }
