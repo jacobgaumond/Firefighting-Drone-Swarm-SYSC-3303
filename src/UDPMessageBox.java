@@ -122,7 +122,7 @@ public class UDPMessageBox {
                 byte[] dataBuffer = message.serialize().getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(dataBuffer, dataBuffer.length,
                         targetSubsystemAddress, targetPort);
-
+                System.out.println("UDP [" + SUBSYSTEM + "] -> Sending message to [" + targetSubsystem + "] on PORT: " + targetPort);
                 socket.sendUDPPacket(sendPacket, SUBSYSTEM.toString(), targetSubsystem.toString());
 
                 return message; // Return message to mimic Message.putMessage() behavior
@@ -142,7 +142,16 @@ public class UDPMessageBox {
     public Message putMessage(Message message, Subsystem targetSubsystem) {
         return putMessage(message, true, targetSubsystem);
     }
-    
+    //This specific message putter that handles the correct drone_ID sending
+    public Message putMessage(Message message, int droneId) {
+        int targetPort = BASE_DRONE_PORT + droneId - 1;
+        byte[] dataBuffer = message.serialize().getBytes();
+        DatagramPacket sendPacket = new DatagramPacket(dataBuffer, dataBuffer.length,
+                targetSubsystemAddress, targetPort);
+        System.out.println("UDP [" + SUBSYSTEM + "] -> Sending message to DRONE " + droneId + " on PORT: " + targetPort);
+        socket.sendUDPPacket(sendPacket, SUBSYSTEM.toString(), "DRONE_" + droneId);
+        return message;
+    }
     public void closeBox() {
         LISTENER_THREAD.stopListening();
         socket.close();
@@ -267,6 +276,7 @@ public class UDPMessageBox {
 
                 if (SOCKET.receiveUDPPacket(receivePacket, UDP_MESSAGE_BOX.getSubsystem().toString(), "UNKNOWN_SOURCE")) {
                     Message message = new Message(new String(dataBuffer, 0, receivePacket.getLength()));
+                    System.out.println("UDP [" + UDP_MESSAGE_BOX.getSubsystem() + "] <- Received message from PORT: " + receivePacket.getPort());
                     UDP_MESSAGE_BOX.INCOMING_BOX.putMessage(message);
                 }
             }

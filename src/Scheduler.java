@@ -148,7 +148,7 @@ public class Scheduler implements Runnable {
                 Message.MessageType.DroneRequest
         );
         
-        messageBox.putMessage(droneMessage, UDPMessageBox.Subsystem.DRONE);
+        messageBox.putMessage(droneMessage, drone.droneId);
     }
 
     // task finished -> assign next in the queue or mark drone as idle
@@ -244,7 +244,7 @@ public class Scheduler implements Runnable {
                 Message.MessageType.DroneRequest
         );
         System.out.println("[Scheduler] Sending " + event + " to Drone " + droneId);
-        messageBox.putMessage(message, UDPMessageBox.Subsystem.DRONE);
+        messageBox.putMessage(message, droneId);
     }
 
     private void processFireEvent(Message message) {
