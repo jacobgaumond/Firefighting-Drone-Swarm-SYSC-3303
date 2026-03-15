@@ -192,7 +192,7 @@ public class Scheduler implements Runnable {
                         
                         // Update GUI: extinguished
                         if (gui != null) {
-                            gui.fireStatusChange(zoneId, "");
+                            gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
                         }
 
                         if (taskQueue.isEmpty() && activeFires.isEmpty()) {
@@ -203,7 +203,7 @@ public class Scheduler implements Runnable {
                                 " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
 
                         if (gui != null) {
-                            gui.fireStatusChange(zoneId, getFireSeverity(activeTask));
+                            gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
                         }
                     }
                 }
@@ -277,6 +277,11 @@ public class Scheduler implements Runnable {
         }
 
         return nearest;
+    }
+
+    private String capitalizeSeverity(String severity) {
+        if (severity == null || severity.isEmpty()) return "";
+        return severity.substring(0,1).toUpperCase() + severity.substring(1).toLowerCase();
     }
 
     private DroneInfo findAvailableDrone(FireEvent fireEvent) {
