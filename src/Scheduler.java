@@ -23,6 +23,7 @@ public class Scheduler implements Runnable {
     private UDPMessageBox messageBox;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
+    private static final double MS_PER_UNIT = 0.15;
 
     // Data Tracking
     private Queue<FireEvent> taskQueue = new LinkedList<>();
@@ -141,7 +142,7 @@ public class Scheduler implements Runnable {
                 amountToDrop,
                 drone.droneId  // assign to specific drone
         );
-        if(gui!=null) gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(),1000, drone.fluid); // TODO time
+        if(gui!=null) gui.moveDroneToZone(drone.droneId,fireEvent.getZoneId(), calculateGuiDroneTravelTime(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY()), drone.fluid); // TODO time
 
         Message droneMessage = new Message(
                 "DroneSubsystem",
@@ -175,7 +176,7 @@ public class Scheduler implements Runnable {
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
-                if(gui!=null)gui.extinguishFire(drone.droneId,drone.assignedZoneID,1000 );//TODO time
+                if(gui!=null)gui.extinguishFire(drone.droneId,drone.assignedZoneID, calculateGuiDroneExtinguishTime(drone.fluidAssigned) );
                 break;
 
             case "FIRE_HANDLED":
@@ -220,7 +221,7 @@ public class Scheduler implements Runnable {
                     // no leftover -> return to base
                     drone.assignedZoneID = -1;
                     drone.state = "EN_ROUTE_BASE";
-                    if (gui!=null) gui.returnDrone(drone.droneId, 1000); // TODO time
+                    if (gui!=null) gui.returnDrone(drone.droneId, calculateGuiDroneTravelTime(drone.x,drone.y,0,0));
                     sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                 }
                 break;
@@ -249,7 +250,7 @@ public class Scheduler implements Runnable {
         messageBox.putMessage(message, droneId);
     }
 
-    private void processFireEvent(Message message) {
+    public void processFireEvent(Message message) {
         if (message.getMessageType() != Message.MessageType.FireEvent) return;
 
         FireEvent fireEvent = new FireEvent(message.getMessageData());
@@ -463,5 +464,15 @@ public class Scheduler implements Runnable {
         public int remainingFluidNeeded() {
             return fluidRequired - fluidDropped;
         }
+
+    }
+    public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
+        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
+        return (long) ((distance * MS_PER_UNIT) * 10/2);
+    }
+    private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
+        double fluidRateMlMs = 0.25;
+        int nozzleOpenDelayMs = 100;
+        return (long) ((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10;
     }
 }
