@@ -64,7 +64,10 @@ Breakdown of responsibilities of each team member for each iteration
     - Documented changes in the `README.md`.
 
 - Ulan:
-
+  - Some bug fixes regarding drones
+  - Severity status bug fix
+  - Reassignment to nearby fires that still need water
+  - Drones no with no fluid send back to base
 - Peter:
   - GUI
     - Get current drone position
