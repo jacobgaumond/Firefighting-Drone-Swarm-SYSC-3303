@@ -25,7 +25,6 @@ public class UDPMessageBox {
     }
 
     private final Subsystem SUBSYSTEM;
-//    private Subsystem TARGET_SUBSYSTEM;
 
     private final MessageBox INCOMING_BOX;
 
@@ -48,17 +47,14 @@ public class UDPMessageBox {
      *
      * @param subsystem         The Subsystem which owns this UDPMessageBox.
      */
-//     * @param targetSubsystem   The Subsystem with which this UDPMessageBox is facilitating communication with.
     public UDPMessageBox(Subsystem subsystem) {
     // public UDPMessageBox(Subsystem subsystem, Subsystem targetSubsystem) {
         INCOMING_BOX = new MessageBox();
 
-        SUBSYSTEM        = subsystem;
-        // TARGET_SUBSYSTEM = targetSubsystem;
+        SUBSYSTEM = subsystem;
 
         // Determine port numbers
         int port = getSubsystemPort(SUBSYSTEM);
-        // int targetPort = getTargetSubsystemPort(TARGET_SUBSYSTEM);
 
         // Create socket
         try {
@@ -78,7 +74,6 @@ public class UDPMessageBox {
             uhe.printStackTrace();
             System.exit(1);
         }
-        // TARGET_SUBSYSTEM_PORT = targetPort;
 
         // Start the LISTENER_THREAD
         LISTENER_THREAD.start();
@@ -163,9 +158,6 @@ public class UDPMessageBox {
     public Subsystem getSubsystem() {
         return SUBSYSTEM;
     }
-//    public Subsystem getTargetSubsystem() {
-//        return TARGET_SUBSYSTEM;
-//    }
 
     // ========== Helpers ==========
     private int getSubsystemPort(Subsystem subsystem) {
