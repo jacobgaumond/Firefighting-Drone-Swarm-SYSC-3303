@@ -48,7 +48,8 @@ public class UDPMessageBox {
         FIRE_INCIDENT,
         SCHEDULER,
         DRONE_GUI,
-        DRONE
+        DRONE,
+        VOID // Used as the target subsystem for "incoming message boxes", which do not send outgoing messages over UDP.
     }
 
     private Subsystem SUBSYSTEM;
@@ -118,6 +119,9 @@ public class UDPMessageBox {
             case Subsystem.DRONE:
                 targetSubsystemPort = (BASE_DRONE_PORT + numDroneMessageBoxes);
                 numDroneMessageBoxes += 1; // Increment, so that the next drone gets a unique port.
+                break;
+            case VOID: // No target (incoming message box; will not send messages)
+                targetSubsystemPort = -1;
                 break;
             default:
                 System.out.println("UDPMessageBox class must be instantiated with an appropriate/supported targetSubsystem");
@@ -193,15 +197,21 @@ public class UDPMessageBox {
      */
     public Message putMessage(Message message, boolean sourceIsSubsystem) {
         if (sourceIsSubsystem) {
-            // Skip message box, and send over UDP
-            // (otherwise, it causes issues with subsystem/listener competing over use of the box)
-            byte[] dataBuffer = message.serialize().getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(dataBuffer, dataBuffer.length,
-                    targetSubsystemAddress, TARGET_SUBSYSTEM_PORT);
+            if (TARGET_SUBSYSTEM_PORT == -1) {
+                System.out.println("Incoming message boxes cannot send outgoing messages (there is no destination).");
+                System.exit(1);
+            }
+            else {
+                // Skip message box, and send over UDP
+                // (otherwise, it causes issues with subsystem/listener competing over use of the box)
+                byte[] dataBuffer = message.serialize().getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(dataBuffer, dataBuffer.length,
+                        targetSubsystemAddress, TARGET_SUBSYSTEM_PORT);
 
-            socket.sendUDPPacket(sendPacket, SUBSYSTEM.toString(), TARGET_SUBSYSTEM.toString());
+                socket.sendUDPPacket(sendPacket, SUBSYSTEM.toString(), TARGET_SUBSYSTEM.toString());
 
-            return message; // Return message to mimic Message.putMessage() behavior
+                return message; // Return message to mimic Message.putMessage() behavior
+            }
         }
         else {
             return INCOMING_BOX.putMessage(message);
