@@ -1,18 +1,12 @@
 public class MessageBox {
-    private Message message;
+    private Message message = null;
 
-    private boolean boxFull;
-    private boolean boxClosed;
+    private boolean boxFull     = false;
+    private boolean boxClosed   = false;
 
-    private int     numWaitingThreads;
+    private int     numWaitingThreads = 0;
 
     public MessageBox() {
-        message     = null;
-
-        boxFull     = false;
-        boxClosed   = false;
-
-        numWaitingThreads = 0;
     }
 
     /**
