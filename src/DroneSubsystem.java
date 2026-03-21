@@ -26,7 +26,6 @@ public class DroneSubsystem implements Runnable {
     private static final double FLUID_RATE_ML_MS = 0.25;
 
     private UDPMessageBox messageBox;
-    private UDPMessageBox schedulerMessageBox;
 
     private static int nextIdValue = 1;//self ID creation
 
@@ -50,8 +49,6 @@ public class DroneSubsystem implements Runnable {
     private boolean droppingFluid = false;
 
     public static void main(String[] args) {
-        DroneGUI gui = null; // TODO: Fix gui.
-
         int TOTAL_DRONE_COUNT = 2;
         Thread[] droneThreads = new Thread[TOTAL_DRONE_COUNT];
         for (int i = 0; i < TOTAL_DRONE_COUNT; i++) {
@@ -87,10 +84,10 @@ public class DroneSubsystem implements Runnable {
         Message registerMessage = new Message(
                 "Scheduler",
                 "DroneSubsystem",
-                String.valueOf(droneId),
+                String.valueOf(droneId) + "," + this.messageBox.getPort(),
                 Message.MessageType.DroneRegistration
         );
-        messageBox.putMessage(registerMessage, UDPMessageBox.Subsystem.SCHEDULER);
+        messageBox.putMessage(registerMessage, UDPMessageBox.SCHEDULER_PORT);
 
         boolean boxOpen = true;
         do {
@@ -142,7 +139,7 @@ public class DroneSubsystem implements Runnable {
 
     public void updateScheduler() { //updates scheduling logic
         System.out.println("[Drone " + droneId + "] Notifying scheduler of status.");
-        messageBox.putMessage(sendStatus(), UDPMessageBox.Subsystem.SCHEDULER);
+        messageBox.putMessage(sendStatus(), UDPMessageBox.SCHEDULER_PORT);
     }
 
     //** Drone Movement & Modification Functions **//
@@ -233,7 +230,7 @@ public class DroneSubsystem implements Runnable {
     public void handleFault() {
         // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
-        messageBox.putMessage(sendStatus(), UDPMessageBox.Subsystem.SCHEDULER);
+        messageBox.putMessage(sendStatus(), UDPMessageBox.SCHEDULER_PORT);
     }
 
     // ========== Helpers ==========

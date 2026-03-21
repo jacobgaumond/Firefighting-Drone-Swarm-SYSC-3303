@@ -34,7 +34,7 @@ class UDPMessageBoxTest {
         
         // send message to SCHEDULER
         Thread sendThread = new Thread(() -> {
-            fireIncidentBox.putMessage(testMessage, UDPMessageBox.Subsystem.SCHEDULER); // PUT
+            fireIncidentBox.putMessage(testMessage, UDPMessageBox.SCHEDULER_PORT);
         });
         sendThread.start();
         
@@ -50,15 +50,6 @@ class UDPMessageBoxTest {
     }
 
     @Test
-    void getSubsystem() {
-        UDPMessageBox.Subsystem subsystem = schedulerBox.getSubsystem();
-        assertEquals(UDPMessageBox.Subsystem.SCHEDULER, subsystem);
-        
-        UDPMessageBox.Subsystem subsystem2 = fireIncidentBox.getSubsystem();
-        assertEquals(UDPMessageBox.Subsystem.FIRE_INCIDENT, subsystem2);
-    }
-
-    @Test
     void isFull() {
         // Initially empty
         assertFalse(schedulerBox.isFull());
@@ -66,7 +57,7 @@ class UDPMessageBoxTest {
         // Send a message to box
         Message testMessage = new Message("fire_incident", "scheduler", "fire_detected", Message.MessageType.FireEvent);
         Thread sendThread = new Thread(() -> {
-            fireIncidentBox.putMessage(testMessage, UDPMessageBox.Subsystem.SCHEDULER); // PUT
+            fireIncidentBox.putMessage(testMessage, UDPMessageBox.SCHEDULER_PORT);
         });
         sendThread.start();
         

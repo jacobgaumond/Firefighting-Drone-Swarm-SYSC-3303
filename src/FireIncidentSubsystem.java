@@ -63,7 +63,7 @@ public class FireIncidentSubsystem implements Runnable {
                     Message.MessageType.FireEvent
             );
 
-            messageBox.putMessage(fireEventMessage, UDPMessageBox.Subsystem.SCHEDULER);
+            messageBox.putMessage(fireEventMessage, UDPMessageBox.SCHEDULER_PORT);
 
             try {
                 Thread.sleep(3000); // wait between events
@@ -83,7 +83,7 @@ public class FireIncidentSubsystem implements Runnable {
                 if (!message.getMessageData().equals("Acknowledged")) {
                     message = new Message("DroneSubsystem", "FireIncidentSubsystem", "Acknowledged", Message.MessageType.FireEvent);
                     System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
-                    messageBox.putMessage(message, UDPMessageBox.Subsystem.SCHEDULER);
+                    messageBox.putMessage(message, UDPMessageBox.SCHEDULER_PORT);
                 }
             }
         } while (boxOpen);
@@ -116,7 +116,7 @@ public class FireIncidentSubsystem implements Runnable {
     }
 
     public void sendMessage(Message message) {
-        messageBox.putMessage(message, UDPMessageBox.Subsystem.SCHEDULER);
+        messageBox.putMessage(message, UDPMessageBox.SCHEDULER_PORT);
     }
 
     //parse csv file

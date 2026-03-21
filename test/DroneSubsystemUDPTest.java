@@ -41,7 +41,7 @@ class DroneSubsystemUDPTest {
         DroneSubsystem drone = new DroneSubsystem();
 
         Message outbound = new Message("Scheduler", "DroneSubsystem", drone.sendStatus().getMessageData(), Message.MessageType.DroneResponse);
-        drone.getMessageBox().putMessage(outbound, UDPMessageBox.Subsystem.SCHEDULER);
+        drone.getMessageBox().putMessage(outbound, UDPMessageBox.SCHEDULER_PORT);
 
         // Catch what the drone sent
         byte[] buf = new byte[200];
