@@ -100,7 +100,7 @@ public class UDPMessageBox {
         try {
             InetAddress targetAddress = InetAddress.getLocalHost(); // TODO pretend not all localHost?
             DatagramPacket sendPacket = new DatagramPacket(data, data.length, targetAddress, port);
-            System.out.println("UDP [" + SUBSYSTEM + "] -> Sending message on PORT: " + port);
+            //System.out.println("UDP [" + SUBSYSTEM + "] -> Sending message on PORT: " + port);
             socket.send(sendPacket);
         } catch (UnknownHostException uhe) {
             uhe.printStackTrace();
@@ -164,7 +164,7 @@ public class UDPMessageBox {
 
                 if (UDP_MESSAGE_BOX.receiveUDPPacket(receivePacket)) {
                     Message message = new Message(new String(dataBuffer, 0, receivePacket.getLength()));
-                    System.out.println("UDP [" + UDP_MESSAGE_BOX.SUBSYSTEM + "] <- Received message from PORT: " + receivePacket.getPort());
+                    //System.out.println("UDP [" + UDP_MESSAGE_BOX.SUBSYSTEM + "] <- Received message from PORT: " + receivePacket.getPort());
                     UDP_MESSAGE_BOX.INCOMING_BOX.putMessage(message);
                 }
             }

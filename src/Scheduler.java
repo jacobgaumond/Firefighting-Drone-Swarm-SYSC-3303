@@ -208,7 +208,7 @@ public class Scheduler implements Runnable {
                 fireEvent.getZoneId(),
                 id -> new FireTask(fireEvent, getRequiredFluid(fireEvent.getSeverity()))
         );
-        int amountToDrop = Math.min(drone.fluid, fireTask.remainingFluidNeeded());
+        int amountToDrop = Math.min((int)drone.fluid, fireTask.remainingFluidNeeded());
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
         drone.fluidAssigned = amountToDrop;
@@ -375,7 +375,7 @@ public class Scheduler implements Runnable {
         };
     }
     
-    private double calculateDistance(int x1, int y1, int x2, int y2) {
+    private double calculateDistance(double x1, double y1, int x2, int y2) {
         // a^2 + b^2 = c^2
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     }
@@ -413,7 +413,9 @@ public class Scheduler implements Runnable {
         int droneId;
         int port;
         String state;
-        int x, y, fluid, fluidAssigned, battery;
+        int  fluidAssigned, battery;
+        double fluid;
+        double x,y;
         int assignedZoneID = -1;
         int dispatchCount = 0;
 
@@ -441,7 +443,7 @@ public class Scheduler implements Runnable {
             return this.battery >= batteryNeeded;
         }
 
-        private double calculateDistance(int x1, int y1, int x2, int y2) {
+        private double calculateDistance(double x1, double y1, int x2, int y2) {
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
         }
     }

@@ -401,7 +401,7 @@ public class DroneGUI extends JFrame {
     }
     
     // Send drone to zone
-    public void moveDroneToZone(int droneId, int zoneId, long travelTime, int fluidRemaining) {
+    public void moveDroneToZone(int droneId, int zoneId, long travelTime, double fluidRemaining) {
         JLabel droneLabel = droneLabels.get(droneId);
         if (droneLabel == null) return;
         

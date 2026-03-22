@@ -1,12 +1,12 @@
 public class DroneResponse extends SimulationEvent {
     private int droneId;
     private String state;
-    private int x, y;
-    private int fluidAmount;
+    private double x, y;
+    private double fluidAmount;
     private int battery;
-    private int fluidDropped;
+    private double fluidDropped;
 
-    public DroneResponse(int droneId, String state, int x, int y, int fluidAmount, int battery, int fluidDropped) {
+    public DroneResponse(int droneId, String state, double x, double y, double fluidAmount, int battery, double fluidDropped) {
         this.droneId = droneId;
         this.state = state;
         this.x = x;
@@ -21,11 +21,11 @@ public class DroneResponse extends SimulationEvent {
         String[] parts = serialized.split(DELIMITER);
         this.droneId = Integer.parseInt(parts[0]);
         this.state = parts[1];
-        this.x = Integer.parseInt(parts[2]);
-        this.y = Integer.parseInt(parts[3]);
-        this.fluidAmount = Integer.parseInt(parts[4]);
+        this.x = Double.parseDouble(parts[2]);
+        this.y = Double.parseDouble(parts[3]);
+        this.fluidAmount = Double.parseDouble(parts[4]);
         this.battery = Integer.parseInt(parts[5]);
-        this.fluidDropped = Integer.parseInt(parts[6]);
+        this.fluidDropped = Double.parseDouble(parts[6]);
     }
 
     @Override
@@ -43,9 +43,9 @@ public class DroneResponse extends SimulationEvent {
     // Getters
     public int getDroneID() { return droneId; }
     public String getState() { return state; }
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getFluidAmount() { return fluidAmount; }
+    public double getX() { return x; }
+    public double getY() { return y; }
+    public double getFluidAmount() { return fluidAmount; }
     public int getBattery() { return battery; }
-    public int getFluidDropped() { return fluidDropped; }
+    public double getFluidDropped() { return fluidDropped; }
 }

@@ -19,7 +19,7 @@ class DroneSubsystemUDPTest {
         DatagramPacket packet = new DatagramPacket(
                 data, data.length,
                 InetAddress.getLocalHost(),
-                UDPMessageBox.BASE_DRONE_PORT + drone.getDroneId() - 1
+               drone.getMessageBox().getPort()
         );
         sender.send(packet);
         sender.close();
