@@ -44,9 +44,7 @@ public class DroneSubsystem implements Runnable {
     private final DroneStateMachine droneSM;
 
 
-    private boolean moving = false;
-    private double speedPertick = 1.0;
-    private boolean droppingFluid = false;
+    private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
     public static void main(String[] args) {
         int TOTAL_DRONE_COUNT = 2;
@@ -147,7 +145,7 @@ public class DroneSubsystem implements Runnable {
 
     public void tick(){
         if(this.getCurrentState()==DroneState.EN_ROUTE_FIRE||this.getCurrentState()==DroneState.EN_ROUTE_BASE){
-            //moveTick(speedPertick);
+            moveTick(speedPertick);
         }
         else if (this.getCurrentState()==DroneState.DROPPING_AGENT){
             releaseFluidPerTick(FLUID_RATE_ML_TICK);
@@ -284,17 +282,9 @@ public class DroneSubsystem implements Runnable {
         }
     }
 
-    // Called by the state machine instead of blocking methods
-    public void startFlyingTo(int x, int y, String payload) {
-        this.targetCoordX = x;
-        this.targetCoordY = y;
-        this.moving = true;
-    }
-
     // Called by tick()
     private void moveTick(double speed) {
-        if (!moving) return;
-
+        System.out.println(" Current x y :"+coordX+", "+coordY+" Target x y :"+targetCoordX+", "+targetCoordY);
         double dx = targetCoordX - coordX;
         double dy = targetCoordY - coordY;
         double distance = Math.sqrt(dx * dx + dy * dy);
@@ -302,8 +292,8 @@ public class DroneSubsystem implements Runnable {
         if (distance <= speed) {
             coordX = targetCoordX;
             coordY = targetCoordY;
-            moving = false;
             droneSM.handleEvent(DroneEvent.ARRIVAL, "", this);
+            updateScheduler();
         } else {
             coordX += (dx / distance) * speed;
             coordY += (dy / distance) * speed;

@@ -37,7 +37,7 @@ public class DroneStateMachine {
             case IDLE:
                 if (ev == DroneEvent.FIRE_ASSIGNED) {
                     transitionTo(DroneState.EN_ROUTE_FIRE, ev);
-                    drone.flyToFire(payload);
+                    //drone.flyToFire(payload);
                 }
                 break;
 
@@ -71,11 +71,11 @@ public class DroneStateMachine {
             case FIRE_HANDLED:
                 if (ev == DroneEvent.RETURN_BASE_REQUEST) {
                     transitionTo(DroneState.EN_ROUTE_BASE, ev);
-                    drone.returnToBase(payload);
+                   // drone.returnToBase(payload);
                 } else if (ev == DroneEvent.FIRE_ASSIGNED) {
                     if (drone.hasBattery() && drone.hasAgent()) {
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
-                        drone.flyToFire(payload);
+                       // drone.flyToFire(payload);
                     }
                 }
                 break;
@@ -90,7 +90,7 @@ public class DroneStateMachine {
                 } else if (ev == DroneEvent.FIRE_ASSIGNED) {
                     if (drone.hasBattery() && drone.hasAgent()) {
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
-                        drone.flyToFire(payload);
+                      //  drone.flyToFire(payload);
                     }
                 }
                 break;
