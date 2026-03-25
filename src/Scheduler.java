@@ -33,7 +33,6 @@ public class Scheduler implements Runnable {
     public static void main(String[] args) {
         DroneGUI gui = new DroneGUI();
         gui.setVisible(true);
-
         Thread scheduler = new Thread(new Scheduler(gui), "SchedulerThread");
         scheduler.start();
     }
@@ -149,7 +148,7 @@ public class Scheduler implements Runnable {
                 }
 
                 // only assign leftover if the drone actually dropped fluid at this fire
-                if (status.getFluidDropped() > 0 && drone.fluid > 0) {
+                if (status.getFluidDropped() > 0 && drone.fluid > 0 && !activeFires.isEmpty()) {
                     FireEvent leftOverTarget = findNearbyFire(drone);
                     if (leftOverTarget != null) {
                         System.out.println("[Scheduler] Drone " + drone.droneId + " using leftover water on nearby fire " + leftOverTarget.getZoneId());
