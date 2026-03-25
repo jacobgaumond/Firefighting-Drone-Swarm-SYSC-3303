@@ -43,20 +43,6 @@ public class MessageBox {
         notifyAll();
         return retrievedMessage;
     }
-    /** New non-blocking message grabber, checks for message if no message returns if not
-     * retrives the message
-     */
-    public synchronized Message pollMessage() {
-        if (!boxFull || boxClosed) {
-            return null; // Return immediately if nothing is there
-        }
-
-        Message retrievedMessage = message;
-        message = null;
-        boxFull = false;
-        notifyAll();
-        return retrievedMessage;
-    }
 
     /**
      * Places a Message object inside the message box, filling the box.

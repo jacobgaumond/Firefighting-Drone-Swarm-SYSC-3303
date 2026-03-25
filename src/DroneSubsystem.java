@@ -86,10 +86,9 @@ public class DroneSubsystem implements Runnable {
                 Message.MessageType.DroneRegistration
         );
         messageBox.putMessage(registerMessage, UDPMessageBox.SCHEDULER_PORT);
-
         while (true) {
-            Message message = messageBox.pollMessage(); //attempts to pull a message
-            if (message != null) { // if message handle the message
+            if(messageBox.isFull()){
+                Message message = messageBox.getMessage();
                 handleMessage(message);
             }
             tick();

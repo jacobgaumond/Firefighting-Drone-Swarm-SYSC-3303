@@ -72,12 +72,6 @@ public class UDPMessageBox {
     public Message getMessage() {
         return INCOMING_BOX.getMessage();
     }
-    /**
-     * Uses the non blocking poll message
-     */
-    public Message pollMessage() {
-        return INCOMING_BOX.pollMessage();
-    }
     
     /**
      * Sends messages to other subsystems.
