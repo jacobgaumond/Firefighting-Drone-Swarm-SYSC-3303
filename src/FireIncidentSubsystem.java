@@ -18,9 +18,8 @@ import java.util.Scanner;
 
 public class FireIncidentSubsystem implements Runnable {
 
-    private UDPMessageBox messageBox;
-
-    private ArrayList<String> fileEvents = new ArrayList<String>();
+    private final UDPMessageBox messageBox;
+    private final ArrayList<String> fileEvents = new ArrayList<>();
 
     public static void main(String[] args) {
         String zoneFileName = "src/data/Sample_zone_file.csv";
@@ -50,31 +49,45 @@ public class FireIncidentSubsystem implements Runnable {
 
     @Override
     public void run() {
+        // get all events from file
+        ArrayList<FireEvent> fireEvents = new ArrayList<>();
         for (String event : fileEvents) {
-            //parse the event CSV
-            FireEvent fireEvent = parseFireEvent(event);
-            if (fireEvent == null) {
-                continue;
+            FireEvent fireEvent = FireEvent.parseFromCsv(event);
+            if (fireEvent != null) {
+                fireEvents.add(fireEvent);
+            }
+        }
+
+        if (fireEvents.isEmpty()) {
+            return; // no events
+        }
+
+        // Find starting timestamp (first fire)
+        long time = Long.MAX_VALUE;
+        for (FireEvent event : fireEvents) {
+            if (event.getTimeInSeconds() < time) {
+                time = event.getTimeInSeconds();
+            }
+        }
+
+        // Dispatch events
+        for (FireEvent fireEvent : fireEvents) {
+            // respect delay between timestamps (accounting for simulation speed)
+            long delay = (long) ((fireEvent.getTimeInSeconds() - time) * (1000 / SimulationConfig.SIMULATION_SPEED));
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
 
-            //convert object into serialized string
             String serializedEvent = fireEvent.serialize();
-
-            //create a Message for the Scheduler -> DroneSubsystem
             Message fireEventMessage = new Message(
                     "Scheduler",
                     "FireIncidentSubsystem",
                     serializedEvent,
                     Message.MessageType.FireEvent
             );
-
             messageBox.putMessage(fireEventMessage, UDPMessageBox.SCHEDULER_PORT);
-
-            try {
-                Thread.sleep(3000); // wait between events
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         boolean boxOpen = true;
@@ -114,39 +127,11 @@ public class FireIncidentSubsystem implements Runnable {
             reader.close();
         } catch (FileNotFoundException e) {
             System.err.println("Error: " + e.getMessage());
-
             System.exit(1);
         }
     }
 
     public void sendMessage(Message message) {
         messageBox.putMessage(message, UDPMessageBox.SCHEDULER_PORT);
-    }
-
-    //parse csv file
-    public FireEvent parseFireEvent(String line) {
-        String[] parts = line.split(",");
-        if (parts.length != 4) {
-            System.err.println("Error: FireIncidentSubsystem: Invalid FireEvent");
-            return null;
-        }
-
-        String time = parts[0];
-        int zoneId;
-        try {
-            zoneId = Integer.parseInt(parts[1]);
-        } catch (NumberFormatException e) {
-            System.err.println("Error: FireIncidentSubsystem: Invalid zoneId");
-            return null;
-        }
-        String eventType = parts[2];
-        String severity = parts[3];
-
-        //coordinates where drone should go to
-        //for now Center of the fire zone is used -> Later can be randomized or specific coordinates
-        int targetX = ZoneMap.getX(zoneId);
-        int targetY = ZoneMap.getY(zoneId);
-
-        return new FireEvent(time, zoneId, eventType, severity, targetX, targetY);
     }
 }

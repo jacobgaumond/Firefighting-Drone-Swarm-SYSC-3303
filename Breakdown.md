@@ -1,4 +1,5 @@
 # Responsibility Breakdown
+
 Breakdown of responsibilities of each team member for each iteration
 
 ## Iteration #1
@@ -35,7 +36,6 @@ Breakdown of responsibilities of each team member for each iteration
   - Map to store zones
   - Few tests
   - Zone class implementation
-    
 - Peter:
   - GUI
     - Refactor
@@ -48,13 +48,15 @@ Breakdown of responsibilities of each team member for each iteration
   - GUI calls throughout app where needed
 
 ## Iteration #3
+
 - Olivia:
   -Code
-    - Scheduler routing for specific drone port calling
-    - GUI logic in the Scheduler subsystem
-    - Sequence Diagram
-    - State Machine Test Cases
-    - Refactoring of Test Cases
+  - Scheduler routing for specific drone port calling
+  - GUI logic in the Scheduler subsystem
+  - Sequence Diagram
+  - State Machine Test Cases
+  - Refactoring of Test Cases
+
 - Jacob:
   - Code
     - Created `src/SocketWrapper.java` in a previous iteration (unused until now). Updated/Polished in this iteration for UDP use.
@@ -68,13 +70,14 @@ Breakdown of responsibilities of each team member for each iteration
   - Severity status bug fix
   - Reassignment to nearby fires that still need water
   - Drones no with no fluid send back to base
+
 - Peter:
   - GUI
     - Get current drone position
   - Scheduler
     - Drone dispatching priority logic
     - Checks number of times specific drone has been dispatched
-    - Between least dispatched, select available. 
+    - Between least dispatched, select available.
     - If none available, compare severities for potentially reroute
   - Main
     - Add multiple drone threads
@@ -83,3 +86,27 @@ Breakdown of responsibilities of each team member for each iteration
     - fix sending messages over UDP
   - Tests
     - UDPMessageBoxTest
+
+## Iteration #4
+
+- Olivia:
+
+- Jacob:
+
+- Ulan:
+
+- Peter:
+  - DroneSubsystem:
+    - Fixed drone port logic
+    - Now uses ephemeral ports, tracked by Scheduler
+  - FireIncidentSubsystem:
+    - Implemented clock for FireEvent dispatching
+    - Follows event timestamps
+  - DroneGui:
+    - New "Time:" label that displays current simulated time
+    - Updates using daemon thread ticking every second
+    - takes into account SIMULATION_SPEED
+  - Scheduler:
+    - Now starts GuI's clock with first FireEvent's timestamp
+  - SimulationConfig:
+    - Defines and shares SIMULATION_SPEED between components

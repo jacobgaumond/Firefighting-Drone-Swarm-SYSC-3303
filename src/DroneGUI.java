@@ -16,6 +16,7 @@ public class DroneGUI extends JFrame {
 
     private int activeFires;
     private JLabel activeFireLabel;
+    private JLabel timeLabel;
 
     private int cols;
     private int rows;
@@ -280,7 +281,7 @@ public class DroneGUI extends JFrame {
         // Fire Counter
         gbc.gridy = 1;
         gbc.weighty = 0.0;
-        sideWrapper.add(createFireCounter(), gbc);
+        sideWrapper.add(createStatusBox(), gbc);
 
         // Logs
         JPanel bottomHalf = createLogsPanel();
@@ -328,18 +329,23 @@ public class DroneGUI extends JFrame {
         return p;
     }
 
-    // Fire Counter
-    private JPanel createFireCounter() {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    // Clock + Fire Counter
+    private JPanel createStatusBox() {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        p.setBorder(BorderFactory.createTitledBorder("Fires"));
+        p.setBorder(BorderFactory.createTitledBorder("Status"));
         p.setBackground(new Color(245, 245, 245));
+
+        timeLabel = new JLabel("Time: 00:00:00");
+        timeLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
 
         activeFireLabel = new JLabel("Active Fires: 0");
         activeFireLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
 
+        p.add(timeLabel);
         p.add(activeFireLabel);
-        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50)); // prevent resizing
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80)); // prevent resizing
 
         return p;
     }
@@ -362,6 +368,30 @@ public class DroneGUI extends JFrame {
     }
 
     // ========== METHODS ==========
+    // Start clock
+    public void startClock(long startTimeSeconds) {
+        Thread clockThread = new Thread(() -> {
+            long simulationSecondMs = (long) (1000 / SimulationConfig.SIMULATION_SPEED);
+            long timeSeconds = startTimeSeconds;
+
+            while (true) {
+                int hours = (int) (timeSeconds / 3600);
+                int minutes = (int) ((timeSeconds % 3600) / 60);
+                int seconds = (int) (timeSeconds % 60);
+                timeLabel.setText(String.format("Time: %02d:%02d:%02d", hours, minutes, seconds));
+
+                try {
+                    Thread.sleep(simulationSecondMs);
+                    timeSeconds += 1; // Add 1 simulated second
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        });
+        clockThread.setDaemon(true); // closes with others
+        clockThread.start();
+    }
+
     // Log a message
     public void logMessage(String message) {
         // Remove trailing X's and whitespace, then append

@@ -35,7 +35,7 @@ public class FireEvent extends SimulationEvent {
         this.targetY = Integer.parseInt(parts[5]);
     }
 
-    //getters
+    // getters
     public String getTime() {
         return time;
     }
@@ -58,6 +58,38 @@ public class FireEvent extends SimulationEvent {
 
     public int getTargetY() {
         return targetY;
+    }
+
+    public long getTimeInSeconds() {
+        String[] parts = time.split(":");
+        int hours = Integer.parseInt(parts[0]);
+        int minutes = Integer.parseInt(parts[1]);
+        int seconds = Integer.parseInt(parts[2]);
+        return (hours * 3600) + (minutes * 60) + seconds;
+    }
+
+    public static FireEvent parseFromCsv(String line) {
+        String[] parts = line.split(",");
+        if (parts.length != 4) {
+            System.err.println("Error: FireEvent: Invalid CSV line");
+            return null;
+        }
+
+        String time = parts[0];
+        int zoneId;
+        try {
+            zoneId = Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
+            System.err.println("Error: FireEvent: Invalid zoneId");
+            return null;
+        }
+        String eventType = parts[2];
+        String severity = parts[3];
+
+        int targetX = ZoneMap.getX(zoneId);
+        int targetY = ZoneMap.getY(zoneId);
+
+        return new FireEvent(time, zoneId, eventType, severity, targetX, targetY);
     }
 
     @Override

@@ -22,14 +22,15 @@ public class Scheduler implements Runnable {
 
     private DroneGUI gui;
     private UDPMessageBox messageBox;
+    private boolean clockStarted = false;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
     private static final double MS_PER_UNIT = 0.15;
 
-    // Data Tracking
-    private Queue<FireEvent> taskQueue = new LinkedList<>();
-    private Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
-    private Map<Integer, FireTask> activeFires = new HashMap<>();
+    // State Tracking
+    private final Queue<FireEvent> taskQueue = new LinkedList<>();
+    private final Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
+    private final Map<Integer, FireTask> activeFires = new HashMap<>();
 
     public static void main(String[] args) {
         DroneGUI gui = new DroneGUI();
@@ -101,6 +102,11 @@ public class Scheduler implements Runnable {
         taskQueue.add(fireEvent);
 
         if (gui != null) {
+            // Start clock on first fire event
+            if (!clockStarted) {
+                gui.startClock(fireEvent.getTimeInSeconds());
+                clockStarted = true;
+            }
             gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
         }
 
@@ -510,12 +516,13 @@ public class Scheduler implements Runnable {
 
     public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        return (long) ((distance * MS_PER_UNIT) * 10 / 2);
+        return (long) (((distance * MS_PER_UNIT) * 10 / 2) / SimulationConfig.SIMULATION_SPEED);
     }
 
     private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
+        // TODO FIX
         double fluidRateMlMs = 0.25;
         int nozzleOpenDelayMs = 100;
-        return (long) ((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10;
+        return (long) ((((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10) / SimulationConfig.SIMULATION_SPEED);
     }
 }
