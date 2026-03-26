@@ -106,6 +106,7 @@ Breakdown of responsibilities of each team member for each iteration
     - New "Time:" label that displays current simulated time
     - Updates using daemon thread ticking every second
     - takes into account SIMULATION_SPEED
+    - faulting
   - Scheduler:
     - Now starts GuI's clock with first FireEvent's timestamp
   - SimulationEnvironment:

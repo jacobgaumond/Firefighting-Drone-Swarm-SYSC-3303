@@ -10,8 +10,8 @@
  */
 public class SimulationEnvironment {
 
-    public static final double SIMULATION_SPEED = 2.0;
-    public static final long SIMULATION_SECOND_MS = (long) (1000 / SIMULATION_SPEED);
+    public static final int SIMULATION_SPEED = 1;
+    public static final int SIMULATION_SECOND_MS = (1000 / SIMULATION_SPEED);
 
     public volatile static long currentTime = 0;
 

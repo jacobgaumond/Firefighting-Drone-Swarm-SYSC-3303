@@ -1,12 +1,13 @@
 
 public class FireEvent extends SimulationEvent {
 
-    private String time; //14:03:15
-    private int zoneId; //1
-    private String eventType; //fire detected
-    private String severity; //high or moderate
-    private int targetX; //x coordinate of fire
-    private int targetY; //y coordinate of fire
+    private String time; // 14:03:15
+    private int zoneId; // 1
+    private String eventType; // fire detected
+    private String severity; // high or moderate
+    private int targetX; // x coordinate of fire
+    private int targetY; // y coordinate of fire
+    private String faultType; // "stuck"," jammed"," packet_loss"," corrupted", or empty string
 
     public FireEvent(String time, int zoneId, String eventType, String severity, int targetX, int targetY) {
         this.time = time;
@@ -15,6 +16,17 @@ public class FireEvent extends SimulationEvent {
         this.severity = severity;
         this.targetX = targetX;
         this.targetY = targetY;
+        this.faultType = "";
+    }
+
+    public FireEvent(String time, int zoneId, String eventType, String severity, int targetX, int targetY, String faultType) {
+        this.time = time;
+        this.zoneId = zoneId;
+        this.eventType = eventType;
+        this.severity = severity;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.faultType = faultType;
     }
 
     /**
@@ -33,6 +45,7 @@ public class FireEvent extends SimulationEvent {
         this.severity = parts[3];
         this.targetX = Integer.parseInt(parts[4]);
         this.targetY = Integer.parseInt(parts[5]);
+        this.faultType = parts.length > 6 ? parts[6] : "";
     }
 
     // getters
@@ -60,6 +73,10 @@ public class FireEvent extends SimulationEvent {
         return targetY;
     }
 
+    public String getFaultType() {
+        return faultType;
+    }
+
     public long getTimeInSeconds() {
         String[] parts = time.split(":");
         int hours = Integer.parseInt(parts[0]);
@@ -70,7 +87,7 @@ public class FireEvent extends SimulationEvent {
 
     public static FireEvent parseFromCsv(String line) {
         String[] parts = line.split(",");
-        if (parts.length != 4) {
+        if (parts.length < 4) {
             System.err.println("Error: FireEvent: Invalid CSV line");
             return null;
         }
@@ -85,11 +102,12 @@ public class FireEvent extends SimulationEvent {
         }
         String eventType = parts[2];
         String severity = parts[3];
+        String faultType = parts.length > 4 ? parts[4].trim() : "";
 
         int targetX = ZoneMap.getX(zoneId);
         int targetY = ZoneMap.getY(zoneId);
 
-        return new FireEvent(time, zoneId, eventType, severity, targetX, targetY);
+        return new FireEvent(time, zoneId, eventType, severity, targetX, targetY, faultType);
     }
 
     @Override
@@ -97,7 +115,7 @@ public class FireEvent extends SimulationEvent {
         return "FireTask[Time=" + time + ", Zone="
                 + zoneId + ", eventType=" + eventType + ", Severity="
                 + severity + ", TargetX="
-                + targetX + ", TargetY=" + targetY + "]";
+                + targetX + ", TargetY=" + targetY + ", FaultType=" + faultType + "]";
     }
 
     /**
@@ -112,7 +130,8 @@ public class FireEvent extends SimulationEvent {
                 + getEventType() + DELIMITER
                 + getSeverity() + DELIMITER
                 + getTargetX() + DELIMITER
-                + getTargetY();
+                + getTargetY() + DELIMITER
+                + getFaultType();
         return serializedFireEvent;
     }
 }

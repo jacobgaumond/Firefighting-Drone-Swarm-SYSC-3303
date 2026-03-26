@@ -63,19 +63,15 @@ public class FireIncidentSubsystem implements Runnable {
         }
 
         // Find starting timestamp (first fire)
-        long time = Long.MAX_VALUE;
-        for (FireEvent event : fireEvents) {
-            if (event.getTimeInSeconds() < time) {
-                time = event.getTimeInSeconds();
-            }
-        }
+        long startTime = fireEvents.get(0).getTimeInSeconds();
 
         // Dispatch events
         for (FireEvent fireEvent : fireEvents) {
+            // TODO: broken
             // respect delay between timestamps (accounting for simulation speed)
-            long delay = (long) ((fireEvent.getTimeInSeconds() - time) * (1000 / SimulationEnvironment.SIMULATION_SPEED));
+            long delay = (long) ((fireEvent.getTimeInSeconds() - startTime) * (1000.0 / SimulationEnvironment.SIMULATION_SPEED));
             try {
-                Thread.sleep(delay);
+                Thread.sleep(delay / 2);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
