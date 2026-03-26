@@ -84,6 +84,9 @@ public class FireEvent extends SimulationEvent {
         int seconds = Integer.parseInt(parts[2]);
         return (hours * 3600) + (minutes * 60) + seconds;
     }
+    public void setFaultType(String s){
+        this.faultType = s;
+    }
 
     public static FireEvent parseFromCsv(String line) {
         String[] parts = line.split(",");

@@ -41,6 +41,8 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
+    private String pendingFault;
+
     private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
     public static void main(String[] args) {
@@ -101,6 +103,17 @@ public class DroneSubsystem implements Runnable {
         if (message.getMessageType() == Message.MessageType.DroneRequest) {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
             System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
+
+            String incomingFault = droneEvent.getFaultType();
+            if (incomingFault != null && !incomingFault.equalsIgnoreCase("NONE") && !incomingFault.isEmpty()) {
+                System.out.println("[DroneSubsystem] CAUTION: Mission assigned with fault: " + incomingFault);
+                this.pendingFault = incomingFault;
+            } else {
+                this.pendingFault = "NONE";
+            }
+
+
+            //Handles event and requests
 
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED || droneEvent.getDroneEvent() == DroneEvent.RETURN_BASE_REQUEST) {
                 this.targetCoordX = droneEvent.getTargetX();

@@ -240,7 +240,8 @@ public class Scheduler implements Runnable {
                 fireEvent.getTargetX(),
                 fireEvent.getTargetY(),
                 amountToDrop,
-                drone.droneId // assign to specific drone
+                drone.droneId, // assign to specific drone
+                fireEvent.getFaultType()
         );
         if (gui != null) {
             gui.moveDroneToZone(drone.droneId,
@@ -256,7 +257,7 @@ public class Scheduler implements Runnable {
                 request.serialize(),
                 Message.MessageType.DroneRequest
         );
-
+        fireEvent.setFaultType("NONE");
         messageBox.putMessage(droneMessage, drone.port);
     }
 
@@ -264,7 +265,7 @@ public class Scheduler implements Runnable {
         DroneInfo drone = droneRegistry.get(droneId);
 
         DroneRequest request = new DroneRequest(
-                event, "", 0, "", "", 0, 0, 0, droneId
+                event, "", 0, "", "", 0, 0, 0, droneId,"NONE"
         );
         Message message = new Message(
                 "DroneSubsystem",

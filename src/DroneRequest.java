@@ -54,7 +54,8 @@ public class DroneRequest extends SimulationEvent {
 
     @Override
     public String serialize() {
-        return droneEvent + DELIMITER + time + DELIMITER + zoneId + DELIMITER + eventType + DELIMITER + severity + DELIMITER + targetX + DELIMITER + targetY + DELIMITER + amountToDrop + DELIMITER + droneId;
+        String fault = (faultType == null || faultType.isEmpty()) ? "NONE":faultType;
+        return droneEvent + DELIMITER + time + DELIMITER + zoneId + DELIMITER + eventType + DELIMITER + severity + DELIMITER + targetX + DELIMITER + targetY + DELIMITER + amountToDrop + DELIMITER + droneId+ DELIMITER+ fault;
     }
 
     @Override
@@ -98,4 +99,5 @@ public class DroneRequest extends SimulationEvent {
     public int getDroneId() {
         return droneId;
     }
+    public String getFaultType(){return faultType;}
 }
