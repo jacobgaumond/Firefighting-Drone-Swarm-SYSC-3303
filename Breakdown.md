@@ -108,5 +108,5 @@ Breakdown of responsibilities of each team member for each iteration
     - takes into account SIMULATION_SPEED
   - Scheduler:
     - Now starts GuI's clock with first FireEvent's timestamp
-  - SimulationConfig:
-    - Defines and shares SIMULATION_SPEED between components
+  - SimulationEnvironment:
+    - Defines and shares simulated clock and time related variable

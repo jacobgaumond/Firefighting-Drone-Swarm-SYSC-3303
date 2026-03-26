@@ -73,7 +73,7 @@ public class FireIncidentSubsystem implements Runnable {
         // Dispatch events
         for (FireEvent fireEvent : fireEvents) {
             // respect delay between timestamps (accounting for simulation speed)
-            long delay = (long) ((fireEvent.getTimeInSeconds() - time) * (1000 / SimulationConfig.SIMULATION_SPEED));
+            long delay = (long) ((fireEvent.getTimeInSeconds() - time) * (1000 / SimulationEnvironment.SIMULATION_SPEED));
             try {
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
@@ -91,7 +91,7 @@ public class FireIncidentSubsystem implements Runnable {
         }
 
         boolean boxOpen = true;
-        do {
+        while (boxOpen) {
             Message message = messageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
@@ -103,7 +103,7 @@ public class FireIncidentSubsystem implements Runnable {
                     messageBox.putMessage(message, UDPMessageBox.SCHEDULER_PORT);
                 }
             }
-        } while (boxOpen);
+        }
     }
 
     private void loadFromFile(String fileName) {

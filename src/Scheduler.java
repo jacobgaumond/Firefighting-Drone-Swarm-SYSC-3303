@@ -22,10 +22,10 @@ public class Scheduler implements Runnable {
 
     private DroneGUI gui;
     private UDPMessageBox messageBox;
-    private boolean clockStarted = false;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
     private static final double MS_PER_UNIT = 0.15;
+    private boolean clockStarted = false;
 
     // State Tracking
     private final Queue<FireEvent> taskQueue = new LinkedList<>();
@@ -102,9 +102,9 @@ public class Scheduler implements Runnable {
         taskQueue.add(fireEvent);
 
         if (gui != null) {
-            // Start clock on first fire event
             if (!clockStarted) {
-                gui.startClock(fireEvent.getTimeInSeconds());
+                SimulationEnvironment.startClock(fireEvent.getTimeInSeconds());
+                gui.startClockDisplay();
                 clockStarted = true;
             }
             gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
@@ -516,13 +516,13 @@ public class Scheduler implements Runnable {
 
     public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        return (long) (((distance * MS_PER_UNIT) * 10 / 2) / SimulationConfig.SIMULATION_SPEED);
+        return (long) (((distance * MS_PER_UNIT) * 10 / 2) / SimulationEnvironment.SIMULATION_SPEED);
     }
 
     private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
         // TODO FIX
         double fluidRateMlMs = 0.25;
         int nozzleOpenDelayMs = 100;
-        return (long) ((((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10) / SimulationConfig.SIMULATION_SPEED);
+        return (long) ((((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10) / SimulationEnvironment.SIMULATION_SPEED);
     }
 }

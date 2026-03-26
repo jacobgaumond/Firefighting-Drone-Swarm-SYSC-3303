@@ -368,21 +368,14 @@ public class DroneGUI extends JFrame {
     }
 
     // ========== METHODS ==========
-    // Start clock
-    public void startClock(long startTimeSeconds) {
+    // Start Clock
+    public void startClockDisplay() {
+        // update time every second
         Thread clockThread = new Thread(() -> {
-            long simulationSecondMs = (long) (1000 / SimulationConfig.SIMULATION_SPEED);
-            long timeSeconds = startTimeSeconds;
-
             while (true) {
-                int hours = (int) (timeSeconds / 3600);
-                int minutes = (int) ((timeSeconds % 3600) / 60);
-                int seconds = (int) (timeSeconds % 60);
-                timeLabel.setText(String.format("Time: %02d:%02d:%02d", hours, minutes, seconds));
-
+                timeLabel.setText("Time: " + SimulationEnvironment.getFormattedTime());
                 try {
-                    Thread.sleep(simulationSecondMs);
-                    timeSeconds += 1; // Add 1 simulated second
+                    Thread.sleep(SimulationEnvironment.SIMULATION_SECOND_MS / 2);
                 } catch (InterruptedException e) {
                     break;
                 }

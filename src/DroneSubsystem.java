@@ -154,7 +154,7 @@ public class DroneSubsystem implements Runnable {
 
         // travel time
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationConfig.SIMULATION_SPEED));
+        long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED));
 
         try {
             Thread.sleep(travelTime);
@@ -169,7 +169,7 @@ public class DroneSubsystem implements Runnable {
 
     public void returnToBase(String payload) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationConfig.SIMULATION_SPEED));
+        long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED));
 
         try {
             Thread.sleep(travelTime);
@@ -201,7 +201,7 @@ public class DroneSubsystem implements Runnable {
     }*/
     public void closeNozzle(String payload) {
         try {
-            Thread.sleep((long) (NOZZLE_CLOSE_DELAY_MS / SimulationConfig.SIMULATION_SPEED));
+            Thread.sleep((long) (NOZZLE_CLOSE_DELAY_MS / SimulationEnvironment.SIMULATION_SPEED));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
