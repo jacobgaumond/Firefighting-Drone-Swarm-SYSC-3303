@@ -307,6 +307,7 @@ public class DroneGUI extends JFrame {
         p.add(createLegendItem("Drone Outbound", droneOutboundColor, "D(n)"));
         p.add(createLegendItem("Drone Extinguishing fire", droneExtinguishingColor, "D(n)"));
         p.add(createLegendItem("Drone returning", droneReturningColor, "D(n)"));
+        p.add(createLegendItem("Drone faulted", droneFaultedColor, "D(n)"));
         return p;
     }
 

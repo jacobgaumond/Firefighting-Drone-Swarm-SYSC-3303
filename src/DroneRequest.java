@@ -11,6 +11,8 @@ public class DroneRequest extends SimulationEvent {
     private int amountToDrop;
     private int droneId;
 
+    private String faultType; // "stuck"," jammed"," packet_loss"," corrupted", or empty string
+
     public DroneRequest(DroneEvent droneEvent, String time, int zoneId, String eventType, String severity, int targetX, int targetY, int amountToDrop, int droneId) {
         this.droneEvent = droneEvent;
         this.time = time;
@@ -21,6 +23,18 @@ public class DroneRequest extends SimulationEvent {
         this.targetY = targetY;
         this.amountToDrop = amountToDrop;
         this.droneId = droneId;
+    }
+    public DroneRequest(DroneEvent droneEvent, String time, int zoneId, String eventType, String severity, int targetX, int targetY, int amountToDrop, int droneId,String faultType) {
+        this.droneEvent = droneEvent;
+        this.time = time;
+        this.zoneId = zoneId;
+        this.eventType = eventType;
+        this.severity = severity;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.amountToDrop = amountToDrop;
+        this.droneId = droneId;
+        this.faultType = faultType;
     }
 
     // Deserialize constructor
@@ -35,6 +49,7 @@ public class DroneRequest extends SimulationEvent {
         this.targetY = Integer.parseInt(parts[6]);
         this.amountToDrop = Integer.parseInt(parts[7]);
         this.droneId = Integer.parseInt(parts[8]);
+        this.faultType = parts.length > 9 ? parts[9] : "";
     }
 
     @Override
