@@ -1,3 +1,4 @@
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -14,8 +15,8 @@ import java.net.UnknownHostException;
 // Messages put into the message box by a subsystem are immediately sent through the socket.
 //
 // Other MessageBox methods are supported; many simply delegate to the MessageBox.
-
 public class UDPMessageBox {
+
     public enum Subsystem {
         FIRE_INCIDENT,
         SCHEDULER,
@@ -28,12 +29,13 @@ public class UDPMessageBox {
     private final ListenerThread LISTENER_THREAD;
 
     // Port constants
-    public final static int FIRE_INCIDENT_PORT  = 9500;
-    public final static int SCHEDULER_PORT      = 9501;
+    public final static int FIRE_INCIDENT_PORT = 9500;
+    public final static int SCHEDULER_PORT = 9501;
     // scheduler tracks ephemeral drone ports 
 
     /**
-     * UDPMessageBox constructor allowing a subsystem to communicate with another
+     * UDPMessageBox constructor allowing a subsystem to communicate with
+     * another
      *
      * @param subsystem The Subsystem which owns this UDPMessageBox
      */
@@ -44,14 +46,12 @@ public class UDPMessageBox {
         // Create socket
         try {
             if (SUBSYSTEM == Subsystem.SCHEDULER) {
-                socket = new DatagramSocket(SCHEDULER_PORT); 
-            } 
-            else if (SUBSYSTEM == Subsystem.FIRE_INCIDENT) {
-                socket = new DatagramSocket(FIRE_INCIDENT_PORT); 
-            } 
-            else if (SUBSYSTEM == Subsystem.DRONE) {
+                socket = new DatagramSocket(SCHEDULER_PORT);
+            } else if (SUBSYSTEM == Subsystem.FIRE_INCIDENT) {
+                socket = new DatagramSocket(FIRE_INCIDENT_PORT);
+            } else if (SUBSYSTEM == Subsystem.DRONE) {
                 socket = new DatagramSocket(); // ephemeral port
-            } 
+            }
         } catch (SocketException e) {
             e.printStackTrace();
             System.exit(1);
@@ -67,32 +67,32 @@ public class UDPMessageBox {
     /**
      * Delegates to MessageBox.getMessage()
      *
-     * @return  the Message object that was inside the box
+     * @return the Message object that was inside the box
      */
     public Message getMessage() {
         return INCOMING_BOX.getMessage();
     }
-    
+
     /**
      * Sends messages to other subsystems.
      *
-     * @param message   the Message object to send.
-     * @param port      the target port to send the message to.
+     * @param message the Message object to send.
+     * @param port the target port to send the message to.
      */
     public void putMessage(Message message, int port) {
         sendMessage(message, port);
     }
-    
+
     /**
      * Sends a Message over UDP to the target port
      *
-     * @param message   the Message to send
-     * @param port      the target port to send the message to
+     * @param message the Message to send
+     * @param port the target port to send the message to
      */
     public void sendMessage(Message message, int port) {
         byte[] data = message.serialize().getBytes();
         try {
-            InetAddress targetAddress = InetAddress.getLocalHost(); // TODO pretend not all localHost?
+            InetAddress targetAddress = InetAddress.getLocalHost();
             DatagramPacket sendPacket = new DatagramPacket(data, data.length, targetAddress, port);
             //System.out.println("UDP [" + SUBSYSTEM + "] -> Sending message on PORT: " + port);
             socket.send(sendPacket);
@@ -104,13 +104,15 @@ public class UDPMessageBox {
             System.exit(1);
         }
     }
-        
+
     /**
-     * Receives a UDP datagram from the socket, returning a boolean signifying method success.
+     * Receives a UDP datagram from the socket, returning a boolean signifying
+     * method success.
      *
-     * @param receivePacket         The DatagramPacket to receive on.
-     * @return                      boolean signifying whether the method proceeded successfully/unsuccessfully
-     *                              (i.e., false if the socket is closed while this method is receiving).
+     * @param receivePacket The DatagramPacket to receive on.
+     * @return boolean signifying whether the method proceeded
+     * successfully/unsuccessfully (i.e., false if the socket is closed while
+     * this method is receiving).
      */
     private boolean receiveUDPPacket(DatagramPacket receivePacket) {
         try {
@@ -134,14 +136,17 @@ public class UDPMessageBox {
     public int getPort() {
         return socket.getLocalPort();
     }
+
     public boolean isFull() {
         return INCOMING_BOX.isFull();
     }
+
     private void closeSocket() {
         socket.close();
     }
 
     private class ListenerThread extends Thread {
+
         private final UDPMessageBox UDP_MESSAGE_BOX;
         private boolean keepListening = true;
 

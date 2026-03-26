@@ -13,8 +13,8 @@
 
 //import java.io.*;
 //import java.net.*;
-
 public class DroneSubsystem implements Runnable {
+
     private static final int NOZZLE_OPEN_DELAY_MS = 100;
     private static final int NOZZLE_CLOSE_DELAY_MS = 100;
     private static final int FLUID_MAX = 15;
@@ -43,7 +43,6 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
-
     private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
     public static void main(String[] args) {
@@ -60,7 +59,7 @@ public class DroneSubsystem implements Runnable {
 
     // Constructor
     public DroneSubsystem() {
-        messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE);
+        messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE);
 
         //Core initlization
         this.droneSM = new DroneStateMachine();
@@ -76,7 +75,6 @@ public class DroneSubsystem implements Runnable {
 
     // Testing constructor (no GUI)
     //public DroneSubsystem() { this(null); }
-
     @Override
     public void run() {
         Message registerMessage = new Message(
@@ -87,7 +85,7 @@ public class DroneSubsystem implements Runnable {
         );
         messageBox.putMessage(registerMessage, UDPMessageBox.SCHEDULER_PORT);
         while (true) {
-            if(messageBox.isFull()){
+            if (messageBox.isFull()) {
                 Message message = messageBox.getMessage();
                 handleMessage(message);
             }
@@ -142,16 +140,14 @@ public class DroneSubsystem implements Runnable {
         messageBox.putMessage(sendStatus(), UDPMessageBox.SCHEDULER_PORT);
     }
 
-    public void tick(){
-        if(this.getCurrentState()==DroneState.EN_ROUTE_FIRE||this.getCurrentState()==DroneState.EN_ROUTE_BASE){
+    public void tick() {
+        if (this.getCurrentState() == DroneState.EN_ROUTE_FIRE || this.getCurrentState() == DroneState.EN_ROUTE_BASE) {
             moveTick(speedPertick);
-        }
-        else if (this.getCurrentState()==DroneState.DROPPING_AGENT){
+        } else if (this.getCurrentState() == DroneState.DROPPING_AGENT) {
             releaseFluidPerTick(FLUID_RATE_ML_TICK);
-            System.out.println("Amount of fluid drone has:"+fluidAmount+"Fluid release at zone:"+fluidReleasedAtZone+"fluid to drop"+fluidAmountToDrop);
+            System.out.println("Amount of fluid drone has:" + fluidAmount + "Fluid release at zone:" + fluidReleasedAtZone + "fluid to drop" + fluidAmountToDrop);
         }
     }
-
 
     //** Drone Movement & Modification Functions **//
     public void flyToFire(String payload) {
@@ -167,7 +163,7 @@ public class DroneSubsystem implements Runnable {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        batteryTravelDistance -= (int)((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
+        batteryTravelDistance -= (int) ((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
         coordX = targetCoordX;
         coordY = targetCoordY;
         droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
@@ -182,7 +178,7 @@ public class DroneSubsystem implements Runnable {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        batteryTravelDistance -= (int)((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
+        batteryTravelDistance -= (int) ((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
         coordX = targetCoordX;
         coordY = targetCoordY;
         System.out.println("[Drone " + droneId + "] Returning to base.");
@@ -205,7 +201,6 @@ public class DroneSubsystem implements Runnable {
 
         droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
     }*/
-
     public void closeNozzle(String payload) {
         try {
             Thread.sleep(NOZZLE_CLOSE_DELAY_MS); //Nozzle Door Close Time
@@ -248,7 +243,6 @@ public class DroneSubsystem implements Runnable {
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     }
 
-
     private void moveTowardsTarget(int targetX, int targetY, double speedPerTick) {
         double dx = targetX - coordX;
         double dy = targetY - coordY;
@@ -266,24 +260,23 @@ public class DroneSubsystem implements Runnable {
         batteryTravelDistance -= (int) Math.ceil(speedPerTick / MAX_DRONE_RANGE * BATTERY_MAX);
     }
 
-
     private void releaseFluidPerTick(double fluidPerTick) {
         if (fluidReleasedAtZone + fluidPerTick >= fluidAmountToDrop) {
             fluidPerTick = fluidAmountToDrop - fluidReleasedAtZone;
         }
-        System.out.println("Fluid per Tick "+ fluidPerTick );
+        System.out.println("Fluid per Tick " + fluidPerTick);
 
         fluidReleasedAtZone += fluidPerTick;
         fluidAmount -= fluidPerTick;
 
-        if (fluidReleasedAtZone >= fluidAmountToDrop || fluidAmount<=0) {
+        if (fluidReleasedAtZone >= fluidAmountToDrop || fluidAmount <= 0) {
             droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
         }
     }
 
     // Called by tick()
     private void moveTick(double speed) {
-        System.out.println(" Current x y :"+coordX+", "+coordY+" Target x y :"+targetCoordX+", "+targetCoordY);
+        System.out.println(" Current x y :" + coordX + ", " + coordY + " Target x y :" + targetCoordX + ", " + targetCoordY);
         double dx = targetCoordX - coordX;
         double dy = targetCoordY - coordY;
         double distance = Math.sqrt(dx * dx + dy * dy);
@@ -299,11 +292,6 @@ public class DroneSubsystem implements Runnable {
         }
     }
 
-
-
-
-
-
     public boolean hasAgent() {
         return fluidAmount > 0;
     }
@@ -312,33 +300,43 @@ public class DroneSubsystem implements Runnable {
     public int getDroneId() {
         return droneId;
     }
+
     public double getCoordX() {
         return coordX;
     }
+
     public void setCoordX(int coordX) {
         this.coordX = coordX;
     }
+
     public double getCoordY() {
         return coordY;
     }
+
     public void setCoordY(int coordY) {
         this.coordY = coordY;
     }
+
     public double getFluidAmount() {
         return fluidAmount;
     }
+
     public void setFluidAmount(int fluidAmount) {
         this.fluidAmount = fluidAmount;
     }
+
     public void setCurrentState(DroneState state) {
         droneSM.setCurrentState(state);
     }
+
     public DroneState getCurrentState() {
         return droneSM.getCurrentState();
     }
+
     public static int getTotalDronesCreated() {
         return nextIdValue - 1;
     }
+
     public UDPMessageBox getMessageBox() {
         return messageBox;
     }

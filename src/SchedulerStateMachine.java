@@ -1,3 +1,4 @@
+
 enum SchedulerState {
     NO_FIRES,
     DISPATCHING,
@@ -54,7 +55,7 @@ public class SchedulerStateMachine {
                 } else if (event == SchedulerEvent.DRONE_UPDATED) {
                     transitionTo(SchedulerState.DISPATCHING, event);
                     scheduler.tryAssignTask();
-                }else if (event == SchedulerEvent.DRONES_AVAILABLE) {
+                } else if (event == SchedulerEvent.DRONES_AVAILABLE) {
                     transitionTo(SchedulerState.ALL_FIRES_ATTENDED_TO, event);
                 }
                 break;
@@ -64,7 +65,7 @@ public class SchedulerStateMachine {
                     transitionTo(SchedulerState.DISPATCHING, event);
                     scheduler.tryAssignTask();
                 } else if (event == SchedulerEvent.ALL_FIRES_EXTINGUISHED) {
-                        transitionTo(SchedulerState.NO_FIRES, event);
+                    transitionTo(SchedulerState.NO_FIRES, event);
                 }
                 break;
 

@@ -1,10 +1,10 @@
+
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DroneSubsystemTest {
 
     // ==================== Initialization ====================
-
     @Test
     void testDroneStartsAtOrigin() {
         DroneSubsystem drone = new DroneSubsystem();
@@ -34,7 +34,6 @@ class DroneSubsystemTest {
     }
 
     // ==================== hasAgent ====================
-
     @Test
     void testHasAgentWhenFull() {
         DroneSubsystem drone = new DroneSubsystem();
@@ -49,7 +48,6 @@ class DroneSubsystemTest {
     }
 
     // ==================== hasBattery ====================
-
     @Test
     void testHasBatteryReturnsTrueWhenAtBase() {
         DroneSubsystem drone = new DroneSubsystem();
@@ -71,7 +69,6 @@ class DroneSubsystemTest {
     }
 
     // ==================== restore ====================
-
     @Test
     void testRestoreRefillsFluid() {
         DroneSubsystem drone = new DroneSubsystem();
@@ -81,7 +78,6 @@ class DroneSubsystemTest {
     }
 
     // ==================== sendStatus ====================
-
     @Test
     void testSendStatusReturnsCorrectMessageType() {
         DroneSubsystem drone = new DroneSubsystem();
@@ -124,7 +120,6 @@ class DroneSubsystemTest {
     }
 
     // ==================== Getters & Setters ====================
-
     @Test
     void testSetAndGetCoords() {
         DroneSubsystem drone = new DroneSubsystem();

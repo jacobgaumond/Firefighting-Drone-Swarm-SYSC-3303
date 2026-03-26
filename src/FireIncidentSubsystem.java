@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class FireIncidentSubsystem implements Runnable {
+
     private UDPMessageBox messageBox;
 
     private ArrayList<String> fileEvents = new ArrayList<String>();
@@ -32,16 +33,18 @@ public class FireIncidentSubsystem implements Runnable {
     }
 
     public FireIncidentSubsystem(String fileName) {
-        messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
-        if (fileName != null) loadFromFile(fileName);
+        messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
+        if (fileName != null) {
+            loadFromFile(fileName);
+        }
     }
 
     // Testing constructor (no file)
     public FireIncidentSubsystem() {
-        messageBox  = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
+        messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.FIRE_INCIDENT);
     }
 
-    public void closeBox(){
+    public void closeBox() {
         messageBox.closeBox();
     }
 
@@ -50,7 +53,9 @@ public class FireIncidentSubsystem implements Runnable {
         for (String event : fileEvents) {
             //parse the event CSV
             FireEvent fireEvent = parseFireEvent(event);
-            if(fireEvent == null) continue;
+            if (fireEvent == null) {
+                continue;
+            }
 
             //convert object into serialized string
             String serializedEvent = fireEvent.serialize();
@@ -77,8 +82,7 @@ public class FireIncidentSubsystem implements Runnable {
             Message message = messageBox.getMessage();
             if (message == null) {
                 boxOpen = false;
-            }
-            else {
+            } else {
                 System.out.println("[FireIncidentSubsystem] Received from " + message.getSourceName() + ": " + message.getMessageData());
                 if (!message.getMessageData().equals("Acknowledged")) {
                     message = new Message("DroneSubsystem", "FireIncidentSubsystem", "Acknowledged", Message.MessageType.FireEvent);
@@ -120,9 +124,9 @@ public class FireIncidentSubsystem implements Runnable {
     }
 
     //parse csv file
-    public FireEvent parseFireEvent(String line){
+    public FireEvent parseFireEvent(String line) {
         String[] parts = line.split(",");
-        if(parts.length != 4){
+        if (parts.length != 4) {
             System.err.println("Error: FireIncidentSubsystem: Invalid FireEvent");
             return null;
         }

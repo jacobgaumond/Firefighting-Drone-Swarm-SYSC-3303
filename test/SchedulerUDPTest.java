@@ -1,3 +1,4 @@
+
 import org.junit.jupiter.api.*;
 
 import java.net.DatagramPacket;
@@ -20,7 +21,10 @@ class SchedulerUDPTest {
     @AfterEach
     void teardown() {
         new Thread(() -> {
-            try { Thread.sleep(400); } catch (InterruptedException e) {}
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException e) {
+            }
             scheduler.closeBox();
         }).start();
     }

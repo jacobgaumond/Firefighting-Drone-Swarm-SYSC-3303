@@ -1,9 +1,11 @@
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 
 public class TestSchedulerFSM {
+
     private SchedulerStateMachine fsm;
     private Scheduler scheduler;
 
@@ -12,6 +14,7 @@ public class TestSchedulerFSM {
         fsm = new SchedulerStateMachine();
         scheduler = new Scheduler();
     }
+
     @AfterEach
     public void teardown() {
         scheduler.closeBox();

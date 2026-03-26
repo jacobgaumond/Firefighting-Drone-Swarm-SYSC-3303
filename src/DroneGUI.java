@@ -1,3 +1,4 @@
+
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -8,33 +9,34 @@ import java.util.Objects;
 import javax.swing.*;
 
 public class DroneGUI extends JFrame {
+
     private JPanel gridPanel;
-    private JPanel droneOverlay; 
+    private JPanel droneOverlay;
     private JTextArea logArea;
 
     private int activeFires;
     private JLabel activeFireLabel;
-    
+
     private int cols;
     private int rows;
     private int cellWidth;
     private int cellHeight;
-    
+
     private Map<Integer, JLabel> fireLabels = new HashMap<>();
     private Map<Integer, JLabel> droneLabels = new HashMap<>();
     private Map<Integer, Thread> droneAnimationThreads = new HashMap<>();
     private final static int animationDelay = 20;
-    private final static int buffer = 120; 
-    
+    private final static int buffer = 120;
+
     private final static Color activeFireColor = new Color(255, 0, 0);
     private final static Color extinguishedFireColor = new Color(77, 167, 46);
-        
+
     private final static Color droneOutboundColor = new Color(255, 191, 0);
     private final static Color droneExtinguishingColor = new Color(77, 167, 46);
     private final static Color droneReturningColor = new Color(216, 109, 205);
 
     public static void main(String[] args) {
-        String zoneFileName = "src/data/Sample_zone_file.csv"; // TODO: Fix ZoneMap
+        String zoneFileName = "src/data/Sample_zone_file.csv";
         ZoneMap.loadZones(zoneFileName);
         ZoneMap.printZones();
 
@@ -51,7 +53,7 @@ public class DroneGUI extends JFrame {
         setLayout(new BorderLayout());
 
         //make zone map
-        String zoneFileName = "src/data/Sample_zone_file.csv"; // TODO: Fix ZoneMap
+        String zoneFileName = "src/data/Sample_zone_file.csv";
         ZoneMap.loadZones(zoneFileName);
         ZoneMap.printZones();
 
@@ -65,10 +67,10 @@ public class DroneGUI extends JFrame {
         }
         this.cols = maxX;
         this.rows = maxY;
-        
+
         // Pane to hold both grid and drone overlay
         JLayeredPane layeredPane = new JLayeredPane();
-        
+
         // Create grid
         this.gridPanel = new JPanel() {
             @Override
@@ -79,14 +81,14 @@ public class DroneGUI extends JFrame {
         };
         gridPanel.setLayout(null);
         gridPanel.setBackground(Color.WHITE);
-        layeredPane.add(gridPanel, Integer.valueOf(0));   
-        
+        layeredPane.add(gridPanel, Integer.valueOf(0));
+
         // Create drone overlay
         this.droneOverlay = new JPanel();
         droneOverlay.setLayout(null);
         droneOverlay.setOpaque(false);
         layeredPane.add(droneOverlay, Integer.valueOf(1));
-        
+
         // Add resize listener to layered pane
         layeredPane.addComponentListener(new ComponentAdapter() {
             @Override
@@ -94,23 +96,23 @@ public class DroneGUI extends JFrame {
                 // Resize both panels to match layered pane
                 gridPanel.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
                 droneOverlay.setBounds(0, 0, layeredPane.getWidth(), layeredPane.getHeight());
-                
+
                 // Update cell dimensions
                 cellWidth = gridPanel.getWidth() / cols;
                 cellHeight = gridPanel.getHeight() / rows;
-                
+
                 repositionComponents();
             }
         });
-        
+
         // create zones
-        initializeZones(); 
+        initializeZones();
 
         // create sidebar
         JPanel sideBar = createSidebar();
 
         // add to UI
-        add(layeredPane, BorderLayout.CENTER); 
+        add(layeredPane, BorderLayout.CENTER);
         add(sideBar, BorderLayout.EAST);
     }
 
@@ -121,13 +123,13 @@ public class DroneGUI extends JFrame {
         for (Entry<Integer, ZoneMap.Zone> entry : ZoneMap.getAllZones().entrySet()) {
             int zoneId = entry.getKey();
             ZoneMap.Zone zone = entry.getValue();
-            
+
             int gridStartX = zone.startX / 100;
             int gridStartY = zone.startY / 100;
-            
+
             // Add zone label at grid's first cell
             this.createZoneLabel(gridStartX, gridStartY, "Z(" + zoneId + ")");
-            
+
             // Add fire label at center of zone
             this.createFireLabel(zoneId);
         }
@@ -136,7 +138,7 @@ public class DroneGUI extends JFrame {
     // Zone Label
     public void createZoneLabel(int gridX, int gridY, String text) {
         JLabel label = new JLabel(text);
-        
+
         label.setOpaque(true);
         label.setBackground(new Color(158, 194, 211));
         label.setForeground(Color.BLACK);
@@ -171,7 +173,7 @@ public class DroneGUI extends JFrame {
     // Drone Label
     public void createDroneLabel(int droneId) {
         JLabel label = new JLabel("D(" + droneId + ")");
-        
+
         label.setOpaque(true);
         label.setBackground(droneOutboundColor);
         label.setForeground(Color.BLACK);
@@ -179,22 +181,24 @@ public class DroneGUI extends JFrame {
         label.setVerticalAlignment(SwingConstants.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 10));
         label.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        
+
         // Start invisible at (0,0)
         label.setVisible(false);
         label.setBounds(0, 0, cellWidth, cellHeight);
-        
+
         // Hashmap for future referencing 
         droneLabels.put(droneId, label);
-        
+
         this.droneOverlay.add(label);
         this.logMessage("Drone " + droneId + " created at (0,0)");
     }
 
     // Dynamic components resizing
     private void repositionComponents() {
-        if (this.gridPanel == null) return;
-        
+        if (this.gridPanel == null) {
+            return;
+        }
+
         // Update cell dimensions
         cellWidth = this.gridPanel.getWidth() / cols;
         cellHeight = this.gridPanel.getHeight() / rows;
@@ -207,7 +211,7 @@ public class DroneGUI extends JFrame {
                 c.setBounds(gx * cellWidth, gy * cellHeight, cellWidth, cellHeight);
             }
         }
-        
+
         // fix drone labels
         for (Component c : this.droneOverlay.getComponents()) {
             if (c instanceof JLabel) {
@@ -218,8 +222,10 @@ public class DroneGUI extends JFrame {
 
     // Draw gridlines and zone boundaries
     private void paintGrid(Graphics g) {
-        if (this.gridPanel == null) return;
-        
+        if (this.gridPanel == null) {
+            return;
+        }
+
         Graphics2D g2 = (Graphics2D) g;
 
         Color lightGrid = new Color(83, 83, 83, 50);
@@ -245,7 +251,7 @@ public class DroneGUI extends JFrame {
             int y1 = ((zone.startY / 100) * cellHeight);
             int x2 = ((zone.endX / 100) * cellWidth);
             int y2 = ((zone.endY / 100) * cellHeight);
-            
+
             g2.drawRect(x1, y1, x2 - x1, y2 - y1);
         }
 
@@ -256,7 +262,7 @@ public class DroneGUI extends JFrame {
     private JPanel createSidebar() {
         // Side bar
         JPanel sideWrapper = new JPanel(new GridBagLayout());
-        
+
         sideWrapper.setPreferredSize(new Dimension(400, 0)); // auto vertical
         sideWrapper.setBorder(BorderFactory.createMatteBorder(0, 2, 0, 0, Color.LIGHT_GRAY));
 
@@ -301,6 +307,7 @@ public class DroneGUI extends JFrame {
         p.add(createLegendItem("Drone returning", droneReturningColor, "D(n)"));
         return p;
     }
+
     private JPanel createLegendItem(String text, Color color, String boxText) {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
         p.setOpaque(false);
@@ -310,8 +317,8 @@ public class DroneGUI extends JFrame {
         box.setPreferredSize(new Dimension(30, 30));
         box.setBackground(color);
         box.setForeground(Color.BLACK);
-        box.setHorizontalAlignment(SwingConstants.CENTER); 
-        box.setVerticalAlignment(SwingConstants.CENTER); 
+        box.setHorizontalAlignment(SwingConstants.CENTER);
+        box.setVerticalAlignment(SwingConstants.CENTER);
         box.setFont(new Font("SansSerif", Font.BOLD, 10));
         box.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
@@ -368,20 +375,24 @@ public class DroneGUI extends JFrame {
     // Update fire status
     public void fireStatusChange(int zoneId, String fireLevel) {
         JLabel fireLabel = fireLabels.get(zoneId);
-        if (fireLabel == null) return;
-        
-        if (Objects.equals(fireLevel, "")) { 
+        if (fireLabel == null) {
+            return;
+        }
+
+        if (Objects.equals(fireLevel, "")) {
             // Extinguished
             fireLabel.setBackground(extinguishedFireColor);
             fireLabel.setText(fireLevel);
 
-            if (activeFires > 0) activeFires--;
+            if (activeFires > 0) {
+                activeFires--;
+            }
             logMessage("Fire in Zone " + zoneId + " extinguished");
         } else {
             // Active
             fireLabel.setBackground(activeFireColor);
 
-            if(fireLabel.getText().equals("")){
+            if (fireLabel.getText().equals("")) {
                 activeFires++; // new fire, not update
             }
 
@@ -391,55 +402,59 @@ public class DroneGUI extends JFrame {
         }
         activeFireLabel.setText("Active Fires: " + activeFires);
     }
-    
+
     // Update drone position (animate movement)
     public void updateDronePosition(int droneId, int pixelX, int pixelY) {
         JLabel droneLabel = droneLabels.get(droneId);
-        if (droneLabel == null) return;
-        
+        if (droneLabel == null) {
+            return;
+        }
+
         droneLabel.setLocation(pixelX, pixelY);
     }
-    
+
     // Send drone to zone
     public void moveDroneToZone(int droneId, int zoneId, long travelTime, double fluidRemaining) {
         JLabel droneLabel = droneLabels.get(droneId);
-        if (droneLabel == null) return;
-        
+        if (droneLabel == null) {
+            return;
+        }
+
         // Cancel current animation
         Thread existingThread = droneAnimationThreads.get(droneId);
         if (existingThread != null && existingThread.isAlive()) {
             existingThread.interrupt();
         }
-        
+
         // Set to outbound color
         droneLabel.setVisible(true);
         droneLabel.setBackground(droneOutboundColor);
-        
+
         logMessage("Drone " + droneId + " outbound to Zone " + zoneId + "| fluid remaining: " + fluidRemaining);
-        
+
         // Current position (important later when interrupted on return)
         int startX = droneLabel.getX();
         int startY = droneLabel.getY();
-        
+
         // Calculate target zone center
         int targetX = (ZoneMap.getX(zoneId) / 100) * cellWidth; // centering
         int targetY = (ZoneMap.getY(zoneId) / 100) * cellHeight;
-        
+
         // Animation based on travel time
-        final int steps = (int) Math.max(1, (travelTime-buffer) / animationDelay);  // frames needed to match travel time
-        
+        final int steps = (int) Math.max(1, (travelTime - buffer) / animationDelay);  // frames needed to match travel time
+
         // Thread for asynchronous animation
         Thread animationThread = new Thread(() -> {
             for (int step = 0; step <= steps; step++) {
                 // animation completion %
                 double progress = (double) step / steps;
-                
+
                 // step
                 int newX = (int) (startX + (targetX - startX) * progress);
                 int newY = (int) (startY + (targetY - startY) * progress);
-                
+
                 updateDronePosition(droneId, newX, newY);
-                
+
                 try {
                     Thread.sleep(animationDelay); // delay between animation steps
                 } catch (InterruptedException e) {
@@ -452,79 +467,84 @@ public class DroneGUI extends JFrame {
         droneAnimationThreads.put(droneId, animationThread);
         animationThread.start();
     }
-    
+
     // Extinguish fire
     public void extinguishFire(int droneId, int zoneId, long dropTime) {
         JLabel droneLabel = droneLabels.get(droneId);
-        if (droneLabel == null) return;
-        
+        if (droneLabel == null) {
+            return;
+        }
+
         // Cancel current animation
         Thread existingThread = droneAnimationThreads.get(droneId);
         if (existingThread != null && existingThread.isAlive()) {
             existingThread.interrupt();
         }
-        
+
         // Change color to extinguishing
         droneLabel.setBackground(droneExtinguishingColor);
-        logMessage("Drone " + droneId + " extinguishing fire at zone: "+zoneId);
-        
+        logMessage("Drone " + droneId + " extinguishing fire at zone: " + zoneId);
+
         // Wait for drop time
         Thread animationThread = new Thread(() -> {
             try {
                 Thread.sleep(dropTime);
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+            }
             droneAnimationThreads.remove(droneId);
         });
         // reference in case of needed interruption
         droneAnimationThreads.put(droneId, animationThread);
         animationThread.start();
     }
-    
+
     // Return drone to origin
     public void returnDrone(int droneId, long travelTime) {
         JLabel droneLabel = droneLabels.get(droneId);
-        if (droneLabel == null) return;
-        
+        if (droneLabel == null) {
+            return;
+        }
+
         // Cancel current animation
         Thread existingThread = droneAnimationThreads.get(droneId);
         if (existingThread != null && existingThread.isAlive()) {
             existingThread.interrupt();
         }
-        
+
         // Set returning color
         droneLabel.setVisible(true);
         droneLabel.setBackground(droneReturningColor);
-        
+
         logMessage("Drone " + droneId + " returning to origin");
-        
+
         // Current position
         int startX = droneLabel.getX();
         int startY = droneLabel.getY();
-        
+
         // Target is origin
         int targetX = 0;
         int targetY = 0;
-        
+
         // Animation based on travel time
-        final int steps = (int) Math.max(1, (travelTime-buffer) / animationDelay); 
-        
+        final int steps = (int) Math.max(1, (travelTime - buffer) / animationDelay);
+
         // Thread for asynchronous animation
         Thread animationThread = new Thread(() -> {
             for (int step = 0; step <= steps; step++) {
                 // animation completion %
                 double progress = (double) step / steps;
-                
+
                 // step
                 int newX = (int) (startX + (targetX - startX) * progress);
                 int newY = (int) (startY + (targetY - startY) * progress);
-                
+
                 updateDronePosition(droneId, newX, newY);
-                
+
                 // onComplete
                 if (step >= steps) {
                     droneLabel.setVisible(false);
                 }
-                
+
                 try {
                     Thread.sleep(animationDelay); // delay between animation steps
                 } catch (InterruptedException e) {
@@ -542,10 +562,10 @@ public class DroneGUI extends JFrame {
     // Get the current position of a drone (potentially in transit)
     public int[] getCurrentDronePosition(int droneId) {
         JLabel droneLabel = droneLabels.get(droneId);
-        
+
         int x = (int) ((droneLabel.getX() / cellWidth) * 100);
         int y = (int) ((droneLabel.getY() / cellHeight) * 100);
-        
+
         return new int[]{x, y};
     }
 }

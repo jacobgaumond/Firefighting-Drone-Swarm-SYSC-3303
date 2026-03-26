@@ -1,4 +1,6 @@
+
 public class FireEvent extends SimulationEvent {
+
     private String time; //14:03:15
     private int zoneId; //1
     private String eventType; //fire detected
@@ -6,7 +8,7 @@ public class FireEvent extends SimulationEvent {
     private int targetX; //x coordinate of fire
     private int targetY; //y coordinate of fire
 
-    public FireEvent(String time, int zoneId, String eventType, String severity, int targetX, int targetY){
+    public FireEvent(String time, int zoneId, String eventType, String severity, int targetX, int targetY) {
         this.time = time;
         this.zoneId = zoneId;
         this.eventType = eventType;
@@ -16,12 +18,14 @@ public class FireEvent extends SimulationEvent {
     }
 
     /**
-     * Constructor that creates a FireEvent object from the output of the FireEvent class's serialize() method. In
-     * other words, it deserializes Strings to create FireEvent objects.
+     * Constructor that creates a FireEvent object from the output of the
+     * FireEvent class's serialize() method. In other words, it deserializes
+     * Strings to create FireEvent objects.
      *
-     * @param serializedFireEvent A String containing a serialized FireEvent object.
+     * @param serializedFireEvent A String containing a serialized FireEvent
+     * object.
      */
-    public FireEvent(String serializedFireEvent){
+    public FireEvent(String serializedFireEvent) {
         String[] parts = serializedFireEvent.split(DELIMITER);
         this.time = parts[0];
         this.zoneId = Integer.parseInt(parts[1]);
@@ -31,30 +35,37 @@ public class FireEvent extends SimulationEvent {
         this.targetY = Integer.parseInt(parts[5]);
     }
 
-
     //getters
-    public String getTime(){ return time; }
-    public int getZoneId(){
+    public String getTime() {
+        return time;
+    }
+
+    public int getZoneId() {
         return zoneId;
     }
-    public String getEventType(){
+
+    public String getEventType() {
         return eventType;
     }
-    public String getSeverity(){ return severity; }
-    public int  getTargetX(){
+
+    public String getSeverity() {
+        return severity;
+    }
+
+    public int getTargetX() {
         return targetX;
     }
-    public int getTargetY(){
+
+    public int getTargetY() {
         return targetY;
     }
 
-
     @Override
-    public String toString(){
-        return "FireTask[Time=" + time + ", Zone=" +
-                zoneId + ", eventType=" + eventType + ", Severity=" +
-                severity + ", TargetX=" +
-                targetX + ", TargetY=" + targetY + "]";
+    public String toString() {
+        return "FireTask[Time=" + time + ", Zone="
+                + zoneId + ", eventType=" + eventType + ", Severity="
+                + severity + ", TargetX="
+                + targetX + ", TargetY=" + targetY + "]";
     }
 
     /**
@@ -64,12 +75,12 @@ public class FireEvent extends SimulationEvent {
      */
     @Override
     public String serialize() {
-        String serializedFireEvent =    getTime() + DELIMITER +
-                                        getZoneId() + DELIMITER +
-                                        getEventType() + DELIMITER +
-                                        getSeverity() + DELIMITER +
-                                        getTargetX() + DELIMITER +
-                                        getTargetY();
+        String serializedFireEvent = getTime() + DELIMITER
+                + getZoneId() + DELIMITER
+                + getEventType() + DELIMITER
+                + getSeverity() + DELIMITER
+                + getTargetX() + DELIMITER
+                + getTargetY();
         return serializedFireEvent;
     }
 }

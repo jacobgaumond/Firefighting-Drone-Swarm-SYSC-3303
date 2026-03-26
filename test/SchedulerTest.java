@@ -1,3 +1,4 @@
+
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,7 +31,6 @@ class SchedulerTest {
     }
 
     // ==================== processFireEvent ====================
-
     @Test
     void testFireEventAddedToTaskQueue() {
         FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
@@ -43,7 +43,7 @@ class SchedulerTest {
 
     @Test
     void testMultipleFireEventsQueueInOrder() {
-        FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High",     250,  1050);
+        FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
         FireEvent fire2 = new FireEvent("14:10:00", 5, "FIRE_DETECTED", "Moderate", 1650, 700);
 
         scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
@@ -64,7 +64,6 @@ class SchedulerTest {
     }
 
     // ==================== tryAssignTask ====================
-
     @Test
     void testTryAssignTaskDoesNothingWithNoDrones() {
         FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
@@ -100,7 +99,6 @@ class SchedulerTest {
     }
 
     // ==================== getTaskQueue / getDroneRegistry / getActiveFires ====================
-
     @Test
     void testTaskQueueStartsEmpty() {
         assertTrue(scheduler.getTaskQueue().isEmpty());
@@ -117,7 +115,6 @@ class SchedulerTest {
     }
 
     // ==================== calculateGuiDroneTravelTime ====================
-
     @Test
     void testTravelTimeIsZeroForSamePosition() {
         assertEquals(0, scheduler.calculateGuiDroneTravelTime(0, 0, 0, 0));
@@ -131,8 +128,8 @@ class SchedulerTest {
 
     @Test
     void testTravelTimeIsSymmetric() {
-        long there = scheduler.calculateGuiDroneTravelTime(0,   0,   100, 100);
-        long back  = scheduler.calculateGuiDroneTravelTime(100, 100, 0,   0);
+        long there = scheduler.calculateGuiDroneTravelTime(0, 0, 100, 100);
+        long back = scheduler.calculateGuiDroneTravelTime(100, 100, 0, 0);
         assertEquals(there, back);
     }
 }

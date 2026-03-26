@@ -1,4 +1,6 @@
+
 public class DroneRequest extends SimulationEvent {
+
     private DroneEvent droneEvent;
     private String time;
     private int zoneId;
@@ -46,13 +48,39 @@ public class DroneRequest extends SimulationEvent {
     }
 
     // Getters
-    public DroneEvent getDroneEvent() { return droneEvent; }
-    public String getTime() { return time; }
-    public int getZoneId() { return zoneId; }
-    public String getEventType() { return eventType; }
-    public String getSeverity() { return severity; }
-    public int getTargetX() { return targetX; }
-    public int getTargetY() { return targetY; }
-    public int getAmountToDrop() { return amountToDrop; }
-    public int getDroneId() { return droneId; }
+    public DroneEvent getDroneEvent() {
+        return droneEvent;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public int getZoneId() {
+        return zoneId;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public String getSeverity() {
+        return severity;
+    }
+
+    public int getTargetX() {
+        return targetX;
+    }
+
+    public int getTargetY() {
+        return targetY;
+    }
+
+    public int getAmountToDrop() {
+        return amountToDrop;
+    }
+
+    public int getDroneId() {
+        return droneId;
+    }
 }

@@ -1,3 +1,4 @@
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
@@ -5,10 +6,12 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class ZoneMap {
+
     // mapping zoneId to Zone object
     private static Map<Integer, Zone> zones = new HashMap<>();
 
     public static class Zone {
+
         public int startX, startY, endX, endY;
 
         public Zone(int startX, int startY, int endX, int endY) {
@@ -22,8 +25,9 @@ public class ZoneMap {
     // load zones
     public static void loadZones(String fileName) {
         try (Scanner scanner = new Scanner(new File(fileName))) {
-            if (scanner.hasNextLine()) scanner.nextLine(); // skip header
-
+            if (scanner.hasNextLine()) {
+                scanner.nextLine(); // skip header
+            }
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String[] parts = line.split(",");
@@ -87,10 +91,10 @@ public class ZoneMap {
         for (Map.Entry<Integer, Zone> entry : zones.entrySet()) {
             int id = entry.getKey();
             Zone z = entry.getValue();
-            System.out.println("Zone ID: " + id +
-                    ", Start: (" + z.startX + ";" + z.startY + ")" +
-                    ", End: (" + z.endX + ";" + z.endY + ")" +
-                    ", Center: (" + getX(id) + ";" + getY(id) + ")");
+            System.out.println("Zone ID: " + id
+                    + ", Start: (" + z.startX + ";" + z.startY + ")"
+                    + ", End: (" + z.endX + ";" + z.endY + ")"
+                    + ", Center: (" + getX(id) + ";" + getY(id) + ")");
         }
         System.out.println("=========================");
     }

@@ -1,4 +1,6 @@
+
 public class DroneResponse extends SimulationEvent {
+
     private int droneId;
     private String state;
     private double x, y;
@@ -35,17 +37,37 @@ public class DroneResponse extends SimulationEvent {
     }
 
     public String toString() {
-        return "DroneResponse[DroneId=" + droneId + ", State=" + state +
-                ", Pos=(" + x + "," + y + "), Fluid=" + fluidAmount +
-                ", Battery=" + battery + ", FluidDropped=" + fluidDropped + "]";
+        return "DroneResponse[DroneId=" + droneId + ", State=" + state
+                + ", Pos=(" + x + "," + y + "), Fluid=" + fluidAmount
+                + ", Battery=" + battery + ", FluidDropped=" + fluidDropped + "]";
     }
 
     // Getters
-    public int getDroneID() { return droneId; }
-    public String getState() { return state; }
-    public double getX() { return x; }
-    public double getY() { return y; }
-    public double getFluidAmount() { return fluidAmount; }
-    public int getBattery() { return battery; }
-    public double getFluidDropped() { return fluidDropped; }
+    public int getDroneID() {
+        return droneId;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public double getFluidAmount() {
+        return fluidAmount;
+    }
+
+    public int getBattery() {
+        return battery;
+    }
+
+    public double getFluidDropped() {
+        return fluidDropped;
+    }
 }

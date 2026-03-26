@@ -1,16 +1,18 @@
+
 public class Message {
-    public enum MessageType { // TODO: Add more MessageType values as needed (e.g., DroneResponseEvent, etc.)
+
+    public enum MessageType {
         FireEvent,
         DroneRequest,
         DroneResponse,
         DroneRegistration
     }
 
-    private final MessageType   type;
-    private final String        data;
+    private final MessageType type;
+    private final String data;
 
-    private final String        destinationName;
-    private final String        sourceName;
+    private final String destinationName;
+    private final String sourceName;
 
     private final static String DELIMITER = "#";
 
@@ -19,12 +21,13 @@ public class Message {
         data = messageData;
 
         this.destinationName = destinationName;
-        this.sourceName      = sourceName;
+        this.sourceName = sourceName;
     }
 
     /**
-     * Constructor that creates a Message object from the output of the Message class's serialize() method.
-     * In other words, it deserializes Strings to create Message objects.
+     * Constructor that creates a Message object from the output of the Message
+     * class's serialize() method. In other words, it deserializes Strings to
+     * create Message objects.
      *
      * @param serializedMessage A String containing a serialized Message object.
      */
@@ -35,16 +38,15 @@ public class Message {
         MessageType type = null;
         try {
             type = MessageType.valueOf(objectVariables[0]);
-        }
-        catch (IllegalArgumentException iae) {
+        } catch (IllegalArgumentException iae) {
             iae.printStackTrace();
             System.exit(1);
         }
         // Initialize object variables
-        this.type       = type;
-        data            = objectVariables[1];
+        this.type = type;
+        data = objectVariables[1];
         destinationName = objectVariables[2];
-        sourceName      = objectVariables[3];
+        sourceName = objectVariables[3];
     }
 
     /**
