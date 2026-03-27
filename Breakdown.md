@@ -90,6 +90,9 @@ Breakdown of responsibilities of each team member for each iteration
 ## Iteration #4
 
 - Olivia:
+    - Rework of the drone scheduler logic
+    - Some of the drone ticking and movement logic
+    - All of the faulting logic between the Scheduler and the DroneSubsystem
 
 - Jacob:
 
