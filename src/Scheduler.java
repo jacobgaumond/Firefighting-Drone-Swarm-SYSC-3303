@@ -115,7 +115,31 @@ public class Scheduler implements Runnable {
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
     }
 
+    //Simple Message checking//
+    private boolean checkMessage(Message message) {
+        if (message == null || message.getMessageData() == null) {
+            return false;
+        }
+        DroneResponse status;
+        try {
+            status = new DroneResponse(message.getMessageData());
+        } catch (Exception e) {
+            System.out.println("[Scheduler] Failed to parse message (corrupted)");
+            return false;
+        }
+        // ===== field validation =====
+        if (status.getDroneID() < 0) return false;
+        if (status.getBattery() < 0 || status.getBattery() > 100) return false;
+        if (Double.isNaN(status.getX()) || Double.isInfinite(status.getX())) return false;
+        if (Double.isNaN(status.getY()) || Double.isInfinite(status.getY())) return false;
+        if (status.getFluidAmount() < 0) return false;
+        return true;
+    }
     private void processDroneMessage(Message message) {
+        if(!checkMessage(message)){
+            sendEventToDrone(-1, DroneEvent.REQUEST_STATUS, String.valueOf(message.getSenderPort()));
+            return;
+        }
         // task finished -> assign next in the queue or mark drone as idle
         DroneResponse status = new DroneResponse(message.getMessageData());
 
@@ -282,11 +306,21 @@ public class Scheduler implements Runnable {
     }
 
     private void sendEventToDrone(int droneId, DroneEvent event, String payload) {
-        DroneInfo drone = droneRegistry.get(droneId);
-
         DroneRequest request = new DroneRequest(
                 event, "", 0, "", "", 0, 0, 0, droneId,"NONE"
         );
+       if(droneId==-1){ //corrupted drone
+            System.out.println(" ReRequesting information back from a corrupted drone message");
+           Message message = new Message(
+                   "DroneSubsystem",
+                   "Scheduler",
+                   request.serialize(),
+                   Message.MessageType.DroneRequest
+           );
+           messageBox.putMessage(message, Integer.parseInt(payload));
+           return;
+       }
+        DroneInfo drone = droneRegistry.get(droneId);
         Message message = new Message(
                 "DroneSubsystem",
                 "Scheduler",

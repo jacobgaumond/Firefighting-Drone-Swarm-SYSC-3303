@@ -106,6 +106,11 @@ public class DroneSubsystem implements Runnable {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
             System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
 
+            if(droneEvent.getDroneEvent()== DroneEvent.REQUEST_STATUS){
+                System.out.println("Received update scheduler");
+                updateScheduler();
+            }
+
             if(droneEvent.getDroneEvent()== DroneEvent.FIRE_ASSIGNED){
               this.pendingFault = droneEvent.getFaultType();
             }
@@ -134,6 +139,22 @@ public class DroneSubsystem implements Runnable {
     }
 
     public Message sendStatus() { //creates the message
+        if(droneSM.getCurrentState()==DroneState.FIRE_HANDLED && pendingFault.equals("corrupted")){ //corrupts on the fire extinguished message
+            System.out.println("Corrupting a message");
+            DroneResponse status = new DroneResponse(
+                    droneId*-1,
+                    generateCorruptedString(9),
+                    generateCorruptedNumber(), generateCorruptedNumber(),
+                    generateCorruptedNumber(),
+                    batteryTravelDistance,
+                    fluidReleasedAtZone,
+                    generateCorruptedString(15)
+            );
+            System.out.println(status);
+            pendingFault="";
+            return new Message("Scheduler", "DroneSubsystem", status.serialize(), Message.MessageType.DroneResponse);
+        }
+
         DroneResponse status = new DroneResponse(
                 droneId,
                 droneSM.getCurrentState().toString(),
@@ -143,7 +164,6 @@ public class DroneSubsystem implements Runnable {
                 fluidReleasedAtZone,
                 currentFault
         );
-        System.out.println(status);
         // Return a new Message object intended for the Scheduler
         return new Message("Scheduler", "DroneSubsystem", status.serialize(), Message.MessageType.DroneResponse);
     }
@@ -299,6 +319,23 @@ public class DroneSubsystem implements Runnable {
 
     public boolean hasAgent() {
         return fluidAmount > 0;
+    }
+
+    private String generateCorruptedString(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{};:,.<>/?";
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            int index = (int) (Math.random() * chars.length());
+            sb.append(chars.charAt(index));
+        }
+
+        return sb.toString();
+    }
+
+    private double generateCorruptedNumber() {
+        return (int)(Math.random() * 1_000_000);
     }
 
     // ========== GETTERS AND SETTERS ==========

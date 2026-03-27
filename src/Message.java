@@ -16,6 +16,8 @@ public class Message {
 
     private final static String DELIMITER = "#";
 
+    private int senderPort = -1;
+
     public Message(String destinationName, String sourceName, String messageData, MessageType messageType) {
         type = messageType;
         data = messageData;
@@ -75,4 +77,7 @@ public class Message {
     public MessageType getMessageType() {
         return type;
     }
+
+    public int getSenderPort(){return senderPort;}
+    public void setSenderPort(int senderPort){this.senderPort= senderPort;}
 }

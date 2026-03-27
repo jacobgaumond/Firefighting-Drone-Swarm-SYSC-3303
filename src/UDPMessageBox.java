@@ -164,6 +164,7 @@ public class UDPMessageBox {
                 if (UDP_MESSAGE_BOX.receiveUDPPacket(receivePacket)) {
                     Message message = new Message(new String(dataBuffer, 0, receivePacket.getLength()));
                     //System.out.println("UDP [" + UDP_MESSAGE_BOX.SUBSYSTEM + "] <- Received message from PORT: " + receivePacket.getPort());
+                    message.setSenderPort(receivePacket.getPort()); // messages now have sender information attached
                     UDP_MESSAGE_BOX.INCOMING_BOX.putMessage(message);
                 }
             }

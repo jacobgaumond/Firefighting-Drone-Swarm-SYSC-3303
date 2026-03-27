@@ -1,5 +1,6 @@
 
 enum DroneEvent {
+    REQUEST_STATUS, // This event doesn't create a transition just the scheduler asking for the drone status again
     FIRE_ASSIGNED, //request going to fire
     ARRIVAL, // I've arrived at destination
     EXTINGUISH_REQUEST,// I've been allowed to extinguish
