@@ -41,6 +41,7 @@ public class Scheduler implements Runnable {
     public Scheduler(DroneGUI gui) {
         this.gui = gui;
         messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.SCHEDULER);
+        startWatchdog(); //makes sure the drones are responding
     }
 
     // Testing constructor (no GUI)
@@ -145,6 +146,8 @@ public class Scheduler implements Runnable {
 
         // Update drone registry
         DroneInfo drone = droneRegistry.get(status.getDroneID());
+        drone.lastHeardFrom =  System.currentTimeMillis();
+        drone.awaitingResponse=false;
         drone.state = status.getState();
         drone.x = status.getX();
         drone.y = status.getY();
@@ -302,6 +305,8 @@ public class Scheduler implements Runnable {
                 Message.MessageType.DroneRequest
         );
         fireEvent.setFaultType("NONE");
+        drone.lastSentRequest = request;
+        drone.awaitingResponse = true;
         messageBox.putMessage(droneMessage, drone.port);
     }
 
@@ -327,7 +332,8 @@ public class Scheduler implements Runnable {
                 request.serialize(),
                 Message.MessageType.DroneRequest
         );
-
+        drone.lastSentRequest= request;
+        drone.awaitingResponse=true;
         messageBox.putMessage(message, drone.port);
     }
 
@@ -489,6 +495,40 @@ public class Scheduler implements Runnable {
         }
     }
 
+    private static final long DRONE_TIMEOUT_MS = 5000; // tune to your simulation speed
+
+    private void startWatchdog() {
+        Thread watchdog = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    break;
+                }
+                long now = System.currentTimeMillis();
+                for (DroneInfo drone : droneRegistry.values()) {
+                    if (drone.awaitingResponse && (now - drone.lastHeardFrom) > DRONE_TIMEOUT_MS) {
+                        System.out.println("[Scheduler] Drone " + drone.droneId + " never responded, resending.");
+                        drone.lastHeardFrom = now;
+                        if (drone.lastSentRequest != null) {
+                            DroneRequest resendRequest = drone.lastSentRequest;
+                            resendRequest.setFaultType("NONE"); // strip fault before resending,
+                            Message resend = new Message(
+                                    "DroneSubsystem",
+                                    "Scheduler",
+                                    resendRequest.serialize(),
+                                    Message.MessageType.DroneRequest
+                            );
+                            messageBox.putMessage(resend, drone.port);
+                        }
+                    }
+                }
+            }
+        }, "WatchdogThread");
+        watchdog.setDaemon(true);
+        watchdog.start();
+    }
+
     // ========== Getters and Setters ==========
     public Queue<FireEvent> getTaskQueue() {
         return taskQueue;
@@ -514,6 +554,10 @@ public class Scheduler implements Runnable {
         int assignedZoneID = -1;
         int dispatchCount = 0;
 
+        DroneRequest lastSentRequest;
+        long lastHeardFrom = System.currentTimeMillis();
+        boolean awaitingResponse = false;
+
         public DroneInfo(int droneId, int port) {
             this.droneId = droneId;
             this.port = port;
@@ -523,6 +567,7 @@ public class Scheduler implements Runnable {
             this.fluid = 15;
             this.battery = 1000;
             this.fluidAssigned = 0;
+            lastSentRequest = null;
         }
 
         public boolean canHandleTask(FireEvent fire) {

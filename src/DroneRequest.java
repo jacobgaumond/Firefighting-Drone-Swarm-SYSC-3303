@@ -100,4 +100,5 @@ public class DroneRequest extends SimulationEvent {
         return droneId;
     }
     public String getFaultType(){return faultType;}
+    public void setFaultType(String faultType){this.faultType=faultType;}
 }

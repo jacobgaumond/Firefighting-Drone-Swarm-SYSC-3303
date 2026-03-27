@@ -106,13 +106,18 @@ public class DroneSubsystem implements Runnable {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
             System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
 
+            if(droneEvent.getDroneEvent()== DroneEvent.FIRE_ASSIGNED){
+              this.pendingFault = droneEvent.getFaultType();
+            }
+            if(pendingFault.equals("packet_loss")){
+                System.out.println("The drone never got the packet");
+                pendingFault="";
+                return;
+            }
+
             if(droneEvent.getDroneEvent()== DroneEvent.REQUEST_STATUS){
                 System.out.println("Received update scheduler");
                 updateScheduler();
-            }
-
-            if(droneEvent.getDroneEvent()== DroneEvent.FIRE_ASSIGNED){
-              this.pendingFault = droneEvent.getFaultType();
             }
 
             //Handles event and requests

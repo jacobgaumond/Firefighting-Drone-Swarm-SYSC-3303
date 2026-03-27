@@ -3,4 +3,4 @@ Time,Zone ID,Event type,Severity,Fault Type
 14:10:05,5,FIRE_DETECTED,Moderate,
 14:10:10,2,FIRE_DETECTED,Low,corrupted
 14:10:15,4,FIRE_DETECTED,Moderate,stuck
-14:10:20,1,FIRE_DETECTED,High,
+14:10:20,1,FIRE_DETECTED,High,packet_loss
