@@ -21,7 +21,7 @@ public class DroneSubsystem implements Runnable {
     private static final double MS_PER_UNIT = 0.15;
     private static final double MAX_DRONE_RANGE = 5048.0; // 2524 * 2 round trip
 
-    private static final double FLUID_RATE_ML_TICK = 0.25;
+    private static final double FLUID_RATE_ML_TICK = 0.5; //change it to be faster
 
     private UDPMessageBox messageBox;
 
@@ -43,10 +43,12 @@ public class DroneSubsystem implements Runnable {
 
     private String pendingFault,currentFault;
 
+    private double initialDistance; // used for tracking when to fault stuck
+
     private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
     public static void main(String[] args) {
-        int TOTAL_DRONE_COUNT = 2;
+        int TOTAL_DRONE_COUNT = 3;
         Thread[] droneThreads = new Thread[TOTAL_DRONE_COUNT];
         for (int i = 0; i < TOTAL_DRONE_COUNT; i++) {
             droneThreads[i] = new Thread(new DroneSubsystem(), "DroneSubsystemThread-" + (i + 1));
@@ -114,6 +116,10 @@ public class DroneSubsystem implements Runnable {
                 this.targetCoordY = droneEvent.getTargetY();
                 this.fluidAmountToDrop = droneEvent.getAmountToDrop();
                 this.fluidReleasedAtZone = 0;
+                this.initialDistance = Math.sqrt(
+                        Math.pow(targetCoordX - coordX, 2) +
+                                Math.pow(targetCoordY - coordY, 2)
+                );
             }
             //sends the message to the statemachine
             droneSM.handleEvent(droneEvent.getDroneEvent(), droneEvent.serialize(), this);
@@ -192,7 +198,7 @@ public class DroneSubsystem implements Runnable {
     }
 
     public boolean openNozzle(String payload) {
-        System.out.println("Opening Nozzle:"+ pendingFault);
+        System.out.println("Opening Nozzle");
         if(pendingFault.equals("jammed")){
             handleFault();
             return false;
@@ -264,10 +270,21 @@ public class DroneSubsystem implements Runnable {
 
     // Called by tick()
     private void moveTick(double speed) {
-        //System.out.println(" Current x y :" + coordX + ", " + coordY + " Target x y :" + targetCoordX + ", " + targetCoordY);
+        System.out.println(" Current x y :" + coordX + ", " + coordY + " Target x y :" + targetCoordX + ", " + targetCoordY);
         double dx = targetCoordX - coordX;
         double dy = targetCoordY - coordY;
         double distance = Math.sqrt(dx * dx + dy * dy);
+
+        if ("stuck".equals(pendingFault)) {
+            double distanceToTarget = Math.sqrt(
+                    Math.pow(targetCoordX - coordX, 2) +
+                            Math.pow(targetCoordY - coordY, 2)
+            );
+            if (distanceToTarget <= initialDistance / 2) {
+                droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
+                return;
+            }
+        }
 
         if (distance <= speed) {
             coordX = targetCoordX;
