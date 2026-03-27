@@ -114,7 +114,6 @@ public class DroneSubsystem implements Runnable {
 
 
             //Handles event and requests
-
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED || droneEvent.getDroneEvent() == DroneEvent.RETURN_BASE_REQUEST) {
                 this.targetCoordX = droneEvent.getTargetX();
                 this.targetCoordY = droneEvent.getTargetY();
@@ -142,6 +141,7 @@ public class DroneSubsystem implements Runnable {
                 batteryTravelDistance,
                 fluidReleasedAtZone
         );
+        System.out.println(status);
         // Return a new Message object intended for the Scheduler
         return new Message("Scheduler", "DroneSubsystem", status.serialize(), Message.MessageType.DroneResponse);
     }
@@ -156,7 +156,6 @@ public class DroneSubsystem implements Runnable {
             moveTick(speedPertick);
         } else if (this.getCurrentState() == DroneState.DROPPING_AGENT) {
             releaseFluidPerTick(FLUID_RATE_ML_TICK);
-            System.out.println("Amount of fluid drone has:" + fluidAmount + "Fluid release at zone:" + fluidReleasedAtZone + "fluid to drop" + fluidAmountToDrop);
         }
     }
 
@@ -196,22 +195,19 @@ public class DroneSubsystem implements Runnable {
         droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
     }
 
-    /*public void openNozzle(String payload) {
-        System.out.println("[Drone " + droneId + "] Nozzle opened, dropping agent.");
-        long dropTime = (long) ((fluidAmountToDrop / FLUID_RATE_ML_MS) + NOZZLE_OPEN_DELAY_MS)*10;
+    public void openNozzle(String payload) {
+        if(pendingFault.equals("jammed")){
+          // droneSM.handleEvent(DroneEvent.FAILURE,payload,this);
+            System.out.println("Drone jammed error");
 
-        System.out.println("[Drone " + droneId + "] extinguishing fire.");
-        try {
-            Thread.sleep(dropTime);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        }else{
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
-
-        fluidAmount -= fluidAmountToDrop;
-        fluidReleasedAtZone += fluidAmountToDrop;
-
-        droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
-    }*/
+    }
     public void closeNozzle(String payload) {
         try {
             Thread.sleep((long) (NOZZLE_CLOSE_DELAY_MS / SimulationEnvironment.SIMULATION_SPEED));
@@ -219,7 +215,6 @@ public class DroneSubsystem implements Runnable {
             throw new RuntimeException(e);
         }
         System.out.println("[Drone " + droneId + "] Nozzle closed.");
-        System.out.println(fluidReleasedAtZone);
         updateScheduler();
     }
 
@@ -253,42 +248,24 @@ public class DroneSubsystem implements Runnable {
     private double calculateDistance(double x1, double y1, int x2, int y2) {
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     }
-
-    // TODO: not used?
-    private void moveTowardsTarget(int targetX, int targetY, double speedPerTick) {
-        double dx = targetX - coordX;
-        double dy = targetY - coordY;
-        double distance = calculateDistance(coordX, coordY, targetX, targetY);
-
-        if (distance <= speedPerTick) {
-            coordX = targetX;
-            coordY = targetY;
-        } else {
-            double ratio = speedPerTick / distance;
-            coordX += (int) Math.round(dx * ratio);
-            coordY += (int) Math.round(dy * ratio);
-        }
-
-        batteryTravelDistance -= (int) Math.ceil(speedPerTick / MAX_DRONE_RANGE * BATTERY_MAX);
-    }
-
     private void releaseFluidPerTick(double fluidPerTick) {
         if (fluidReleasedAtZone + fluidPerTick >= fluidAmountToDrop) {
             fluidPerTick = fluidAmountToDrop - fluidReleasedAtZone;
         }
-        System.out.println("Fluid per Tick " + fluidPerTick);
+        //System.out.println("Fluid per Tick " + fluidPerTick);
 
         fluidReleasedAtZone += fluidPerTick;
         fluidAmount -= fluidPerTick;
 
         if (fluidReleasedAtZone >= fluidAmountToDrop || fluidAmount <= 0) {
+            fluidReleasedAtZone = fluidAmountToDrop;
             droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
         }
     }
 
     // Called by tick()
     private void moveTick(double speed) {
-        System.out.println(" Current x y :" + coordX + ", " + coordY + " Target x y :" + targetCoordX + ", " + targetCoordY);
+        //System.out.println(" Current x y :" + coordX + ", " + coordY + " Target x y :" + targetCoordX + ", " + targetCoordY);
         double dx = targetCoordX - coordX;
         double dy = targetCoordY - coordY;
         double distance = Math.sqrt(dx * dx + dy * dy);

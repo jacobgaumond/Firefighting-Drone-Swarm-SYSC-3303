@@ -13,10 +13,8 @@
  *     DroneSubsystem:         updates on events and drone statuses
  */
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Scheduler implements Runnable {
 
@@ -99,7 +97,10 @@ public class Scheduler implements Runnable {
 
     public void processFireEvent(Message message) {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
-        taskQueue.add(fireEvent);
+        activeFires.computeIfAbsent(
+                fireEvent.getZoneId(),
+                id -> new FireTask(fireEvent)
+        );
 
         if (gui != null) {
             if (!clockStarted) {
@@ -138,13 +139,12 @@ public class Scheduler implements Runnable {
                 FireTask activeTask = activeFires.get(drone.assignedZoneID);
 
                 if (activeTask != null) { //Checks to see if the zoneFire is fully out or not
-                    activeTask.fluidDropped += status.getFluidDropped();
                     int zoneId = activeTask.fireEvent.getZoneId();
-
+                    activeTask.assignedDrones.remove(drone.droneId);
+                    activeTask.fluidDropped += (int) status.getFluidDropped();
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + zoneId + " EXTINGUISHED!");
                         activeFires.remove(zoneId);
-
                         // Update GUI: extinguished
                         if (gui != null) {
                             gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
@@ -154,23 +154,18 @@ public class Scheduler implements Runnable {
                             schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
                         }
                     } else {
-                        System.out.println("[Scheduler] Zone " + zoneId
-                                + " still needs " + activeTask.remainingFluidNeeded() + " more fluid, requeueing.");
-
                         if (gui != null) {
                             gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
                         }
                     }
                 }
-
-                // only assign leftover if the drone actually dropped fluid at this fire
-                if (status.getFluidDropped() > 0 && drone.fluid > 0 && !activeFires.isEmpty()) {
-                    FireEvent leftOverTarget = findNearbyFire(drone);
-                    if (leftOverTarget != null) {
-                        System.out.println("[Scheduler] Drone " + drone.droneId + " using leftover water on nearby fire " + leftOverTarget.getZoneId());
-                        drone.assignedZoneID = leftOverTarget.getZoneId(); //mark fire
-                        drone.state = "EN_ROUTE_FIRE";                     //mark busy
-                        assignFireTaskToDrone(drone, leftOverTarget);
+                // assign if it has remaining fluid
+                if (drone.fluid > 0 && !activeFires.isEmpty()) {
+                    drone.assignedZoneID = -1;
+                    drone.fluidAssigned=0;
+                    findNearbyFire(drone);
+                    if(drone.assignedZoneID==-1){
+                    sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                     }
                 } else {
                     // no leftover -> return to base
@@ -189,30 +184,55 @@ public class Scheduler implements Runnable {
 
             case "FAULTED":
                 System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted!");
+                for (FireTask task : activeFires.values()) {
+                    if (task.assignedDrones.containsKey(status.getDroneID())) {
+                        // Remove the drone so netFluidStillNeeded() goes back up
+                        task.assignedDrones.remove(status.getDroneID());
+                        System.out.println("[Scheduler] Re-calculating needs for Zone " + task.fireEvent.getZoneId());
+                        break;
+                    }
+
+                }
                 break;
         }
     }
 
     // ========== Drone and Task Logic ==========
     public void tryAssignTask() {
-        while (!taskQueue.isEmpty()) {
-            FireEvent next = taskQueue.peek();
-            DroneInfo available = findAvailableDrone(next);
+        boolean assigned;
 
-            if (available != null) {
-                assignFireTaskToDrone(available, next);
+        do {
+            assigned = false;
 
-                if (willBeExtinguishedByAssignedDrones(activeFires.get(next.getZoneId()))) {
-                    taskQueue.poll();
+            // Find fires that still need fluid, sorted by priority
+            List<FireTask> sortedFires = activeFires.values().stream()
+                    .filter(task -> task.netFluidStillNeeded() > 0)
+                    .sorted(Comparator
+                            .comparingInt((FireTask t) -> getSeverityPriority(t.fireEvent.getSeverity()))
+                            .reversed() // highest severity first
+                            .thenComparingLong(t -> t.createdAt)) // oldest first on ties
+                    .collect(Collectors.toList());
+
+            // Try to assign a drone to any fire that needs it
+            for (FireTask task : sortedFires) {
+                DroneInfo available = findAvailableDrone(task.fireEvent);
+                if (available != null) {
+                    assignFireTaskToDrone(available, task.fireEvent);
+                    assigned = true;
+                    break; // Break after assigning one drone, then restart the loop
                 }
-            } else {
-                schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
-                break; // no drones available, wait
             }
-        }
-        if (taskQueue.isEmpty() && !activeFires.isEmpty()) {
-            boolean allWillBeExtinguished = activeFires.values().stream().allMatch(this::willBeExtinguishedByAssignedDrones);
-            if (allWillBeExtinguished) {
+
+        } while (assigned); // Keep looping as long as we assigned at least one drone
+
+        // After loop, check the state
+        if (activeFires.isEmpty()) {
+            schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
+        } else {
+            boolean allHaveEnough = activeFires.values().stream()
+                    .allMatch(task -> task.netFluidStillNeeded() <= 0);
+
+            if (allHaveEnough) {
                 schedulerSM.handleEvent(SchedulerEvent.DRONES_AVAILABLE, this);
             } else {
                 schedulerSM.handleEvent(SchedulerEvent.NOT_ENOUGH_DRONES_AVAILABLE, this);
@@ -223,9 +243,10 @@ public class Scheduler implements Runnable {
     private void assignFireTaskToDrone(DroneInfo drone, FireEvent fireEvent) {
         FireTask fireTask = activeFires.computeIfAbsent(
                 fireEvent.getZoneId(),
-                id -> new FireTask(fireEvent, getRequiredFluid(fireEvent.getSeverity()))
+                id -> new FireTask(fireEvent)
         );
-        int amountToDrop = Math.min((int) drone.fluid, fireTask.remainingFluidNeeded());
+        int amountToDrop = (int) Math.min(drone.fluid, fireTask.netFluidStillNeeded());
+        fireTask.assignedDrones.put(drone.droneId,amountToDrop); //assigns what the current drone is going to drop
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
         drone.fluidAssigned = amountToDrop;
@@ -243,6 +264,7 @@ public class Scheduler implements Runnable {
                 drone.droneId, // assign to specific drone
                 fireEvent.getFaultType()
         );
+        System.out.println("Assigning zone "+fireEvent.getZoneId()+" to drone"+ drone.droneId);
         if (gui != null) {
             gui.moveDroneToZone(drone.droneId,
                     fireEvent.getZoneId(),
@@ -283,7 +305,7 @@ public class Scheduler implements Runnable {
         double shortestDistance = Double.MAX_VALUE;
 
         for (FireTask task : activeFires.values()) {
-            if (task.remainingFluidNeeded() <= 0) {
+            if (task.netFluidStillNeeded() <= 0) {
                 continue; // skip extinguished
 
             }
@@ -381,7 +403,7 @@ public class Scheduler implements Runnable {
                 .mapToInt(d -> d.fluidAssigned)
                 .sum();
 
-        return totalFluidEnRoute >= fireTask.remainingFluidNeeded();
+        return totalFluidEnRoute >= fireTask.netFluidStillNeeded();
     }
 
     private int getRequiredFluid(String severity) {
@@ -422,7 +444,7 @@ public class Scheduler implements Runnable {
     }
 
     private String getFireSeverity(FireTask fireTask) {
-        int remaining = fireTask.remainingFluidNeeded();
+        double remaining = fireTask.netFluidStillNeeded();
 
         if (remaining >= 30) {
             return "high";
@@ -496,21 +518,28 @@ public class Scheduler implements Runnable {
     private static class FireTask {
 
         FireEvent fireEvent;
-        int fluidRequired;
-        int fluidDropped;
+        double fluidRequired;
+        double fluidDropped = 0.0;
+        Map<Integer, Integer> assignedDrones = new HashMap<>();
+        long createdAt = System.currentTimeMillis();
 
-        public FireTask(FireEvent fireEvent, int fluidRequired) {
+        public FireTask(FireEvent fireEvent) {
             this.fireEvent = fireEvent;
-            this.fluidRequired = fluidRequired;
-            this.fluidDropped = 0;
+            this.fluidRequired = switch (fireEvent.getSeverity().toLowerCase()) {
+                case "high" -> 30;
+                case "moderate" -> 20;
+                case "low" -> 10;
+                default -> 0;
+            };
         }
-
+        public int getFluidCurrentlyEnRoute() {//firetasks are like this now
+            return assignedDrones.values().stream().mapToInt(Integer::intValue).sum();
+        }
+        public double netFluidStillNeeded() {//sees if it needs more help
+            return fluidRequired - fluidDropped - getFluidCurrentlyEnRoute();
+        }
         public boolean isExtinguished() {
             return fluidDropped >= fluidRequired;
-        }
-
-        public int remainingFluidNeeded() {
-            return fluidRequired - fluidDropped;
         }
 
     }

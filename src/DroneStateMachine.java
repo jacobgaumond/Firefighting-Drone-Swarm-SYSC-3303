@@ -37,7 +37,6 @@ public class DroneStateMachine {
             case IDLE:
                 if (ev == DroneEvent.FIRE_ASSIGNED) {
                     transitionTo(DroneState.EN_ROUTE_FIRE, ev);
-                    //drone.flyToFire(payload);
                 }
                 break;
 
@@ -52,8 +51,8 @@ public class DroneStateMachine {
 
             case ARRIVED_AT_FIRE:
                 if (ev == DroneEvent.EXTINGUISH_REQUEST) {
+                    drone.openNozzle(payload);
                     transitionTo(DroneState.DROPPING_AGENT, ev);
-                    // drone.openNozzle(payload);
                 }
                 break;
 
