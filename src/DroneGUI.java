@@ -35,7 +35,7 @@ public class DroneGUI extends JFrame {
     private final static Color droneOutboundColor = new Color(255, 191, 0);
     private final static Color droneExtinguishingColor = new Color(77, 167, 46);
     private final static Color droneReturningColor = new Color(216, 109, 205);
-    private final static Color droneFaultedColor = new Color(77, 77, 77);
+    private final static Color droneFaultedColor = new Color(117, 117, 117);
 
     public static void main(String[] args) {
         String zoneFileName = "src/data/Sample_zone_file.csv";
@@ -590,8 +590,6 @@ public class DroneGUI extends JFrame {
             return;
         }
 
-        // TODO: implement different types
-
         // Cancel current animation
         Thread existingThread = droneAnimationThreads.get(droneId);
         if (existingThread != null && existingThread.isAlive()) {
@@ -614,12 +612,14 @@ public class DroneGUI extends JFrame {
                 parent.repaint();
             }
         }
+
         // Set faulted color and display fault text
         droneLabel.setBackground(droneFaultedColor);
-        //droneLabel.setText("FAULT");
+        // droneLabel.setText("<html style='lineHeight: 0.5; textAlign: center;'>D(" + droneId + ")<br/>Fault: " + type.toUpperCase() + "</html>");
+        droneLabel.setText("<html>D(" + droneId + ")<br/><font color='red'>" + type.toUpperCase() + "</font></html>");
         droneLabel.setVisible(true);
 
-        logMessage("Drone " + droneId + " FAULTED - Fault type: " + type);
+        logMessage("Drone " + droneId + " FAULTED - Type: " + type);
     }
 
     // ========== GETTERS ==========
