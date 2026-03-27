@@ -85,6 +85,27 @@ before it was realized that they would only be usable in future iterations.
 
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
+### Faulting
+  Faults are problems that drones might run into when doing their tasks
+
+  Faults are initially loaded from the event file and sent to the scheduler attached to a fireEvent. When the drone goes to pick up the fireEvent the drone also
+  picks up the fault that goes with the event. Once a drone has knowledge of the fault the logic acts accordingly for the specific drone fault:
+  
+  1. jammed: A drones nozzle gets stuck
+    When the drone arrives at the fire it attempts to open it's nozzle and then realizes it's stuck, switch to a faulted state, updates scheduler.
+  
+  2.  stuck: A drone gets stuck mid air
+    When the drone is on it's way to the assigned task it will randomly switch to a stuck state where it no longer moves and then updates scheduler.
+    
+  3. corrupted: A drone sends a corrupted message back to the scheduler
+    Once received corrupted in our current implementation on the transition from EXTINGUISHING_FIRE to FIRE_HANDLED when it goes to update the scheduler the
+    sent message will have corrupted information. The scheduler checks the message if it's corrupted rerequests and update from the port that sent the corrupted
+    message.
+
+  5. packet_loss: A drone doesn't receive the message from the scheduler
+     When a drone gets aa packet_loss fault it skips all the message handling to act like it never received the message. The scheduler has a watch thread that
+     makes sure that drones respond within 5 seconds within receiving a message. If a drone doesn't respond the watch will refire the last message sent without
+     the fault.
 
 ### Testing Code
 
