@@ -41,7 +41,7 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
-    private String pendingFault;
+    private String pendingFault,currentFault;
 
     private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
@@ -104,14 +104,9 @@ public class DroneSubsystem implements Runnable {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
             System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
 
-            String incomingFault = droneEvent.getFaultType();
-            if (incomingFault != null && !incomingFault.equalsIgnoreCase("NONE") && !incomingFault.isEmpty()) {
-                System.out.println("[DroneSubsystem] CAUTION: Mission assigned with fault: " + incomingFault);
-                this.pendingFault = incomingFault;
-            } else {
-                this.pendingFault = "NONE";
+            if(droneEvent.getDroneEvent()== DroneEvent.FIRE_ASSIGNED){
+              this.pendingFault = droneEvent.getFaultType();
             }
-
 
             //Handles event and requests
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED || droneEvent.getDroneEvent() == DroneEvent.RETURN_BASE_REQUEST) {
@@ -139,7 +134,8 @@ public class DroneSubsystem implements Runnable {
                 coordX, coordY,
                 fluidAmount,
                 batteryTravelDistance,
-                fluidReleasedAtZone
+                fluidReleasedAtZone,
+                currentFault
         );
         System.out.println(status);
         // Return a new Message object intended for the Scheduler
@@ -195,14 +191,15 @@ public class DroneSubsystem implements Runnable {
         droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
     }
 
-    public void openNozzle(String payload) {
+    public boolean openNozzle(String payload) {
+        System.out.println("Opening Nozzle:"+ pendingFault);
         if(pendingFault.equals("jammed")){
-          // droneSM.handleEvent(DroneEvent.FAILURE,payload,this);
-            System.out.println("Drone jammed error");
-
+            handleFault();
+            return false;
         }else{
             try {
-                Thread.sleep(100);
+                Thread.sleep(NOZZLE_OPEN_DELAY_MS);
+                return true;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -228,7 +225,9 @@ public class DroneSubsystem implements Runnable {
     public void handleFault() {
         // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
+        currentFault =pendingFault;
         messageBox.putMessage(sendStatus(), UDPMessageBox.SCHEDULER_PORT);
+        pendingFault="";
     }
 
     // ========== Helpers ==========

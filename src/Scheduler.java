@@ -186,12 +186,10 @@ public class Scheduler implements Runnable {
                 System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted!");
                 for (FireTask task : activeFires.values()) {
                     if (task.assignedDrones.containsKey(status.getDroneID())) {
-                        // Remove the drone so netFluidStillNeeded() goes back up
-                        task.assignedDrones.remove(status.getDroneID());
-                        System.out.println("[Scheduler] Re-calculating needs for Zone " + task.fireEvent.getZoneId());
+                        task.assignedDrones.remove(status.getDroneID()); //remove the drone assignment
                         break;
                     }
-
+                    gui.faultDrone(status.getDroneID(),status.getFaultType());
                 }
                 break;
         }

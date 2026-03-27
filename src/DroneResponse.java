@@ -8,6 +8,8 @@ public class DroneResponse extends SimulationEvent {
     private int battery;
     private double fluidDropped;
 
+    private String faultType;
+
     public DroneResponse(int droneId, String state, double x, double y, double fluidAmount, int battery, double fluidDropped) {
         this.droneId = droneId;
         this.state = state;
@@ -16,6 +18,17 @@ public class DroneResponse extends SimulationEvent {
         this.fluidAmount = fluidAmount;
         this.battery = battery;
         this.fluidDropped = fluidDropped;
+        this.faultType="";
+    }
+    public DroneResponse(int droneId, String state, double x, double y, double fluidAmount, int battery, double fluidDropped, String faultType) {
+        this.droneId = droneId;
+        this.state = state;
+        this.x = x;
+        this.y = y;
+        this.fluidAmount = fluidAmount;
+        this.battery = battery;
+        this.fluidDropped = fluidDropped;
+        this.faultType = faultType;
     }
 
     // Deserialize constructor
@@ -28,12 +41,13 @@ public class DroneResponse extends SimulationEvent {
         this.fluidAmount = Double.parseDouble(parts[4]);
         this.battery = Integer.parseInt(parts[5]);
         this.fluidDropped = Double.parseDouble(parts[6]);
+        this.faultType = parts.length > 7 ? parts[7] : "";
     }
 
     @Override
     public String serialize() {
         return droneId + DELIMITER + state + DELIMITER + x + DELIMITER + y + DELIMITER
-                + fluidAmount + DELIMITER + battery + DELIMITER + fluidDropped;
+                + fluidAmount + DELIMITER + battery + DELIMITER + fluidDropped+ DELIMITER+faultType;
     }
 
     public String toString() {
@@ -70,4 +84,5 @@ public class DroneResponse extends SimulationEvent {
     public double getFluidDropped() {
         return fluidDropped;
     }
+    public String getFaultType(){return faultType;}
 }

@@ -591,15 +591,32 @@ public class DroneGUI extends JFrame {
         }
 
         // TODO: implement different types
+
         // Cancel current animation
         Thread existingThread = droneAnimationThreads.get(droneId);
         if (existingThread != null && existingThread.isAlive()) {
             existingThread.interrupt();
         }
 
+        if ("jammed".equalsIgnoreCase(type)) {
+            // Shift the drone one cell to the left
+            Container parent = droneLabel.getParent();
+            if (parent != null) {
+                int currentX = droneLabel.getX();
+                int newX = currentX - cellWidth;
+
+                // Make sure it stays within bounds (not negative)
+                if (newX < 0) {
+                    newX = 0;
+                }
+
+                droneLabel.setLocation(newX, droneLabel.getY());
+                parent.repaint();
+            }
+        }
         // Set faulted color and display fault text
         droneLabel.setBackground(droneFaultedColor);
-        droneLabel.setText("FAULT");
+        //droneLabel.setText("FAULT");
         droneLabel.setVisible(true);
 
         logMessage("Drone " + droneId + " FAULTED - Fault type: " + type);

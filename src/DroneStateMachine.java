@@ -51,8 +51,11 @@ public class DroneStateMachine {
 
             case ARRIVED_AT_FIRE:
                 if (ev == DroneEvent.EXTINGUISH_REQUEST) {
-                    drone.openNozzle(payload);
-                    transitionTo(DroneState.DROPPING_AGENT, ev);
+                    if(drone.openNozzle(payload)) { //checks to see if it opens
+                        transitionTo(DroneState.DROPPING_AGENT, ev);
+                    }else{ //doesn't open fault it
+                        transitionTo(DroneState.FAULTED,ev );
+                    }
                 }
                 break;
 
