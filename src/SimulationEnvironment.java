@@ -13,7 +13,7 @@ public class SimulationEnvironment {
     public static final int SIMULATION_SPEED = 1;
     public static final int SIMULATION_SECOND_MS = (1000 / SIMULATION_SPEED);
 
-    public volatile static long currentTime = 0;
+    public static long currentTime = 0;
 
     public static synchronized void startClock(long startTime) {
         currentTime = startTime;

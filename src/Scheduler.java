@@ -470,7 +470,7 @@ public class Scheduler implements Runnable {
         return totalFluidEnRoute >= fireTask.netFluidStillNeeded();
     }
 
-    private int getRequiredFluid(String severity) {
+    private static int getRequiredFluid(String severity) {
         return switch (severity.toLowerCase()) {
             case "high" ->
                 30;
@@ -520,8 +520,6 @@ public class Scheduler implements Runnable {
             return "";
         }
     }
-
-    private static final long DRONE_TIMEOUT_MS = 5000; // tune to your simulation speed
 
     public void startWatchdog() {
         Thread watchdog = new Thread(() -> {
@@ -648,16 +646,7 @@ public class Scheduler implements Runnable {
 
         public FireTask(FireEvent fireEvent) {
             this.fireEvent = fireEvent;
-            this.fluidRequired = switch (fireEvent.getSeverity().toLowerCase()) {
-                case "high" ->
-                    30;
-                case "moderate" ->
-                    20;
-                case "low" ->
-                    10;
-                default ->
-                    0;
-            };
+            this.fluidRequired = getRequiredFluid(fireEvent.getSeverity());
         }
 
         public int getFluidCurrentlyEnRoute() {//firetasks are like this now

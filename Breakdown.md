@@ -90,9 +90,9 @@ Breakdown of responsibilities of each team member for each iteration
 ## Iteration #4
 
 - Olivia:
-    - Rework of the drone scheduler logic
-    - Some of the drone ticking and movement logic
-    - All of the faulting logic between the Scheduler and the DroneSubsystem
+  - Rework of the drone scheduler logic
+  - Some of the drone ticking and movement logic
+  - All of the faulting logic between the Scheduler and the DroneSubsystem
 
 - Jacob:
 
@@ -114,3 +114,5 @@ Breakdown of responsibilities of each team member for each iteration
     - Now starts GuI's clock with first FireEvent's timestamp
   - SimulationEnvironment:
     - Defines and shares simulated clock and time related variable
+  - UML
+    - Updated class diagram

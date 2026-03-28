@@ -89,7 +89,7 @@ public class UDPMessageBox {
      * @param message the Message to send
      * @param port the target port to send the message to
      */
-    public void sendMessage(Message message, int port) {
+    private void sendMessage(Message message, int port) {
         byte[] data = message.serialize().getBytes();
         try {
             InetAddress targetAddress = InetAddress.getLocalHost();
