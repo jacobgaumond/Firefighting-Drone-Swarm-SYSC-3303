@@ -23,6 +23,7 @@ public class DroneRequest extends SimulationEvent {
         this.targetY = targetY;
         this.amountToDrop = amountToDrop;
         this.droneId = droneId;
+        this.faultType = "";
     }
     public DroneRequest(DroneEvent droneEvent, String time, int zoneId, String eventType, String severity, int targetX, int targetY, int amountToDrop, int droneId,String faultType) {
         this.droneEvent = droneEvent;
