@@ -1,6 +1,7 @@
 # Firefighting Drone Swarm
 
 ## Overall Project Description
+
 This is an iterative project that aims to create a simulation of a swarm of drones that put out fires on a map.
 
 This iteration focuses on demonstrating safe communication between multiple threads.
@@ -56,9 +57,9 @@ before it was realized that they would only be usable in future iterations.
 
 - `src/DroneSubsystem.java`
   This class represents one of the Clients in the Client-Server model. Registers itself with the Scheduler on startup
-  and listens for incoming DroneRequest messages. 
-  Uses a state machine to manage its lifecycle from idle, to flying, dropping agent, and returning to base. 
-  Tracks its own position, fluid, level, battery, and fluid released per run. 
+  and listens for incoming DroneRequest messages.
+  Uses a state machine to manage its lifecycle from idle, to flying, dropping agent, and returning to base.
+  Tracks its own position, fluid, level, battery, and fluid released per run.
   Reports status back to the Scheduler after every state change.
 
 - `src/DroneStateMachine.java`
@@ -85,27 +86,29 @@ before it was realized that they would only be usable in future iterations.
 
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
+
 ### Faulting
-  Faults are problems that drones might run into when doing their tasks
 
-  Faults are initially loaded from the event file and sent to the scheduler attached to a fireEvent. When the drone goes to pick up the fireEvent the drone also
-  picks up the fault that goes with the event. Once a drone has knowledge of the fault the logic acts accordingly for the specific drone fault:
-  
-  1. jammed: A drones nozzle gets stuck
-    When the drone arrives at the fire it attempts to open it's nozzle and then realizes it's stuck, switch to a faulted state, updates scheduler.
-  
-  2.  stuck: A drone gets stuck mid air
-    When the drone is on it's way to the assigned task it will randomly switch to a stuck state where it no longer moves and then updates scheduler.
-    
-  3. corrupted: A drone sends a corrupted message back to the scheduler
-    Once received corrupted in our current implementation on the transition from EXTINGUISHING_FIRE to FIRE_HANDLED when it goes to update the scheduler the
-    sent message will have corrupted information. The scheduler checks the message if it's corrupted rerequests and update from the port that sent the corrupted
-    message.
+Faults are problems that drones might run into when doing their tasks
 
-  5. packet_loss: A drone doesn't receive the message from the scheduler
-     When a drone gets aa packet_loss fault it skips all the message handling to act like it never received the message. The scheduler has a watch thread that
-     makes sure that drones respond within 5 seconds within receiving a message. If a drone doesn't respond the watch will refire the last message sent without
-     the fault.
+Faults are initially loaded from the event file and sent to the scheduler attached to a fireEvent. When the drone goes to pick up the fireEvent the drone also
+picks up the fault that goes with the event. Once a drone has knowledge of the fault the logic acts accordingly for the specific drone fault:
+
+1. jammed: A drones nozzle gets stuck
+   When the drone arrives at the fire it attempts to open it's nozzle and then realizes it's stuck, switch to a faulted state, updates scheduler.
+
+2. stuck: A drone gets stuck mid air
+   When the drone is on it's way to the assigned task it will randomly switch to a stuck state where it no longer moves and then updates scheduler.
+
+3. corrupted: A drone sends a corrupted message back to the scheduler
+   Once received corrupted in our current implementation on the transition from EXTINGUISHING_FIRE to FIRE_HANDLED when it goes to update the scheduler the
+   sent message will have corrupted information. The scheduler checks the message if it's corrupted rerequests and update from the port that sent the corrupted
+   message.
+
+4. packet_loss: A drone doesn't receive the message from the scheduler
+   When a drone gets a packet_loss fault it skips all the message handling to act like it never received the message. The scheduler has a watch thread that
+   makes sure that drones respond within 5 seconds within receiving a message. If a drone doesn't respond the watch will refire the last message sent without
+   the fault.
 
 ### Testing Code
 
@@ -149,15 +152,10 @@ from a ZIP file, extract the file and open the resulting directory using the Int
 ### Usage
 
 To run the project, run the main methods of the following classes **in the specified order**:
+
 - Scheduler.java
 - DroneSubsystem.java
 - FireIncidentSubsystem.java
-
-[//]: # (To run the project, run the main function of the Main class in `src/Main.java` &#40;e.g., by right-clicking the file and)
-
-[//]: # (selecting "Run Main.main&#40;&#41;"&#41;. This will start 3 threads &#40;i.e., one for the Scheduler &#40;Server&#41;, one for the)
-
-[//]: # (FireIncidentSubsystem &#40;Client&#41;, and one for the DroneSubsystem &#40;Client&#41;.)
 
 Once running, the project will not stop until it is manually stopped by the user (i.e., by pressing stop in IntelliJ).
 

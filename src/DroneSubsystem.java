@@ -41,7 +41,7 @@ public class DroneSubsystem implements Runnable {
 
     private final DroneStateMachine droneSM;
 
-    private String pendingFault,currentFault;
+    private String pendingFault, currentFault;
 
     private double initialDistance; // used for tracking when to fault stuck
 
@@ -106,16 +106,15 @@ public class DroneSubsystem implements Runnable {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
             System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
 
-            if(droneEvent.getDroneEvent()== DroneEvent.FIRE_ASSIGNED){
-              this.pendingFault = droneEvent.getFaultType();
+            if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED) {
+                this.pendingFault = droneEvent.getFaultType();
             }
-            if(pendingFault.equals("packet_loss")){
-                System.out.println("The drone never got the packet");
-                pendingFault="";
+            if (pendingFault.equals("packet_loss")) {
+                System.out.println("FAULTED: The drone never got the packet");
+                pendingFault = "";
                 return;
             }
-
-            if(droneEvent.getDroneEvent()== DroneEvent.REQUEST_STATUS){
+            if (droneEvent.getDroneEvent() == DroneEvent.REQUEST_STATUS) {
                 System.out.println("Received update scheduler");
                 updateScheduler();
             }
@@ -126,10 +125,7 @@ public class DroneSubsystem implements Runnable {
                 this.targetCoordY = droneEvent.getTargetY();
                 this.fluidAmountToDrop = droneEvent.getAmountToDrop();
                 this.fluidReleasedAtZone = 0;
-                this.initialDistance = Math.sqrt(
-                        Math.pow(targetCoordX - coordX, 2) +
-                                Math.pow(targetCoordY - coordY, 2)
-                );
+                this.initialDistance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             }
             //sends the message to the statemachine
             droneSM.handleEvent(droneEvent.getDroneEvent(), droneEvent.serialize(), this);
@@ -144,10 +140,10 @@ public class DroneSubsystem implements Runnable {
     }
 
     public Message sendStatus() { //creates the message
-        if(droneSM.getCurrentState()==DroneState.FIRE_HANDLED && pendingFault.equals("corrupted")){ //corrupts on the fire extinguished message
+        if (droneSM.getCurrentState() == DroneState.FIRE_HANDLED && pendingFault.equals("corrupted")) { //corrupts on the fire extinguished message
             System.out.println("Corrupting a message");
             DroneResponse status = new DroneResponse(
-                    droneId*-1,
+                    droneId * -1,
                     generateCorruptedString(9),
                     generateCorruptedNumber(), generateCorruptedNumber(),
                     generateCorruptedNumber(),
@@ -156,7 +152,7 @@ public class DroneSubsystem implements Runnable {
                     generateCorruptedString(15)
             );
             System.out.println(status);
-            pendingFault="";
+            pendingFault = "";
             return new Message("Scheduler", "DroneSubsystem", status.serialize(), Message.MessageType.DroneResponse);
         }
 
@@ -192,7 +188,7 @@ public class DroneSubsystem implements Runnable {
         System.out.println("[Drone " + droneId + "] Flying to fire: " + payload);
 
         // travel time
-        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
+        double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
         long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED));
 
         try {
@@ -207,7 +203,7 @@ public class DroneSubsystem implements Runnable {
     }
 
     public void returnToBase(String payload) {
-        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
+        double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
         long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED));
 
         try {
@@ -224,10 +220,10 @@ public class DroneSubsystem implements Runnable {
 
     public boolean openNozzle(String payload) {
         System.out.println("Opening Nozzle");
-        if(pendingFault.equals("jammed")){
+        if (pendingFault.equals("jammed")) {
             handleFault();
             return false;
-        }else{
+        } else {
             try {
                 Thread.sleep(NOZZLE_OPEN_DELAY_MS);
                 return true;
@@ -236,6 +232,7 @@ public class DroneSubsystem implements Runnable {
             }
         }
     }
+
     public void closeNozzle(String payload) {
         try {
             Thread.sleep((long) (NOZZLE_CLOSE_DELAY_MS / SimulationEnvironment.SIMULATION_SPEED));
@@ -256,28 +253,29 @@ public class DroneSubsystem implements Runnable {
     public void handleFault() {
         // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
-        currentFault =pendingFault;
+        currentFault = pendingFault;
         messageBox.putMessage(sendStatus(), UDPMessageBox.SCHEDULER_PORT);
-        pendingFault="";
+        pendingFault = "";
     }
 
     // ========== Helpers ==========
+    private double calculateDistance(double x1, double y1, int x2, int y2) {
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
     public boolean hasBattery() {
-        double droneToFire = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        double fireToBase = Math.sqrt(Math.pow(targetCoordX, 2) + Math.pow(targetCoordY, 2));
+        double droneToFire = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
+        double fireToBase = calculateDistance(targetCoordX, targetCoordY, 0, 0);
         double totalDistance = droneToFire + fireToBase;
         return batteryTravelDistance >= totalDistance;
     }
 
     public int calculateBatteryUsage() {
-        double droneToFire = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        double fireToBase = Math.sqrt(Math.pow(targetCoordX, 2) + Math.pow(targetCoordY, 2));
+        double droneToFire = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
+        double fireToBase = calculateDistance(targetCoordX, targetCoordY, 0, 0);
         return (int) Math.ceil(droneToFire + fireToBase);
     }
 
-    private double calculateDistance(double x1, double y1, int x2, int y2) {
-        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-    }
     private void releaseFluidPerTick(double fluidPerTick) {
         if (fluidReleasedAtZone + fluidPerTick >= fluidAmountToDrop) {
             fluidPerTick = fluidAmountToDrop - fluidReleasedAtZone;
@@ -295,16 +293,12 @@ public class DroneSubsystem implements Runnable {
 
     // Called by tick()
     private void moveTick(double speed) {
-        System.out.println(" Current x y :" + coordX + ", " + coordY + " Target x y :" + targetCoordX + ", " + targetCoordY);
         double dx = targetCoordX - coordX;
         double dy = targetCoordY - coordY;
-        double distance = Math.sqrt(dx * dx + dy * dy);
+        double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
 
         if ("stuck".equals(pendingFault)) {
-            double distanceToTarget = Math.sqrt(
-                    Math.pow(targetCoordX - coordX, 2) +
-                            Math.pow(targetCoordY - coordY, 2)
-            );
+            double distanceToTarget = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             if (distanceToTarget <= initialDistance / 2) {
                 droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
                 return;
@@ -340,7 +334,7 @@ public class DroneSubsystem implements Runnable {
     }
 
     private double generateCorruptedNumber() {
-        return (int)(Math.random() * 1_000_000);
+        return (int) (Math.random() * 1_000_000);
     }
 
     // ========== GETTERS AND SETTERS ==========

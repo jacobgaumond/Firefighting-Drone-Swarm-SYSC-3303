@@ -71,7 +71,7 @@ public class FireIncidentSubsystem implements Runnable {
             // respect delay between timestamps (accounting for simulation speed)
             long delay = (long) ((fireEvent.getTimeInSeconds() - startTime) * (1000.0 / SimulationEnvironment.SIMULATION_SPEED));
             try {
-                Thread.sleep(delay / 2);
+                Thread.sleep(delay);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -84,6 +84,9 @@ public class FireIncidentSubsystem implements Runnable {
                     Message.MessageType.FireEvent
             );
             messageBox.putMessage(fireEventMessage, UDPMessageBox.SCHEDULER_PORT);
+
+            // Update startTime for next delay calculation
+            startTime = fireEvent.getTimeInSeconds();
         }
 
         boolean boxOpen = true;

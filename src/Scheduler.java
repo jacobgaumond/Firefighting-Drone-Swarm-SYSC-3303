@@ -129,15 +129,26 @@ public class Scheduler implements Runnable {
             return false;
         }
         // ===== field validation =====
-        if (status.getDroneID() < 0) return false;
-        if (status.getBattery() < 0 || status.getBattery() > 100) return false;
-        if (Double.isNaN(status.getX()) || Double.isInfinite(status.getX())) return false;
-        if (Double.isNaN(status.getY()) || Double.isInfinite(status.getY())) return false;
-        if (status.getFluidAmount() < 0) return false;
+        if (status.getDroneID() < 0) {
+            return false;
+        }
+        if (status.getBattery() < 0 || status.getBattery() > 100) {
+            return false;
+        }
+        if (Double.isNaN(status.getX()) || Double.isInfinite(status.getX())) {
+            return false;
+        }
+        if (Double.isNaN(status.getY()) || Double.isInfinite(status.getY())) {
+            return false;
+        }
+        if (status.getFluidAmount() < 0) {
+            return false;
+        }
         return true;
     }
+
     private void processDroneMessage(Message message) {
-        if(!checkMessage(message)){
+        if (!checkMessage(message)) {
             sendEventToDrone(-1, DroneEvent.REQUEST_STATUS, String.valueOf(message.getSenderPort()));
             return;
         }
@@ -146,8 +157,8 @@ public class Scheduler implements Runnable {
 
         // Update drone registry
         DroneInfo drone = droneRegistry.get(status.getDroneID());
-        drone.lastHeardFrom =  System.currentTimeMillis();
-        drone.awaitingResponse=false;
+        drone.lastHeardFrom = System.currentTimeMillis();
+        drone.awaitingResponse = false;
         drone.state = status.getState();
         drone.x = status.getX();
         drone.y = status.getY();
@@ -189,10 +200,10 @@ public class Scheduler implements Runnable {
                 // assign if it has remaining fluid
                 if (drone.fluid > 0 && !activeFires.isEmpty()) {
                     drone.assignedZoneID = -1;
-                    drone.fluidAssigned=0;
+                    drone.fluidAssigned = 0;
                     findNearbyFire(drone);
-                    if(drone.assignedZoneID==-1){
-                    sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
+                    if (drone.assignedZoneID == -1) {
+                        sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
                     }
                 } else {
                     // no leftover -> return to base
@@ -216,7 +227,7 @@ public class Scheduler implements Runnable {
                         task.assignedDrones.remove(status.getDroneID()); //remove the drone assignment
                         break;
                     }
-                    gui.faultDrone(status.getDroneID(),status.getFaultType());
+                    gui.faultDrone(status.getDroneID(), status.getFaultType());
                 }
                 break;
         }
@@ -271,7 +282,7 @@ public class Scheduler implements Runnable {
                 id -> new FireTask(fireEvent)
         );
         int amountToDrop = (int) Math.min(drone.fluid, fireTask.netFluidStillNeeded());
-        fireTask.assignedDrones.put(drone.droneId,amountToDrop); //assigns what the current drone is going to drop
+        fireTask.assignedDrones.put(drone.droneId, amountToDrop); //assigns what the current drone is going to drop
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
         drone.fluidAssigned = amountToDrop;
@@ -289,13 +300,13 @@ public class Scheduler implements Runnable {
                 drone.droneId, // assign to specific drone
                 fireEvent.getFaultType()
         );
-        System.out.println("Assigning zone "+fireEvent.getZoneId()+" to drone"+ drone.droneId);
+        System.out.println("Assigning zone " + fireEvent.getZoneId() + " to drone" + drone.droneId);
         if (gui != null) {
             gui.moveDroneToZone(drone.droneId,
                     fireEvent.getZoneId(),
                     calculateGuiDroneTravelTime(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY()),
                     drone.fluid
-            ); // TODO time
+            );
         }
 
         Message droneMessage = new Message(
@@ -316,31 +327,30 @@ public class Scheduler implements Runnable {
         drone.dispatchTime = System.currentTimeMillis();
         drone.expectedResponseTime = expectedTime;
 
-
-
         messageBox.putMessage(droneMessage, drone.port);
     }
 
     private void sendEventToDrone(int droneId, DroneEvent event, String payload) {
         DroneRequest request = new DroneRequest(
-                event, "", 0, "", "", 0, 0, 0, droneId,"NONE"
+                event, "", 0, "", "", 0, 0, 0, droneId, "NONE"
         );
-       if(droneId==-1){ //corrupted drone
+        if (droneId == -1) { // corrupted drone
             System.out.println(" ReRequesting information back from a corrupted drone message");
-           Message message = new Message(
-                   "DroneSubsystem",
-                   "Scheduler",
-                   request.serialize(),
-                   Message.MessageType.DroneRequest
-           );
-           messageBox.putMessage(message, Integer.parseInt(payload));
-           return;
-       }
+            gui.faultDrone(droneId, "corruption");
+            Message message = new Message(
+                    "DroneSubsystem",
+                    "Scheduler",
+                    request.serialize(),
+                    Message.MessageType.DroneRequest
+            );
+            messageBox.putMessage(message, Integer.parseInt(payload));
+            return;
+        }
         DroneInfo drone = droneRegistry.get(droneId);
 
-       drone.dispatchTime = System.currentTimeMillis();
-       drone.lastSentRequest = request;
-       drone.awaitingResponse = true;
+        drone.dispatchTime = System.currentTimeMillis();
+        drone.lastSentRequest = request;
+        drone.awaitingResponse = true;
 
         Message message = new Message(
                 "DroneSubsystem",
@@ -348,8 +358,8 @@ public class Scheduler implements Runnable {
                 request.serialize(),
                 Message.MessageType.DroneRequest
         );
-        drone.lastSentRequest= request;
-        drone.awaitingResponse=true;
+        drone.lastSentRequest = request;
+        drone.awaitingResponse = true;
         messageBox.putMessage(message, drone.port);
     }
 
@@ -614,6 +624,7 @@ public class Scheduler implements Runnable {
         public long getDispatchTime() {
             return dispatchTime;
         }
+
         public long getExpectedResponseTime() {
             return expectedResponseTime;
         }
@@ -621,6 +632,7 @@ public class Scheduler implements Runnable {
         public void setDispatchTime(long dispatchTime) {
             this.dispatchTime = dispatchTime;
         }
+
         public void setExpectedResponseTime(long expectedResponseTime) {
             this.expectedResponseTime = expectedResponseTime;
         }
@@ -637,18 +649,25 @@ public class Scheduler implements Runnable {
         public FireTask(FireEvent fireEvent) {
             this.fireEvent = fireEvent;
             this.fluidRequired = switch (fireEvent.getSeverity().toLowerCase()) {
-                case "high" -> 30;
-                case "moderate" -> 20;
-                case "low" -> 10;
-                default -> 0;
+                case "high" ->
+                    30;
+                case "moderate" ->
+                    20;
+                case "low" ->
+                    10;
+                default ->
+                    0;
             };
         }
+
         public int getFluidCurrentlyEnRoute() {//firetasks are like this now
             return assignedDrones.values().stream().mapToInt(Integer::intValue).sum();
         }
+
         public double netFluidStillNeeded() {//sees if it needs more help
             return fluidRequired - fluidDropped - getFluidCurrentlyEnRoute();
         }
+
         public boolean isExtinguished() {
             return fluidDropped >= fluidRequired;
         }

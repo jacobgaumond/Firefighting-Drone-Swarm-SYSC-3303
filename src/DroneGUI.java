@@ -312,7 +312,7 @@ public class DroneGUI extends JFrame {
     }
 
     private JPanel createLegendItem(String text, Color color, String boxText) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         p.setOpaque(false);
 
         JLabel box = new JLabel(boxText);
