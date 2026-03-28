@@ -307,6 +307,17 @@ public class Scheduler implements Runnable {
         fireEvent.setFaultType("NONE");
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
+
+        double distance = calculateDistance(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY());
+
+        long expectedTime = (long) ((distance * MS_PER_UNIT * 10) / SimulationEnvironment.SIMULATION_SPEED);
+        expectedTime += 2000;
+
+        drone.dispatchTime = System.currentTimeMillis();
+        drone.expectedResponseTime = expectedTime;
+
+
+
         messageBox.putMessage(droneMessage, drone.port);
     }
 
@@ -326,6 +337,11 @@ public class Scheduler implements Runnable {
            return;
        }
         DroneInfo drone = droneRegistry.get(droneId);
+
+       drone.dispatchTime = System.currentTimeMillis();
+       drone.lastSentRequest = request;
+       drone.awaitingResponse = true;
+
         Message message = new Message(
                 "DroneSubsystem",
                 "Scheduler",
@@ -497,7 +513,7 @@ public class Scheduler implements Runnable {
 
     private static final long DRONE_TIMEOUT_MS = 5000; // tune to your simulation speed
 
-    private void startWatchdog() {
+    public void startWatchdog() {
         Thread watchdog = new Thread(() -> {
             while (true) {
                 try {
@@ -507,9 +523,10 @@ public class Scheduler implements Runnable {
                 }
                 long now = System.currentTimeMillis();
                 for (DroneInfo drone : droneRegistry.values()) {
-                    if (drone.awaitingResponse && (now - drone.lastHeardFrom) > DRONE_TIMEOUT_MS) {
+                    if (drone.awaitingResponse && (now - drone.dispatchTime) > drone.expectedResponseTime) {
                         System.out.println("[Scheduler] Drone " + drone.droneId + " never responded, resending.");
-                        drone.lastHeardFrom = now;
+                        drone.dispatchTime = now;
+
                         if (drone.lastSentRequest != null) {
                             DroneRequest resendRequest = drone.lastSentRequest;
                             resendRequest.setFaultType("NONE"); // strip fault before resending,
@@ -543,7 +560,7 @@ public class Scheduler implements Runnable {
     }
 
     // ========== Sub Classes ==========
-    private static class DroneInfo {
+    public class DroneInfo {
 
         int droneId;
         int port;
@@ -557,6 +574,9 @@ public class Scheduler implements Runnable {
         DroneRequest lastSentRequest;
         long lastHeardFrom = System.currentTimeMillis();
         boolean awaitingResponse = false;
+
+        private long dispatchTime;
+        private long expectedResponseTime;
 
         public DroneInfo(int droneId, int port) {
             this.droneId = droneId;
@@ -589,6 +609,20 @@ public class Scheduler implements Runnable {
 
         private double calculateDistance(double x1, double y1, int x2, int y2) {
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        }
+
+        public long getDispatchTime() {
+            return dispatchTime;
+        }
+        public long getExpectedResponseTime() {
+            return expectedResponseTime;
+        }
+
+        public void setDispatchTime(long dispatchTime) {
+            this.dispatchTime = dispatchTime;
+        }
+        public void setExpectedResponseTime(long expectedResponseTime) {
+            this.expectedResponseTime = expectedResponseTime;
         }
     }
 
