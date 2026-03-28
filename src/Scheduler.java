@@ -26,7 +26,6 @@ public class Scheduler implements Runnable {
     private boolean clockStarted = false;
 
     // State Tracking
-    private final Queue<FireEvent> taskQueue = new LinkedList<>(); // TODO: Remove
     private final Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
     private final Map<Integer, FireTask> activeFires = new HashMap<>();
 
@@ -555,10 +554,6 @@ public class Scheduler implements Runnable {
     }
 
     // ========== Getters and Setters ==========
-    public Queue<FireEvent> getTaskQueue() { // TODO: Remove
-        return taskQueue;
-    }
-
     public Map<Integer, DroneInfo> getDroneRegistry() {
         return droneRegistry;
     }
