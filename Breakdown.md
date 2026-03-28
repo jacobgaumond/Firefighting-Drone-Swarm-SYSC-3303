@@ -95,6 +95,17 @@ Breakdown of responsibilities of each team member for each iteration
   - All of the faulting logic between the Scheduler and the DroneSubsystem
 
 - Jacob:
+  - Code:
+    - Refactored Scheduler
+      - Changed accessibility of FireTask subclass, added getter.
+      - Removed unused variable taskQueue and related references
+  - Tests
+    - Fixed build issues by updating FireIncidentSubsystemTest and SchedulerTest
+    - FireEventTest:
+      - Created new class
+      - Added testParseFromCsv()
+    - SchedulerTest and SchedulerUDPTest
+      - Refactored to no longer use Scheduler's removed taskQueue, modified most of the test methods to permit this
 
 - Ulan:
 
