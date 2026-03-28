@@ -43,12 +43,14 @@ class SchedulerUDPTest {
 
     @Test
     void testSchedulerReceivesFireEvent() throws Exception {
-        FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
+        int fireZoneId = 3;
+        FireEvent fire = new FireEvent("14:03:15", fireZoneId, "FIRE_DETECTED", "High", 250, 1050);
         sendToScheduler(new Message("FireIncidentSubsystem", "Scheduler", fire.serialize(), Message.MessageType.FireEvent));
         Thread.sleep(300);
 
-        assertEquals(1, scheduler.getTaskQueue().size());
-        FireEvent received = scheduler.getTaskQueue().peek();
+        assertEquals(1, scheduler.getActiveFires().size());
+
+        FireEvent received = scheduler.getActiveFires().get(fireZoneId).getFireEvent();
         assertEquals(3, received.getZoneId());
         assertEquals("High", received.getSeverity());
         assertEquals("FIRE_DETECTED", received.getEventType());

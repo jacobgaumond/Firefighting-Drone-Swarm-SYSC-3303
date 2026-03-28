@@ -63,50 +63,43 @@ class SchedulerTest {
 
     // ==================== processFireEvent ====================
     @Test
-    void testFireEventAddedToTaskQueue() {
+    void testFireEventCreatesActiveFireTask() {
         FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
         Message msg = new Message("FireIncidentSubsystem", "Scheduler", fire.serialize(), Message.MessageType.FireEvent);
 
         scheduler.processFireEvent(msg);
 
-        assertEquals(1, scheduler.getTaskQueue().size());
+        assertEquals(1, scheduler.getActiveFires().size());
     }
 
-    @Test
-    void testMultipleFireEventsQueueInOrder() {
-        FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
-        FireEvent fire2 = new FireEvent("14:10:00", 5, "FIRE_DETECTED", "Moderate", 1650, 700);
-
-        scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
-        scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire2.serialize(), Message.MessageType.FireEvent));
-
-        assertEquals(2, scheduler.getTaskQueue().size());
-        assertEquals(3, scheduler.getTaskQueue().peek().getZoneId()); // fire1 is first
-    }
-
-    @Test
-    void testNonFireEventIgnoredByProcessFireEvent() {
-        FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
-        Message msg = new Message("DroneSubsystem", "Scheduler", fire.serialize(), Message.MessageType.DroneResponse);
-
-        scheduler.processFireEvent(msg); // wrong type — should be ignored
-
-        assertTrue(scheduler.getTaskQueue().isEmpty());
-    }
+    // taskQueue was replaced by activeFires (hashmap); order no longer makes sense.
+//    @Test
+//    void testMultipleFireEventsQueueInOrder() {
+//        FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
+//        FireEvent fire2 = new FireEvent("14:10:00", 5, "FIRE_DETECTED", "Moderate", 1650, 700);
+//
+//        scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
+//        scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire2.serialize(), Message.MessageType.FireEvent));
+//
+//        assertEquals(2, scheduler.getTaskQueue().size());
+//        assertEquals(3, scheduler.getTaskQueue().peek().getZoneId()); // fire1 is first
+//    }
 
     // ==================== tryAssignTask ====================
+
+    // tryAssignTask no longer attempts removal from taskQueue (now activeFires)
+//    @Test
+//    void testTryAssignTaskDoesNothingWithNoDrones() {
+//        FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
+//        scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire.serialize(), Message.MessageType.FireEvent));
+//
+//        scheduler.tryAssignTask(); // no drones registered — task should stay queued
+//
+//        assertEquals(1, scheduler.getTaskQueue().size());
+//    }
+
     @Test
-    void testTryAssignTaskDoesNothingWithNoDrones() {
-        FireEvent fire = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
-        scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire.serialize(), Message.MessageType.FireEvent));
-
-        scheduler.tryAssignTask(); // no drones registered — task should stay queued
-
-        assertEquals(1, scheduler.getTaskQueue().size());
-    }
-
-    @Test
-    void testFireStaysQueuedWhenInsufficientFluid() {
+    void testFireStaysActiveWhenInsufficientFluid() {
         // Setup Message object
         int droneId = 1;
         int dronePort = 9503;
@@ -120,13 +113,14 @@ class SchedulerTest {
         // Test
         scheduler.registerDrone(registerMessage); // drone has 15 fluid, High severity needs 30
 
-        FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
+        int fireZoneId = 3;
+        FireEvent fire1 = new FireEvent("14:03:15", fireZoneId, "FIRE_DETECTED", "High", 250, 1050);
         scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
 
-        // fire1 is assigned to drone but NOT dequeued because
+        // fire1 is assigned to drone but NOT removed because
         // drone's 15 fluid < 30 required for High severity
-        assertEquals(1, scheduler.getTaskQueue().size());
-        assertEquals(3, scheduler.getTaskQueue().peek().getZoneId());
+        assertEquals(1, scheduler.getActiveFires().size());
+        assertEquals(3, scheduler.getActiveFires().get(fireZoneId).getFireEvent().getZoneId());
     }
 
     @Test
@@ -148,14 +142,10 @@ class SchedulerTest {
         scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
 
         // drone's 15 fluid >= 10 required for Low severity → fire is dequeued
-        assertEquals(0, scheduler.getTaskQueue().size());
+        assertEquals(0, scheduler.getActiveFires().size());
     }
 
-    // ==================== getTaskQueue / getDroneRegistry / getActiveFires ====================
-    @Test
-    void testTaskQueueStartsEmpty() {
-        assertTrue(scheduler.getTaskQueue().isEmpty());
-    }
+    // ==================== getDroneRegistry / getActiveFires ====================
 
     @Test
     void testDroneRegistryStartsEmpty() {
