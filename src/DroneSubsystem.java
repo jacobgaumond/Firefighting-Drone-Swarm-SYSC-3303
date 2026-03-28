@@ -61,6 +61,9 @@ public class DroneSubsystem implements Runnable {
 
     // Constructor
     public DroneSubsystem() {
+        pendingFault = "";
+        currentFault = "";
+
         messageBox = new UDPMessageBox(UDPMessageBox.Subsystem.DRONE);
 
         //Core initlization
