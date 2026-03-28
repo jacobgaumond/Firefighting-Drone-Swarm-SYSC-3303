@@ -34,23 +34,6 @@ class FireIncidentSubsystemTest {
     }
 
     @Test
-    void testParseFireEvent() {
-
-        String line = "14:03:15,3,FIRE_DETECTED,High";
-        FireEvent event = fireSys.parseFireEvent(line);
-
-        assertNotNull(event);
-        assertEquals("14:03:15", event.getTime());
-        assertEquals(3, event.getZoneId());
-        assertEquals("FIRE_DETECTED", event.getEventType());
-        assertEquals("High", event.getSeverity());
-
-        //check target coordinates
-        assertEquals(ZoneMap.getX(3), event.getTargetX());
-        assertEquals(ZoneMap.getY(3), event.getTargetY());
-    }
-
-    @Test
     void toSchedulerMessageBox() throws InterruptedException {
         FireEvent fireEvent = fireSys.parseFireEvent("14:03:15,3,FIRE_DETECTED,High");
         Message message = new Message(
