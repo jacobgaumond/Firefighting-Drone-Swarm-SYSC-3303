@@ -35,7 +35,7 @@ class FireIncidentSubsystemTest {
 
     @Test
     void toSchedulerMessageBox() throws InterruptedException {
-        FireEvent fireEvent = fireSys.parseFireEvent("14:03:15,3,FIRE_DETECTED,High");
+        FireEvent fireEvent = FireEvent.parseFromCsv("14:03:15,3,FIRE_DETECTED,High");
         Message message = new Message(
                 "Scheduler",
                 "FireIncidentSubsystem",

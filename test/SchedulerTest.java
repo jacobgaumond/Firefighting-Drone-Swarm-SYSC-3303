@@ -19,14 +19,45 @@ class SchedulerTest {
 
     @Test
     void testRegisterDroneAddsToRegistry() {
-        scheduler.registerDrone(1);
+        // Setup Message object
+        int droneId = 1;
+        int dronePort = 9503;
+        Message registerMessage = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                String.valueOf(droneId) + "," + dronePort,
+                Message.MessageType.DroneRegistration
+        );
+
+        // Test
+        scheduler.registerDrone(registerMessage);
         assertTrue(scheduler.getDroneRegistry().containsKey(1));
     }
 
     @Test
     void testRegisterMultipleDrones() {
-        scheduler.registerDrone(1);
-        scheduler.registerDrone(2);
+        // Setup Message objects
+        int droneId1 = 1;
+        int droneId2 = 2;
+        int dronePort1 = 9503;
+        int dronePort2 = 9504;
+
+        Message registerMessage1 = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                String.valueOf(droneId1) + "," + dronePort1,
+                Message.MessageType.DroneRegistration
+        );
+        Message registerMessage2 = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                String.valueOf(droneId2) + "," + dronePort2,
+                Message.MessageType.DroneRegistration
+        );
+
+        // Test
+        scheduler.registerDrone(registerMessage1);
+        scheduler.registerDrone(registerMessage2);
         assertEquals(2, scheduler.getDroneRegistry().size());
     }
 
@@ -76,7 +107,18 @@ class SchedulerTest {
 
     @Test
     void testFireStaysQueuedWhenInsufficientFluid() {
-        scheduler.registerDrone(1); // drone has 15 fluid, High severity needs 30
+        // Setup Message object
+        int droneId = 1;
+        int dronePort = 9503;
+        Message registerMessage = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                String.valueOf(droneId) + "," + dronePort,
+                Message.MessageType.DroneRegistration
+        );
+
+        // Test
+        scheduler.registerDrone(registerMessage); // drone has 15 fluid, High severity needs 30
 
         FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "High", 250, 1050);
         scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
@@ -89,7 +131,18 @@ class SchedulerTest {
 
     @Test
     void testLowSeverityFireDequeued() {
-        scheduler.registerDrone(1); // drone has 15 fluid, Low severity needs 10
+        // Setup Message object
+        int droneId = 1;
+        int dronePort = 9503;
+        Message registerMessage = new Message(
+                "Scheduler",
+                "DroneSubsystem",
+                String.valueOf(droneId) + "," + dronePort,
+                Message.MessageType.DroneRegistration
+        );
+
+        // Test
+        scheduler.registerDrone(registerMessage); // drone has 15 fluid, Low severity needs 10
 
         FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "Low", 0, 0);
         scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
