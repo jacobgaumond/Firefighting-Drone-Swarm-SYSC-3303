@@ -186,45 +186,9 @@ public class DroneSubsystem implements Runnable {
     }
 
     //** Drone Movement & Modification Functions **//
-    public void flyToFire(String payload) {
-        // batteryTravelDistance -= calculateBatteryUsage();
-        System.out.println("[Drone " + droneId + "] Flying to fire: " + payload);
-
-        // travel time
-        double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
-        long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED));
-
-        try {
-            Thread.sleep(travelTime);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        batteryTravelDistance -= (int) ((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
-        coordX = targetCoordX;
-        coordY = targetCoordY;
-        droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
-    }
-
-    public void returnToBase(String payload) {
-        double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
-        long travelTime = (long) ((((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED));
-
-        try {
-            Thread.sleep(travelTime);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        batteryTravelDistance -= (int) ((distance / MAX_DRONE_RANGE) * BATTERY_MAX);
-        coordX = targetCoordX;
-        coordY = targetCoordY;
-        System.out.println("[Drone " + droneId + "] Returning to base.");
-        droneSM.handleEvent(DroneEvent.ARRIVAL, payload, this);
-    }
-
     public boolean openNozzle(String payload) {
         System.out.println("Opening Nozzle");
         if (pendingFault.equals("jammed")) {
-            handleFault();
             return false;
         } else {
             try {
