@@ -26,7 +26,7 @@ public class Scheduler implements Runnable {
     private boolean clockStarted = false;
 
     // State Tracking
-    private final Queue<FireEvent> taskQueue = new LinkedList<>();
+    private final Queue<FireEvent> taskQueue = new LinkedList<>(); // TODO: Remove
     private final Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
     private final Map<Integer, FireTask> activeFires = new HashMap<>();
 
@@ -188,7 +188,7 @@ public class Scheduler implements Runnable {
                             gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
                         }
 
-                        if (taskQueue.isEmpty() && activeFires.isEmpty()) {
+                        if (activeFires.isEmpty()) {
                             schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
                         }
                     } else {
@@ -555,7 +555,7 @@ public class Scheduler implements Runnable {
     }
 
     // ========== Getters and Setters ==========
-    public Queue<FireEvent> getTaskQueue() {
+    public Queue<FireEvent> getTaskQueue() { // TODO: Remove
         return taskQueue;
     }
 
