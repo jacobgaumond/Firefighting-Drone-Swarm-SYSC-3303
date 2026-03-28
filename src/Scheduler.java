@@ -636,7 +636,7 @@ public class Scheduler implements Runnable {
         }
     }
 
-    private static class FireTask {
+    public class FireTask {
 
         FireEvent fireEvent;
         double fluidRequired;
@@ -651,6 +651,10 @@ public class Scheduler implements Runnable {
 
         public int getFluidCurrentlyEnRoute() {//firetasks are like this now
             return assignedDrones.values().stream().mapToInt(Integer::intValue).sum();
+        }
+
+        public FireEvent getFireEvent() {
+            return fireEvent;
         }
 
         public double netFluidStillNeeded() {//sees if it needs more help
