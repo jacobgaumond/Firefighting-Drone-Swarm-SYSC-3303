@@ -195,7 +195,9 @@ public class DroneSubsystem implements Runnable {
     public boolean openNozzle(String payload) {
         System.out.println("Opening Nozzle");
         if (pendingFault.equals("jammed")) {
-            handleFault();
+            currentFault = pendingFault;
+            System.out.println("Drone nozzle jammed faulting");
+            //handleFault();
             return false;
         } else {
             try {
@@ -228,7 +230,7 @@ public class DroneSubsystem implements Runnable {
         // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
         currentFault = pendingFault;
-        messageBox.putMessage(sendStatus(), UDPMessageBox.SCHEDULER_PORT);
+        updateScheduler();
         pendingFault = "";
     }
 

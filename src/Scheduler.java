@@ -220,14 +220,15 @@ public class Scheduler implements Runnable {
                 break;
 
             case "FAULTED":
-                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted!");
+                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with"+ status.getFaultType());
                 for (FireTask task : activeFires.values()) {
                     if (task.assignedDrones.containsKey(status.getDroneID())) {
+                        System.out.println("Removing the faulted drones zone");
                         task.assignedDrones.remove(status.getDroneID()); //remove the drone assignment
                         break;
                     }
-                    gui.faultDrone(status.getDroneID(), status.getFaultType());
                 }
+                gui.faultDrone(status.getDroneID(), status.getFaultType());
                 break;
         }
     }
