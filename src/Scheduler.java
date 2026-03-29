@@ -29,6 +29,8 @@ public class Scheduler implements Runnable {
     private final Map<Integer, DroneInfo> droneRegistry = new HashMap<>();
     private final Map<Integer, FireTask> activeFires = new HashMap<>();
 
+    private boolean stopWatchdog = false;
+
     public static void main(String[] args) {
         DroneGUI gui = new DroneGUI();
         gui.setVisible(true);
@@ -49,6 +51,8 @@ public class Scheduler implements Runnable {
     }
 
     public void closeBox() {
+        stopWatchdog = true;
+
         if (messageBox != null) {
             messageBox.closeBox();
         }
@@ -523,7 +527,7 @@ public class Scheduler implements Runnable {
 
     public void startWatchdog() {
         Thread watchdog = new Thread(() -> {
-            while (true) {
+            while (!stopWatchdog) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
