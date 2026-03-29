@@ -80,6 +80,12 @@ public class DroneSubsystem implements Runnable {
 
     // Testing constructor (no GUI)
     //public DroneSubsystem() { this(null); }
+    public void closeBox() {
+        if (messageBox != null) {
+            messageBox.closeBox();
+        }
+    }
+
     @Override
     public void run() {
         Message registerMessage = new Message(

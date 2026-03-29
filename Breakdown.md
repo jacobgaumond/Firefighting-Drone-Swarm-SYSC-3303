@@ -99,6 +99,7 @@ Breakdown of responsibilities of each team member for each iteration
     - Refactored Scheduler
       - Changed accessibility of FireTask subclass, added getter.
       - Removed unused variable taskQueue and related references
+    - Added DroneSubsystem's closeBox() method to allow cleanup during testing
   - Tests
     - Fixed build issues by updating FireIncidentSubsystemTest and SchedulerTest
     - FireEventTest:
