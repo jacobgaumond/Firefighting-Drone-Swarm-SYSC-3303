@@ -124,7 +124,7 @@ class SchedulerTest {
     }
 
     @Test
-    void testLowSeverityFireDequeued() {
+    void testLowSeverityFireAssignedToDrone() {
         // Setup Message object
         int droneId = 1;
         int dronePort = 9503;
@@ -141,8 +141,14 @@ class SchedulerTest {
         FireEvent fire1 = new FireEvent("14:03:15", 3, "FIRE_DETECTED", "Low", 0, 0);
         scheduler.processFireEvent(new Message("FireIncidentSubsystem", "Scheduler", fire1.serialize(), Message.MessageType.FireEvent));
 
-        // drone's 15 fluid >= 10 required for Low severity → fire is dequeued
-        assertEquals(0, scheduler.getActiveFires().size());
+        // fire should still be active
+        assertEquals(1, scheduler.getActiveFires().size());
+
+        // one drone should be assigned to it
+        Scheduler.FireTask task = scheduler.getActiveFires().get(3);
+        assertNotNull(task);
+        assertEquals(1, task.assignedDrones.size());
+        assertTrue(task.assignedDrones.containsKey(droneId));
     }
 
     // ==================== getDroneRegistry / getActiveFires ====================
