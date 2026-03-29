@@ -195,6 +195,7 @@ public class DroneSubsystem implements Runnable {
     public boolean openNozzle(String payload) {
         System.out.println("Opening Nozzle");
         if (pendingFault.equals("jammed")) {
+            handleFault();
             return false;
         } else {
             try {
