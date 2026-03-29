@@ -58,7 +58,7 @@ class SchedulerUDPTest {
 
     @Test
     void testSchedulerReceivesDroneRegistration() throws Exception {
-        sendToScheduler(new Message("Scheduler", "DroneSubsystem", "1", Message.MessageType.DroneRegistration));
+        sendToScheduler(new Message("Scheduler", "DroneSubsystem", "1,9503", Message.MessageType.DroneRegistration));
         Thread.sleep(300);
 
         assertEquals(1, scheduler.getDroneRegistry().size());
