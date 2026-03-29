@@ -388,12 +388,13 @@ public class DroneGUI extends JFrame {
     }
 
     // Log a message
-    public void logMessage(String message) {
-        // Remove trailing X's and whitespace, then append
-        String cleanMsg = message.replaceAll("X+$", "").trim();
-        logArea.append(cleanMsg + "\n");
+    public void logMessage(String message){
+        String timestamp = SimulationEnvironment.getFormattedTime();
 
-        // Auto-scroll to the bottom
+        String cleanMsg = message.replaceAll("X+$", "").trim();
+
+        logArea.append("[" + timestamp + "] " + cleanMsg + "\n");
+
         logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 

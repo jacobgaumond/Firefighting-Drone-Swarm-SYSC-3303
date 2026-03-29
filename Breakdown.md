@@ -112,6 +112,11 @@ Breakdown of responsibilities of each team member for each iteration
       - Refactored to no longer use Scheduler's removed taskQueue, modified most of the test methods to permit this
 
 - Ulan:
+  - Timer based fault detection in scheduler
+  - start of timer when assigns drone to zone
+  - mark drone as fault if fails to respond before timer expiry
+  - test for drone timer based
+  - timestamps for logs
 
 - Peter:
   - DroneSubsystem:
