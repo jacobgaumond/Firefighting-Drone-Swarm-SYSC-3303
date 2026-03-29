@@ -529,7 +529,7 @@ public class Scheduler implements Runnable {
         Thread watchdog = new Thread(() -> {
             while (!stopWatchdog) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     break;
                 }
