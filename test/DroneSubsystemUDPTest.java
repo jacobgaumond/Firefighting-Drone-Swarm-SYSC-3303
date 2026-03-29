@@ -30,6 +30,8 @@ class DroneSubsystemUDPTest {
         assertNotNull(received);
         assertEquals(Message.MessageType.DroneRequest, received.getMessageType());
         sender.close();
+
+        drone.closeBox();
     }
 
     @Test
@@ -55,5 +57,7 @@ class DroneSubsystemUDPTest {
 
         DroneResponse response = new DroneResponse(new Message(receivedData).getMessageData());
         assertEquals(drone.getDroneId(), response.getDroneID());
+
+        drone.closeBox();
     }
 }

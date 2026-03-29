@@ -29,5 +29,7 @@ public class TimeBasedFaultTest {
                 "Watchdog should have updated dispatchTime due to timeout");
 
         System.out.println("Timer-based fault detection triggered correctly!");
+
+        scheduler.closeBox();
     }
 }

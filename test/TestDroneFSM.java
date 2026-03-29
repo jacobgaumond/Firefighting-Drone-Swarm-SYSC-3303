@@ -1,4 +1,5 @@
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,11 @@ public class TestDroneFSM {
     public void setup() {
         fsm = new DroneStateMachine();
         dsub = new DroneSubsystem();
+    }
+
+    @AfterEach
+    void breakdown() {
+        dsub.closeBox();
     }
 
     @Test
