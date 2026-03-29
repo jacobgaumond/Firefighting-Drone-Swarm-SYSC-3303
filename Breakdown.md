@@ -100,8 +100,11 @@ Breakdown of responsibilities of each team member for each iteration
       - Changed accessibility of FireTask subclass, added getter.
       - Removed unused variable taskQueue and related references
     - Added DroneSubsystem's closeBox() method to allow cleanup during testing
+    - Fixed scheduler bug where the watchdog would never end, even if the scheduler's message box was closed
   - Tests
     - Fixed build issues by updating FireIncidentSubsystemTest and SchedulerTest
+    - Fixed runtime issues related to tests not closing their instantiated subsystem's ports (and/or watchdogs),
+    which caused failures across a huge percentage of the tests
     - FireEventTest:
       - Created new class
       - Added testParseFromCsv()
