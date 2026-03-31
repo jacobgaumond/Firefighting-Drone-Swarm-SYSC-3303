@@ -224,7 +224,7 @@ public class Scheduler implements Runnable {
                 break;
 
             case "FAULTED":
-                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with"+ status.getFaultType());
+                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with "+ status.getFaultType());
                 for (FireTask task : activeFires.values()) {
                     if (task.assignedDrones.containsKey(status.getDroneID())) {
                         System.out.println("Removing the faulted drones zone");
@@ -232,6 +232,7 @@ public class Scheduler implements Runnable {
                         break;
                     }
                 }
+
                 gui.faultDrone(status.getDroneID(), status.getFaultType());
                 break;
         }
@@ -512,7 +513,7 @@ public class Scheduler implements Runnable {
     }
 
     private String getFireSeverity(FireTask fireTask) {
-        double remaining = fireTask.netFluidStillNeeded();
+        double remaining = fireTask.getFireSeverity();
 
         if (remaining >= 30) {
             return "high";
@@ -660,6 +661,9 @@ public class Scheduler implements Runnable {
         public double netFluidStillNeeded() {//sees if it needs more help
             return fluidRequired - fluidDropped - getFluidCurrentlyEnRoute();
         }
+        public double getFireSeverity(){
+            return fluidRequired-fluidDropped;
+        }
 
         public boolean isExtinguished() {
             return fluidDropped >= fluidRequired;
@@ -669,7 +673,7 @@ public class Scheduler implements Runnable {
 
     public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        return (long) (((distance * MS_PER_UNIT) * 10 / 2) / SimulationEnvironment.SIMULATION_SPEED);
+        return (long) (((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED);
     }
 
     private long calculateGuiDroneExtinguishTime(int fluidToDrop) {

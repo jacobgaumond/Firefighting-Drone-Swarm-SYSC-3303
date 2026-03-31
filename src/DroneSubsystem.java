@@ -230,7 +230,7 @@ public class DroneSubsystem implements Runnable {
         // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
         currentFault = pendingFault;
-        updateScheduler();
+        //updateScheduler();
         pendingFault = "";
     }
 
@@ -274,9 +274,12 @@ public class DroneSubsystem implements Runnable {
         double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
 
         if ("stuck".equals(pendingFault)) {
-            double distanceToTarget = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
-            if (distanceToTarget <= initialDistance / 2) {
+            double distanceTravelled = initialDistance - calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
+            if (distanceTravelled >= initialDistance / 2) {
+                System.out.println("Drone stuck at "+coordX+" "+coordY +"Required"+targetCoordX+targetCoordY);
                 droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
+                System.out.println("Current Fault is"+ currentFault);
+                updateScheduler();
                 return;
             }
         }
