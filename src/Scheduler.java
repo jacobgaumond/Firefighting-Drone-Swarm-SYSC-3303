@@ -153,6 +153,7 @@ public class Scheduler implements Runnable {
     private void processDroneMessage(Message message) {
         if (!checkMessage(message)) {
             sendEventToDrone(-1, DroneEvent.REQUEST_STATUS, String.valueOf(message.getSenderPort()));
+            this.gui.logMessage("Corrupted Packet Received");
             return;
         }
         // task finished -> assign next in the queue or mark drone as idle
@@ -542,6 +543,7 @@ public class Scheduler implements Runnable {
 
                         if (drone.lastSentRequest != null) {
                             DroneRequest resendRequest = drone.lastSentRequest;
+                            this.gui.logMessage("Resending packet to: "+drone.droneId);
                             resendRequest.setFaultType("NONE"); // strip fault before resending,
                             Message resend = new Message(
                                     "DroneSubsystem",
