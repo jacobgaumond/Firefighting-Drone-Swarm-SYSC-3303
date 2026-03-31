@@ -675,7 +675,7 @@ public class Scheduler implements Runnable {
 
     public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        return (long) (((distance * MS_PER_UNIT) * 10) / SimulationEnvironment.SIMULATION_SPEED);
+        return (long) (((distance * MS_PER_UNIT) * 10/1.35) / SimulationEnvironment.SIMULATION_SPEED);
     }
 
     private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
