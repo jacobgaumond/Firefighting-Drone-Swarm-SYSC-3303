@@ -158,6 +158,7 @@ public class Scheduler implements Runnable {
         }
         // task finished -> assign next in the queue or mark drone as idle
         DroneResponse status = new DroneResponse(message.getMessageData());
+        System.out.println("Scheduler received from drone:"+status);
 
         // Update drone registry
         DroneInfo drone = droneRegistry.get(status.getDroneID());
@@ -168,6 +169,7 @@ public class Scheduler implements Runnable {
         drone.y = status.getY();
         drone.fluid = status.getFluidAmount();
         drone.battery = status.getBattery();
+
 
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
@@ -205,9 +207,13 @@ public class Scheduler implements Runnable {
                 if (drone.fluid > 0 && !activeFires.isEmpty()) {
                     drone.assignedZoneID = -1;
                     drone.fluidAssigned = 0;
-                    findNearbyFire(drone);
+                    FireEvent reassigned=  findNearbyFire(drone);
+                    if(reassigned!=null){
+                        assignFireTaskToDrone(drone,reassigned);
+                    }
                     if (drone.assignedZoneID == -1) {
                         sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
+                        gui.returnDrone(drone.droneId, calculateGuiDroneTravelTime(drone.x, drone.y, 0, 0));
                     }
                 } else {
                     // no leftover -> return to base
@@ -321,7 +327,7 @@ public class Scheduler implements Runnable {
                 request.serialize(),
                 Message.MessageType.DroneRequest
         );
-        fireEvent.setFaultType("NONE");
+        fireEvent.setFaultType("");
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
 
@@ -337,6 +343,7 @@ public class Scheduler implements Runnable {
     }
 
     private void sendEventToDrone(int droneId, DroneEvent event, String payload) {
+
         DroneRequest request = new DroneRequest(
                 event, "", 0, "", "", 0, 0, 0, droneId, "NONE"
         );
@@ -353,7 +360,7 @@ public class Scheduler implements Runnable {
             return;
         }
         DroneInfo drone = droneRegistry.get(droneId);
-
+        System.out.println("Sending Event To Drone:"+droneId+"Event:"+event);
         drone.dispatchTime = System.currentTimeMillis();
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
@@ -531,7 +538,7 @@ public class Scheduler implements Runnable {
         Thread watchdog = new Thread(() -> {
             while (!stopWatchdog) {
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(6000);
                 } catch (InterruptedException e) {
                     break;
                 }

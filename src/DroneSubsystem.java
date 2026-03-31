@@ -48,7 +48,7 @@ public class DroneSubsystem implements Runnable {
     private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
     public static void main(String[] args) {
-        int TOTAL_DRONE_COUNT = 3;
+        int TOTAL_DRONE_COUNT = 10;
         Thread[] droneThreads = new Thread[TOTAL_DRONE_COUNT];
         for (int i = 0; i < TOTAL_DRONE_COUNT; i++) {
             droneThreads[i] = new Thread(new DroneSubsystem(), "DroneSubsystemThread-" + (i + 1));
@@ -263,6 +263,7 @@ public class DroneSubsystem implements Runnable {
 
         if (fluidReleasedAtZone >= fluidAmountToDrop || fluidAmount <= 0) {
             fluidReleasedAtZone = fluidAmountToDrop;
+            System.out.println("Released: "+fluidAmountToDrop+" fluid remaining: "+fluidReleasedAtZone);
             droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
         }
     }

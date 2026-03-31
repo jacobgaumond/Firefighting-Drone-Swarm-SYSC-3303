@@ -34,6 +34,7 @@ public class DroneStateMachine {
     }
 
     public synchronized void handleEvent(DroneEvent ev, String payload, DroneSubsystem drone) {
+        System.out.println("Handling Event");
         switch (state) {
             case IDLE:
                 if (ev == DroneEvent.FIRE_ASSIGNED) {
@@ -76,10 +77,9 @@ public class DroneStateMachine {
                     transitionTo(DroneState.EN_ROUTE_BASE, ev);
                     // drone.returnToBase(payload);
                 } else if (ev == DroneEvent.FIRE_ASSIGNED) {
-                    if (drone.hasBattery() && drone.hasAgent()) {
+                        System.out.println("Have we made it into here?");
                         transitionTo(DroneState.EN_ROUTE_FIRE, ev);
-                        // drone.flyToFire(payload);
-                    }
+
                 }
                 break;
 

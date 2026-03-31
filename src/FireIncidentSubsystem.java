@@ -84,6 +84,7 @@ public class FireIncidentSubsystem implements Runnable {
                     Message.MessageType.FireEvent
             );
             messageBox.putMessage(fireEventMessage, UDPMessageBox.SCHEDULER_PORT);
+            System.out.println("Sending FireEvent: "+ fireEvent);
 
             // Update startTime for next delay calculation
             startTime = fireEvent.getTimeInSeconds();
