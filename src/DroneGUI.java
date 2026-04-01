@@ -2,10 +2,9 @@
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.Objects;
 import javax.swing.*;
 
 public class DroneGUI extends JFrame {
@@ -17,6 +16,10 @@ public class DroneGUI extends JFrame {
     private int activeFires;
     private JLabel activeFireLabel;
     private JLabel timeLabel;
+
+    private JPanel droneStatusLeft;
+    private JPanel droneStatusRight;
+    private Map<Integer, JLabel> droneStatusLabels = new HashMap<>();
 
     private int cols;
     private int rows;
@@ -50,7 +53,7 @@ public class DroneGUI extends JFrame {
     public DroneGUI() {
         setTitle("Group 2, Drone GUI");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1300, 600);
+        setSize(1300, 700);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -116,6 +119,7 @@ public class DroneGUI extends JFrame {
         // add to UI
         add(layeredPane, BorderLayout.CENTER);
         add(sideBar, BorderLayout.EAST);
+        add(createBottomDronePanel(),BorderLayout.SOUTH);
     }
 
     // ========== UI COMPONENTS ==========
@@ -193,6 +197,7 @@ public class DroneGUI extends JFrame {
 
         this.droneOverlay.add(label);
         this.logMessage("Drone " + droneId + " created at (0,0)");
+        registerDroneStatus(droneId); // updates the bottom tracker for the drones
     }
 
     // Dynamic components resizing
@@ -369,6 +374,35 @@ public class DroneGUI extends JFrame {
         return p;
     }
 
+    //Creating the bottom drone tracking panel visually
+    private JPanel createBottomDronePanel() {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, Color.LIGHT_GRAY));
+
+        JLabel title = new JLabel("  Drone Status");
+        title.setFont(new Font("SansSerif", Font.BOLD, 12));
+        title.setOpaque(true);
+        title.setBackground(new Color(158, 194, 211));
+        title.setPreferredSize(new Dimension(0, 25));
+
+        droneStatusLeft = new JPanel();
+        droneStatusLeft.setLayout(new BoxLayout(droneStatusLeft, BoxLayout.Y_AXIS));
+        droneStatusLeft.setBackground(new Color(245, 245, 245));
+
+        droneStatusRight = new JPanel();
+        droneStatusRight.setLayout(new BoxLayout(droneStatusRight, BoxLayout.Y_AXIS));
+        droneStatusRight.setBackground(new Color(245, 245, 245));
+
+        JPanel columns = new JPanel(new GridLayout(1, 2, 4, 0));
+        columns.setBackground(new Color(245, 245, 245));
+        columns.add(droneStatusLeft);
+        columns.add(droneStatusRight);
+
+        p.add(title, BorderLayout.NORTH);
+        p.add(columns, BorderLayout.CENTER);
+        return p;
+    }
+
     // ========== METHODS ==========
     // Start Clock
     public void startClockDisplay() {
@@ -385,6 +419,50 @@ public class DroneGUI extends JFrame {
         });
         clockThread.setDaemon(true); // closes with others
         clockThread.start();
+    }
+    public void updateDroneStatus(int droneId, double fluid, String state) {
+        JLabel label = droneStatusLabels.get(droneId);
+        if (label == null) return;
+
+        SwingUtilities.invokeLater(() ->
+                label.setText(String.format("Drone %2d: Fluid %5.1fL - %s", droneId, fluid, state.toUpperCase()))
+        );
+    }
+
+    private void registerDroneStatus(int droneId) {
+        JLabel label = new JLabel(String.format("Drone %2d: Fluid 15.0L - IDLE", droneId));
+        label.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        label.setOpaque(true);
+        label.setBackground(new Color(245, 245, 245));
+
+        droneStatusLabels.put(droneId, label);
+
+        // Even IDs go right, odd go left — but split is based on registered drones sorted order
+        // We just add to both panels and re-sort everything across both
+        SwingUtilities.invokeLater(() -> {
+            // Collect all registered drone IDs in sorted order
+            List<Integer> sortedIds = new ArrayList<>(droneStatusLabels.keySet());
+            Collections.sort(sortedIds);
+            // Split sorted IDs into left and right halves
+            int half = (sortedIds.size() + 1) / 2; // left gets the extra if odd number
+            List<Integer> leftIds = sortedIds.subList(0, half);
+            List<Integer> rightIds = sortedIds.subList(half, sortedIds.size());
+
+            // Rebuild left panel
+            droneStatusLeft.removeAll();
+            for (int id : leftIds) {
+                droneStatusLeft.add(droneStatusLabels.get(id));
+            }
+            // Rebuild right panel
+            droneStatusRight.removeAll();
+            for (int id : rightIds) {
+                droneStatusRight.add(droneStatusLabels.get(id));
+            }
+            droneStatusLeft.revalidate();
+            droneStatusLeft.repaint();
+            droneStatusRight.revalidate();
+            droneStatusRight.repaint();
+        });
     }
 
     // Log a message

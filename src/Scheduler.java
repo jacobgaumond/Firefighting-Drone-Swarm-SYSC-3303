@@ -169,7 +169,9 @@ public class Scheduler implements Runnable {
         drone.y = status.getY();
         drone.fluid = status.getFluidAmount();
         drone.battery = status.getBattery();
-
+        if (gui != null) {
+            gui.updateDroneStatus(status.getDroneID(),status.getFluidAmount(),status.getState());
+        }
 
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
