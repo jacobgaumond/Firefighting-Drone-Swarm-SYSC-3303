@@ -13,18 +13,19 @@
 
 public class DroneSubsystem implements Runnable {
 
+    //STATIC DELAYS
     private static final int NOZZLE_OPEN_DELAY_MS = 100;
     private static final int NOZZLE_CLOSE_DELAY_MS = 100;
     private static final int FLUID_MAX = 15;
     private static final int BATTERY_MAX = 100;
 
     private static final double MS_PER_UNIT = 0.15;
-    private static final double MAX_DRONE_RANGE = 5048.0; // 2524 * 2 round trip
 
     private static final double FLUID_RATE_ML_TICK = 0.5; //change it to be faster
 
     private UDPMessageBox messageBox;
 
+    //Drone Information
     private static int nextIdValue = 1;//self ID creation
 
     private int droneId;
@@ -123,11 +124,10 @@ public class DroneSubsystem implements Runnable {
                 pendingFault = "";
                 return;
             }
-            if (droneEvent.getDroneEvent() == DroneEvent.REQUEST_STATUS) {
+            if (droneEvent.getDroneEvent() == DroneEvent.REQUEST_STATUS) {//if scheduler is requesting status send new  status
                 System.out.println("Received update scheduler");
                 updateScheduler();
             }
-
             //Handles event and requests
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED || droneEvent.getDroneEvent() == DroneEvent.RETURN_BASE_REQUEST) {
                 this.targetCoordX = droneEvent.getTargetX();
