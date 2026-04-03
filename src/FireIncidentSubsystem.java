@@ -67,7 +67,6 @@ public class FireIncidentSubsystem implements Runnable {
 
         // Dispatch events
         for (FireEvent fireEvent : fireEvents) {
-            // TODO: broken
             // respect delay between timestamps (accounting for simulation speed)
             long delay = (long) ((fireEvent.getTimeInSeconds() - startTime) * (1000.0 / SimulationEnvironment.SIMULATION_SPEED));
             try {
@@ -84,26 +83,22 @@ public class FireIncidentSubsystem implements Runnable {
                     Message.MessageType.FireEvent
             );
             messageBox.putMessage(fireEventMessage, UDPMessageBox.SCHEDULER_PORT);
-            System.out.println("Sending FireEvent: "+ fireEvent);
+            System.out.println(fireEvent);
 
             // Update startTime for next delay calculation
             startTime = fireEvent.getTimeInSeconds();
         }
 
-        boolean boxOpen = true;
-        while (boxOpen) {
-            Message message = messageBox.getMessage();
-            if (message == null) {
-                boxOpen = false;
-            } else {
-                System.out.println("[FireIncidentSubsystem] Received from " + message.getSourceName() + ": " + message.getMessageData());
-                if (!message.getMessageData().equals("Acknowledged")) {
-                    message = new Message("DroneSubsystem", "FireIncidentSubsystem", "Acknowledged", Message.MessageType.FireEvent);
-                    System.out.println("[FireIncidentSubsystem] Sending to DroneSubsystem, through Scheduler: " + message.getMessageData());
-                    messageBox.putMessage(message, UDPMessageBox.SCHEDULER_PORT);
-                }
-            }
-        }
+        // Send termination signal to Scheduler
+        System.out.println("[FireIncidentSubsystem] All events dispatched.");
+        Message allHandledMessage = new Message(
+                "Scheduler",
+                "FireIncidentSubsystem",
+                "ALL_FIRES_HANDLED",
+                Message.MessageType.FireEvent
+        );
+        messageBox.putMessage(allHandledMessage, UDPMessageBox.SCHEDULER_PORT);
+        messageBox.closeBox();
     }
 
     private void loadFromFile(String fileName) {

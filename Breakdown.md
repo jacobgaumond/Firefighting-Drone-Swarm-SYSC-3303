@@ -136,3 +136,20 @@ Breakdown of responsibilities of each team member for each iteration
     - Defines and shares simulated clock and time related variable
   - UML
     - Updated class diagram
+
+## Iteration #5
+
+- Olivia:
+
+- Jacob:
+
+- Ulan:
+
+- Peter:
+  - EventLogger:
+    - created logging and analytics functions
+  - FireIncidentSubsystem:
+    - added ALL_FIRES_HANDLED signal for end of file
+  - Scheduler:
+    - responds to ALL_FIRES_HANDLED
+    - prints analytics once all fires handled and drones IDLE

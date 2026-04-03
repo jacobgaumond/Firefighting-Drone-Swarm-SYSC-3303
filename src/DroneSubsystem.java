@@ -96,6 +96,7 @@ public class DroneSubsystem implements Runnable {
                 Message.MessageType.DroneRegistration
         );
         messageBox.putMessage(registerMessage, UDPMessageBox.SCHEDULER_PORT);
+
         while (true) {
             if (messageBox.isFull()) {
                 Message message = messageBox.getMessage();
@@ -227,7 +228,6 @@ public class DroneSubsystem implements Runnable {
 
     //This is to be decided later with different information//
     public void handleFault() {
-        // TODO: log fault, notify scheduler, await repair event
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
         currentFault = pendingFault;
         //updateScheduler();
@@ -263,7 +263,7 @@ public class DroneSubsystem implements Runnable {
 
         if (fluidReleasedAtZone >= fluidAmountToDrop || fluidAmount <= 0) {
             fluidReleasedAtZone = fluidAmountToDrop;
-            System.out.println("Released: "+fluidAmountToDrop+" fluid remaining: "+fluidReleasedAtZone);
+            System.out.println("Released: " + fluidAmountToDrop + " fluid remaining: " + fluidReleasedAtZone);
             droneSM.handleEvent(DroneEvent.FIRE_EXTINGUISHED, "", this);
         }
     }
@@ -277,9 +277,9 @@ public class DroneSubsystem implements Runnable {
         if ("stuck".equals(pendingFault)) {
             double distanceTravelled = initialDistance - calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             if (distanceTravelled >= initialDistance / 2) {
-                System.out.println("Drone stuck at "+coordX+" "+coordY +"Required"+targetCoordX+targetCoordY);
+                System.out.println("Drone stuck at " + coordX + " " + coordY + "Required" + targetCoordX + targetCoordY);
                 droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
-                System.out.println("Current Fault is"+ currentFault);
+                System.out.println("Current Fault is" + currentFault);
                 updateScheduler();
                 return;
             }

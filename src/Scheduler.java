@@ -13,12 +13,14 @@
  *     DroneSubsystem:         updates on events and drone statuses
  */
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Scheduler implements Runnable {
 
     private DroneGUI gui;
+    private EventLogger logger = new EventLogger(250, "log.txt");
     private UDPMessageBox messageBox;
 
     private final SchedulerStateMachine schedulerSM = new SchedulerStateMachine();
@@ -61,14 +63,39 @@ public class Scheduler implements Runnable {
     @Override
     public void run() {
         boolean boxOpen = true;
+        boolean allFiresHandled = false;
 
         while (boxOpen) {
             Message message = messageBox.getMessage();
+
             if (message == null) {
                 boxOpen = false;
             } else {
-                processIncomingMessage(message);
+                if (message.getMessageData().equals("ALL_FIRES_HANDLED")) {
+                    allFiresHandled = true; // TODO: how do we exit this only once all drones are back?
+                } else {
+                    processIncomingMessage(message);
+                }
             }
+        }
+
+        // Generate and log metrics analysis
+        try {
+            if (gui != null) {
+                gui.logMessage(logger.analyzeAverageEventResponseTime());
+                gui.logMessage(logger.analyzeMaximumEventResponseTime());
+                gui.logMessage(logger.analyzeAverageEventCompletionTime());
+                gui.logMessage(logger.analyzeMaximumEventCompletionTime());
+                gui.logMessage(logger.analyzeDroneUtilization());
+            }
+        } catch (IOException e) {
+            System.out.println("[SCHEDULER] Error generating metrics");
+        }
+
+        logger.shutdown();
+
+        while (true) {
+            // keep open for user
         }
     }
 
@@ -101,8 +128,12 @@ public class Scheduler implements Runnable {
 
     public void processFireEvent(Message message) {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
+
+        int zoneId = fireEvent.getZoneId();
+        logger.log("FIRE_EVENT_CREATED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+
         activeFires.computeIfAbsent(
-                fireEvent.getZoneId(),
+                zoneId,
                 id -> new FireTask(fireEvent)
         );
 
@@ -111,8 +142,10 @@ public class Scheduler implements Runnable {
                 SimulationEnvironment.startClock(fireEvent.getTimeInSeconds());
                 gui.startClockDisplay();
                 clockStarted = true;
+                logger.log("FIRST_FIRE_EVENT", String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+
             }
-            gui.fireStatusChange(fireEvent.getZoneId(), fireEvent.getSeverity());
+            gui.fireStatusChange(zoneId, fireEvent.getSeverity());
         }
 
         System.out.println("[SCHEDULER] Handling fire event: " + fireEvent);
@@ -158,7 +191,6 @@ public class Scheduler implements Runnable {
         }
         // task finished -> assign next in the queue or mark drone as idle
         DroneResponse status = new DroneResponse(message.getMessageData());
-        System.out.println("Scheduler received from drone:"+status);
 
         // Update drone registry
         DroneInfo drone = droneRegistry.get(status.getDroneID());
@@ -170,11 +202,13 @@ public class Scheduler implements Runnable {
         drone.fluid = status.getFluidAmount();
         drone.battery = status.getBattery();
         if (gui != null) {
-            gui.updateDroneStatus(status.getDroneID(),status.getFluidAmount(),status.getState());
+            gui.updateDroneStatus(status.getDroneID(), status.getFluidAmount(), status.getState());
         }
 
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
+                logger.log("DRONE_ARRIVED_AT_FIRE", "drone=" + status.getDroneID(), "zone=" + drone.assignedZoneID, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
                 if (gui != null) {
                     gui.extinguishFire(drone.droneId, drone.assignedZoneID, calculateGuiDroneExtinguishTime(drone.fluidAssigned));
@@ -190,8 +224,8 @@ public class Scheduler implements Runnable {
                     activeTask.fluidDropped += (int) status.getFluidDropped();
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + zoneId + " EXTINGUISHED!");
-                        activeFires.remove(zoneId);
-                        // Update GUI: extinguished
+
+                        logger.log("FIRE_EXTINGUISHED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
                         if (gui != null) {
                             gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
                         }
@@ -209,9 +243,9 @@ public class Scheduler implements Runnable {
                 if (drone.fluid > 0 && !activeFires.isEmpty()) {
                     drone.assignedZoneID = -1;
                     drone.fluidAssigned = 0;
-                    FireEvent reassigned=  findNearbyFire(drone);
-                    if(reassigned!=null){
-                        assignFireTaskToDrone(drone,reassigned);
+                    FireEvent reassigned = findNearbyFire(drone);
+                    if (reassigned != null) {
+                        assignFireTaskToDrone(drone, reassigned);
                     }
                     if (drone.assignedZoneID == -1) {
                         sendEventToDrone(drone.droneId, DroneEvent.RETURN_BASE_REQUEST, "");
@@ -229,11 +263,13 @@ public class Scheduler implements Runnable {
                 break;
 
             case "IDLE":
+                logger.log("DRONE_IDLE", "drone=" + status.getDroneID(), String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+
                 tryAssignTask();
                 break;
 
             case "FAULTED":
-                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with "+ status.getFaultType());
+                System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with " + status.getFaultType());
                 for (FireTask task : activeFires.values()) {
                     if (task.assignedDrones.containsKey(status.getDroneID())) {
                         System.out.println("Removing the faulted drones zone");
@@ -302,6 +338,8 @@ public class Scheduler implements Runnable {
         drone.fluidAssigned = amountToDrop;
         drone.dispatchCount++;
 
+        logger.log("DRONE_ASSIGNED", "drone=" + drone.droneId, "zone=" + fireEvent.getZoneId(), String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,
                 fireEvent.getTime(),
@@ -362,7 +400,7 @@ public class Scheduler implements Runnable {
             return;
         }
         DroneInfo drone = droneRegistry.get(droneId);
-        System.out.println("Sending Event To Drone:"+droneId+"Event:"+event);
+        System.out.println("Sending Event To Drone:" + droneId + "Event:" + event);
         drone.dispatchTime = System.currentTimeMillis();
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
@@ -552,7 +590,7 @@ public class Scheduler implements Runnable {
 
                         if (drone.lastSentRequest != null) {
                             DroneRequest resendRequest = drone.lastSentRequest;
-                            this.gui.logMessage("Resending packet to: "+drone.droneId);
+                            this.gui.logMessage("Resending packet to: " + drone.droneId);
                             resendRequest.setFaultType("NONE"); // strip fault before resending,
                             Message resend = new Message(
                                     "DroneSubsystem",
@@ -672,8 +710,9 @@ public class Scheduler implements Runnable {
         public double netFluidStillNeeded() {//sees if it needs more help
             return fluidRequired - fluidDropped - getFluidCurrentlyEnRoute();
         }
-        public double getFireSeverity(){
-            return fluidRequired-fluidDropped;
+
+        public double getFireSeverity() {
+            return fluidRequired - fluidDropped;
         }
 
         public boolean isExtinguished() {
@@ -684,11 +723,10 @@ public class Scheduler implements Runnable {
 
     public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        return (long) (((distance * MS_PER_UNIT) * 10/1.35) / SimulationEnvironment.SIMULATION_SPEED);
+        return (long) (((distance * MS_PER_UNIT) * 10 / 1.35) / SimulationEnvironment.SIMULATION_SPEED);
     }
 
     private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
-        // TODO FIX
         double fluidRateMlMs = 0.25;
         int nozzleOpenDelayMs = 100;
         return (long) ((((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10) / SimulationEnvironment.SIMULATION_SPEED);
