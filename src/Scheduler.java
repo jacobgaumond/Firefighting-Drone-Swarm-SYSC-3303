@@ -174,7 +174,7 @@ public class Scheduler implements Runnable {
         if (status.getDroneID() < 0) {
             return false;
         }
-        if (status.getBattery() < 0 || status.getBattery() > 100) {
+        if (status.getBattery() < 0 || status.getBattery() > DroneSubsystem.BATTERY_MAX) {
             return false;
         }
         if (Double.isNaN(status.getX()) || Double.isInfinite(status.getX())) {
