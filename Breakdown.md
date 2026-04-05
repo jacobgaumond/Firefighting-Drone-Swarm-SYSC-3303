@@ -140,6 +140,10 @@ Breakdown of responsibilities of each team member for each iteration
 ## Iteration #5
 
 - Olivia:
+  -Drone registering in the GUI
+  -Drone tracking with fluid and states added to the GUI
+  -Drone scheduing fixes
+  -Correct termination logic for once all fires are handled and all drones have either returned or are faulted
 
 - Jacob:
 
