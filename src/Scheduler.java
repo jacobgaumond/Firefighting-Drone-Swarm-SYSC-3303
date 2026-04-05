@@ -90,6 +90,9 @@ public class Scheduler implements Runnable {
                 gui.logMessage(logger.analyzeAverageEventCompletionTime());
                 gui.logMessage(logger.analyzeMaximumEventCompletionTime());
                 gui.logMessage(logger.analyzeDroneUtilization());
+                gui.logMessage(logger.analyzeAverageDroneIdleTime());
+                gui.logMessage(logger.analyzeDroneFlightTime());
+                gui.logMessage(logger.analyzeTotalSimulationTime());
             }
         } catch (IOException e) {
             System.out.println("[SCHEDULER] Error generating metrics");
@@ -132,7 +135,6 @@ public class Scheduler implements Runnable {
     public void processFireEvent(Message message) {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         int zoneId = fireEvent.getZoneId();
-        logger.log("FIRE_EVENT_CREATED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
 
         activeFires.computeIfAbsent(
                 zoneId,
@@ -145,10 +147,12 @@ public class Scheduler implements Runnable {
                 gui.startClockDisplay();
                 clockStarted = true;
                 logger.log("FIRST_FIRE_EVENT", String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
-
             }
             gui.fireStatusChange(zoneId, fireEvent.getSeverity());
         }
+
+
+        logger.log("FIRE_EVENT_CREATED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
 
         System.out.println("[SCHEDULER] Handling fire event: " + fireEvent);
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
@@ -228,11 +232,14 @@ public class Scheduler implements Runnable {
                         System.out.println("[Scheduler] Zone " + zoneId + " EXTINGUISHED!");
 
                         logger.log("FIRE_EXTINGUISHED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+                        activeFires.remove(zoneId);
                         if (gui != null) {
                             gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
                         }
 
                         if (activeFires.isEmpty()) {
+                            System.out.println("[SCHEDULER] Logging ALL_FIRES_EXTINGUISHED");
+                            logger.log("ALL_FIRES_EXTINGUISHED", String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
                             schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
                         }
                     } else {
@@ -342,6 +349,7 @@ public class Scheduler implements Runnable {
         drone.dispatchCount++;
 
         logger.log("DRONE_ASSIGNED", "drone=" + drone.droneId, "zone=" + fireEvent.getZoneId(), String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+        logger.log("DRONE_DEPARTED", "drone=" + drone.droneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
 
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,

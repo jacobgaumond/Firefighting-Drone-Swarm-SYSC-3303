@@ -176,7 +176,7 @@ public class EventLogger {
 
         double averageResponseTime = firesHandled > 0 ? totalResponseTime / firesHandled : 0.0;
 
-        return "\n- Average Event Response Time" + String.format("%.2f", averageResponseTime) + "\n";
+        return "\n- Average Event Response Time: " + String.format("%.2f", averageResponseTime) + "\n";
     }
 
     // Maximum response time
@@ -219,7 +219,7 @@ public class EventLogger {
             }
         }
 
-        return "\n- Maximum Response Time" + String.format("%.2f", maxResponseTime) + "\n";
+        return "\n- Maximum Response Time: " + String.format("%.2f", maxResponseTime) + "\n";
     }
 
     // Average time from event creation to full completion of service
@@ -261,7 +261,7 @@ public class EventLogger {
 
         double averageCompletionTime = completionCount > 0 ? totalCompletionTime / completionCount : 0.0;
 
-        return "\n- Average Event Completion Time" + String.format("%.2f", averageCompletionTime) + "\n";
+        return "\n- Average Event Completion Time: " + String.format("%.2f", averageCompletionTime) + "\n";
     }
 
     // Maximum completion time
@@ -301,7 +301,7 @@ public class EventLogger {
             }
         }
 
-        return "\n- Maximum Event Completion Time" + String.format("%.2f", maxCompletionTime) + "\n";
+        return "\n- Maximum Event Completion Time: " + String.format("%.2f", maxCompletionTime) + "\n";
     }
 
     // Drone Utilization time active vs total
@@ -361,5 +361,101 @@ public class EventLogger {
         }
 
         return result;
+    }
+
+
+    public String analyzeAverageDroneIdleTime() throws IOException {
+        Map<Integer, Double> droneLastIdleTime = new HashMap<>();
+        Map<Integer, Double> droneTotalIdleTime = new HashMap<>();
+        double allFiresExtinguishedTime = 0.0;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("ALL_FIRES_EXTINGUISHED")) {
+                    String[] parts = line.split(", ");
+                    allFiresExtinguishedTime = Double.parseDouble(parts[2].replace("]", ""));
+                } else if (line.contains("DRONE_IDLE")) {
+                    String[] parts = line.split(", ");
+                    int drone = Integer.parseInt(parts[2].split("=")[1]);
+                    double timestamp = Double.parseDouble(parts[3].replace("]", ""));
+                    droneLastIdleTime.put(drone, timestamp);
+                } else if (line.contains("DRONE_ASSIGNED")) {
+                    String[] parts = line.split(", ");
+                    int drone = Integer.parseInt(parts[2].split("=")[1]);
+                    double timestamp = Double.parseDouble(parts[4].replace("]", ""));
+                    if (droneLastIdleTime.containsKey(drone)) {
+                        double idleTime = timestamp - droneLastIdleTime.get(drone);
+                        droneTotalIdleTime.merge(drone, idleTime, Double::sum);
+                        droneLastIdleTime.remove(drone);
+                    }
+                }
+            }
+        }
+
+
+        for (Map.Entry<Integer, Double> entry : droneLastIdleTime.entrySet()) {
+            double idleTime = allFiresExtinguishedTime - entry.getValue();
+            droneTotalIdleTime.merge(entry.getKey(), idleTime, Double::sum);
+        }
+
+        double total = droneTotalIdleTime.values().stream().mapToDouble(Double::doubleValue).sum();
+        double avg = droneTotalIdleTime.isEmpty() ? 0.0 : total / droneTotalIdleTime.size();
+        return "\n- Average Drone Idle Time: " + String.format("%.2f", avg) + "s\n";
+    }
+
+
+    public String analyzeDroneFlightTime() throws IOException {
+        Map<Integer, Double> droneLastDepartTime = new HashMap<>();
+        Map<Integer, Double> droneTotalFlightTime = new HashMap<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("DRONE_DEPARTED")) {
+                    String[] parts = line.split(", ");
+                    int drone = Integer.parseInt(parts[2].split("=")[1]);
+                    double timestamp = Double.parseDouble(parts[3].replace("]", ""));
+                    droneLastDepartTime.put(drone, timestamp);
+                } else if (line.contains("DRONE_ARRIVED_AT_FIRE")) {
+                    String[] parts = line.split(", ");
+                    int drone = Integer.parseInt(parts[2].split("=")[1]);
+                    double timestamp = Double.parseDouble(parts[4].replace("]", ""));
+                    if (droneLastDepartTime.containsKey(drone)) {
+                        double flightTime = timestamp - droneLastDepartTime.get(drone);
+                        droneTotalFlightTime.merge(drone, flightTime, Double::sum);
+                        droneLastDepartTime.remove(drone);
+                    }
+                }
+            }
+        }
+
+        String result = "\n- Drone Flight Times:\n";
+        for (Map.Entry<Integer, Double> entry : droneTotalFlightTime.entrySet()) {
+            result += "Drone " + entry.getKey() + ": " + String.format("%.2f", entry.getValue()) + "s\n";
+        }
+        return result;
+    }
+
+
+    public String analyzeTotalSimulationTime() throws IOException {
+        double firstFireTime = 0.0;
+        double allExtinguishedTime = 0.0;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("FIRST_FIRE_EVENT")) {
+                    String[] parts = line.split(", ");
+                    firstFireTime = Double.parseDouble(parts[2].replace("]", ""));
+                } else if (line.contains("ALL_FIRES_EXTINGUISHED")) {
+                    String[] parts = line.split(", ");
+                    allExtinguishedTime = Double.parseDouble(parts[2].replace("]", ""));
+                }
+            }
+        }
+
+        double total = allExtinguishedTime - firstFireTime;
+        return "\n- Total Time to Extinguish All Fires: " + String.format("%.2f", total) + "s\n";
     }
 }

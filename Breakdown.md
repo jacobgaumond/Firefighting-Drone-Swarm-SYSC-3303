@@ -148,6 +148,10 @@ Breakdown of responsibilities of each team member for each iteration
 - Jacob:
 
 - Ulan:
+    - For event logger additionally added calculation of average drone idle time metric
+    - implemented analyze drone flight time metric
+    - created analyze total simulation time metric
+    - handled few bugs
 
 - Peter:
   - EventLogger:
