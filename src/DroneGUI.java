@@ -430,7 +430,7 @@ public class DroneGUI extends JFrame {
     }
 
     private void registerDroneStatus(int droneId) {
-        JLabel label = new JLabel(String.format("Drone %2d: Fluid 15.0L - Battery %3d - IDLE", droneId, DroneSubsystem.BATTERY_MAX));
+        JLabel label = new JLabel(String.format("Drone %2d: Fluid %5.1fL - Battery %3d - IDLE", droneId, 15.0, DroneSubsystem.BATTERY_MAX));
         label.setFont(new Font("Monospaced", Font.PLAIN, 12));
         label.setOpaque(true);
         label.setBackground(new Color(245, 245, 245));
