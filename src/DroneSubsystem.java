@@ -17,7 +17,7 @@ public class DroneSubsystem implements Runnable {
     private static final int NOZZLE_OPEN_DELAY_MS = 100;
     private static final int NOZZLE_CLOSE_DELAY_MS = 100;
     private static final int FLUID_MAX = 15;
-    private static final int BATTERY_MAX = 100;
+    public static final int BATTERY_MAX = 100;
 
     private static final double MS_PER_UNIT = 0.15;
 

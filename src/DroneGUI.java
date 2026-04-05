@@ -420,17 +420,17 @@ public class DroneGUI extends JFrame {
         clockThread.setDaemon(true); // closes with others
         clockThread.start();
     }
-    public void updateDroneStatus(int droneId, double fluid, String state) {
+    public void updateDroneStatus(int droneId, double fluid, int battery, String state) {
         JLabel label = droneStatusLabels.get(droneId);
         if (label == null) return;
 
         SwingUtilities.invokeLater(() ->
-                label.setText(String.format("Drone %2d: Fluid %5.1fL - %s", droneId, fluid, state.toUpperCase()))
+                label.setText(String.format("Drone %2d: Fluid %5.1fL - Battery %3d - %s", droneId, fluid, battery, state.toUpperCase()))
         );
     }
 
     private void registerDroneStatus(int droneId) {
-        JLabel label = new JLabel(String.format("Drone %2d: Fluid 15.0L - IDLE", droneId));
+        JLabel label = new JLabel(String.format("Drone %2d: Fluid 15.0L - Battery %3d - IDLE", droneId, DroneSubsystem.BATTERY_MAX));
         label.setFont(new Font("Monospaced", Font.PLAIN, 12));
         label.setOpaque(true);
         label.setBackground(new Color(245, 245, 245));
