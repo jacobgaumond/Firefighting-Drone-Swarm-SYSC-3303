@@ -76,6 +76,9 @@ public class Scheduler implements Runnable {
                 } else {
                     processIncomingMessage(message);
                 }
+                if(allFiresHandled && allDronesFinalPosition()){
+                 break;
+                }
             }
         }
 
@@ -128,7 +131,6 @@ public class Scheduler implements Runnable {
 
     public void processFireEvent(Message message) {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
-
         int zoneId = fireEvent.getZoneId();
         logger.log("FIRE_EVENT_CREATED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
 
@@ -274,6 +276,7 @@ public class Scheduler implements Runnable {
                     if (task.assignedDrones.containsKey(status.getDroneID())) {
                         System.out.println("Removing the faulted drones zone");
                         task.assignedDrones.remove(status.getDroneID()); //remove the drone assignment
+                        tryAssignTask();
                         break;
                     }
                 }
@@ -514,13 +517,16 @@ public class Scheduler implements Runnable {
         return best;
     }
 
-    private boolean willBeExtinguishedByAssignedDrones(FireTask fireTask) {
-        int totalFluidEnRoute = droneRegistry.values().stream()
-                .filter(d -> d.assignedZoneID == fireTask.fireEvent.getZoneId())
-                .mapToInt(d -> d.fluidAssigned)
-                .sum();
+    public boolean allDronesFinalPosition() {
+        for (DroneInfo drone : droneRegistry.values()) {
+            boolean isFaulted = drone.state.equals("FAULTED");
+            boolean isAtBase = drone.x == 0 && drone.y == 0;
 
-        return totalFluidEnRoute >= fireTask.netFluidStillNeeded();
+            if (!isFaulted && !isAtBase) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static int getRequiredFluid(String severity) {
