@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36" version="29.6.6">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="6531" dy="3004" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1910" dy="603" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -184,7 +184,7 @@
         <mxCell id="jlX2Ai0cEvsvv_Rp8za6-22" parent="CVOeVcOD3Fet3aQW3hyP-16" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;div&gt;-&lt;u&gt;FLUID_MAX&lt;/u&gt;: int &amp;lt;&amp;lt;read only&amp;gt;&amp;gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="30" width="370" y="450" as="geometry" />
         </mxCell>
-        <mxCell id="jlX2Ai0cEvsvv_Rp8za6-23" parent="CVOeVcOD3Fet3aQW3hyP-16" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;div&gt;-&lt;u&gt;BATTERY_MAX&lt;/u&gt;: int &amp;lt;&amp;lt;read only&amp;gt;&amp;gt;&lt;/div&gt;" vertex="1">
+        <mxCell id="jlX2Ai0cEvsvv_Rp8za6-23" parent="CVOeVcOD3Fet3aQW3hyP-16" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="+&lt;u&gt;BATTERY_MAX&lt;/u&gt;: int &amp;lt;&amp;lt;read only&amp;gt;&amp;gt;" vertex="1">
           <mxGeometry height="30" width="370" y="480" as="geometry" />
         </mxCell>
         <mxCell id="jlX2Ai0cEvsvv_Rp8za6-24" parent="CVOeVcOD3Fet3aQW3hyP-16" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;div&gt;-&lt;u&gt;MS_PER_UNIT&lt;/u&gt;: double &amp;lt;&amp;lt;read only&amp;gt;&amp;gt;&lt;/div&gt;" vertex="1">
