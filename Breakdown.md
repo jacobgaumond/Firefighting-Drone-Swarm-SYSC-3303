@@ -140,12 +140,16 @@ Breakdown of responsibilities of each team member for each iteration
 ## Iteration #5
 
 - Olivia:
-  -Drone registering in the GUI
-  -Drone tracking with fluid and states added to the GUI
-  -Drone scheduing fixes
-  -Correct termination logic for once all fires are handled and all drones have either returned or are faulted
+  - Drone registering in the GUI
+  - Drone tracking with fluid and states added to the GUI
+  - Drone scheduling fixes
+  - Correct termination logic for once all fires are handled and all drones have either returned or are faulted
 
 - Jacob:
+  - Implemented battery drainage for moving drones
+  - Drone tracking with battery added to the GUI
+  - Slight battery-related refactoring in Scheduler and DroneSubsystem
+    - Updated UML to reflect changes
 
 - Ulan:
     - For event logger additionally added calculation of average drone idle time metric
