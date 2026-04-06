@@ -291,8 +291,18 @@ public class DroneSubsystem implements Runnable {
             droneSM.handleEvent(DroneEvent.ARRIVAL, "", this);
             updateScheduler();
         } else {
-            coordX += (dx / distance) * speed;
-            coordY += (dy / distance) * speed;
+            double coordXChange = (dx / distance) * speed;
+            double coordYChange = (dy / distance) * speed;
+
+            coordX += coordXChange;
+            coordY += coordYChange;
+
+            // Consume battery power
+            double totalTravelled = Math.sqrt(coordXChange * coordXChange + coordYChange * coordYChange); // Pythagorean Theorem
+            batteryTravelDistance -= Math.round(totalTravelled / 100);
+            if (batteryTravelDistance < 0) {
+                batteryTravelDistance = 0;
+            }
         }
     }
 
