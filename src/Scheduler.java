@@ -76,7 +76,7 @@ public class Scheduler implements Runnable {
                 } else {
                     processIncomingMessage(message);
                 }
-                if (allFiresHandled && allDronesFinalPosition()) {
+                if (allFiresHandled && allDronesFinalPosition() && activeFires.isEmpty()) {
                     break;
                 }
             }

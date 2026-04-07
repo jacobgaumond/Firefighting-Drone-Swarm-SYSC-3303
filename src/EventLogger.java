@@ -363,7 +363,6 @@ public class EventLogger {
         return result;
     }
 
-
     public String analyzeAverageDroneIdleTime() throws IOException {
         Map<Integer, Double> droneLastIdleTime = new HashMap<>();
         Map<Integer, Double> droneTotalIdleTime = new HashMap<>();
@@ -393,7 +392,6 @@ public class EventLogger {
             }
         }
 
-
         for (Map.Entry<Integer, Double> entry : droneLastIdleTime.entrySet()) {
             double idleTime = allFiresExtinguishedTime - entry.getValue();
             droneTotalIdleTime.merge(entry.getKey(), idleTime, Double::sum);
@@ -403,7 +401,6 @@ public class EventLogger {
         double avg = droneTotalIdleTime.isEmpty() ? 0.0 : total / droneTotalIdleTime.size();
         return "\n- Average Drone Idle Time: " + String.format("%.2f", avg) + "s\n";
     }
-
 
     public String analyzeDroneFlightTime() throws IOException {
         Map<Integer, Double> droneLastDepartTime = new HashMap<>();
@@ -416,11 +413,13 @@ public class EventLogger {
                     String[] parts = line.split(", ");
                     int drone = Integer.parseInt(parts[2].split("=")[1]);
                     double timestamp = Double.parseDouble(parts[3].replace("]", ""));
+
                     droneLastDepartTime.put(drone, timestamp);
                 } else if (line.contains("DRONE_ARRIVED_AT_FIRE")) {
                     String[] parts = line.split(", ");
                     int drone = Integer.parseInt(parts[2].split("=")[1]);
                     double timestamp = Double.parseDouble(parts[4].replace("]", ""));
+
                     if (droneLastDepartTime.containsKey(drone)) {
                         double flightTime = timestamp - droneLastDepartTime.get(drone);
                         droneTotalFlightTime.merge(drone, flightTime, Double::sum);
@@ -436,7 +435,6 @@ public class EventLogger {
         }
         return result;
     }
-
 
     public String analyzeTotalSimulationTime() throws IOException {
         double firstFireTime = 0.0;
