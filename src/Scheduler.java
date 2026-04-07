@@ -76,8 +76,8 @@ public class Scheduler implements Runnable {
                 } else {
                     processIncomingMessage(message);
                 }
-                if(allFiresHandled && allDronesFinalPosition()){
-                 break;
+                if (allFiresHandled && allDronesFinalPosition()) {
+                    break;
                 }
             }
         }
@@ -150,7 +150,6 @@ public class Scheduler implements Runnable {
             }
             gui.fireStatusChange(zoneId, fireEvent.getSeverity());
         }
-
 
         logger.log("FIRE_EVENT_CREATED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
 

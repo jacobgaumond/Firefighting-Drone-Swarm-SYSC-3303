@@ -119,7 +119,7 @@ public class DroneGUI extends JFrame {
         // add to UI
         add(layeredPane, BorderLayout.CENTER);
         add(sideBar, BorderLayout.EAST);
-        add(createBottomDronePanel(),BorderLayout.SOUTH);
+        add(createBottomDronePanel(), BorderLayout.SOUTH);
     }
 
     // ========== UI COMPONENTS ==========
@@ -420,12 +420,15 @@ public class DroneGUI extends JFrame {
         clockThread.setDaemon(true); // closes with others
         clockThread.start();
     }
+
     public void updateDroneStatus(int droneId, double fluid, int battery, String state) {
         JLabel label = droneStatusLabels.get(droneId);
-        if (label == null) return;
+        if (label == null) {
+            return;
+        }
 
-        SwingUtilities.invokeLater(() ->
-                label.setText(String.format("Drone %2d: Fluid %5.1fL - Battery %3d - %s", droneId, fluid, battery, state.toUpperCase()))
+        SwingUtilities.invokeLater(()
+                -> label.setText(String.format("Drone %2d: Fluid %5.1fL - Battery %3d - %s", droneId, fluid, battery, state.toUpperCase()))
         );
     }
 
@@ -466,7 +469,7 @@ public class DroneGUI extends JFrame {
     }
 
     // Log a message
-    public void logMessage(String message){
+    public void logMessage(String message) {
         String timestamp = SimulationEnvironment.getFormattedTime();
 
         String cleanMsg = message.replaceAll("X+$", "").trim();
@@ -592,11 +595,12 @@ public class DroneGUI extends JFrame {
         // Wait for drop time
         Thread animationThread = new Thread(() -> {
             try {
-                Thread.sleep(dropTime);
+                Thread.sleep(dropTime / SimulationEnvironment.SIMULATION_SPEED);
             } catch (InterruptedException e) {
             }
             droneAnimationThreads.remove(droneId);
         });
+
         // reference in case of needed interruption
         droneAnimationThreads.put(droneId, animationThread);
         animationThread.start();

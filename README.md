@@ -159,9 +159,6 @@ To run the project, run the main methods of the following classes **in the speci
 
 Once running, the project will not stop until it is manually stopped by the user (i.e., by pressing stop in IntelliJ).
 
-To run the GUI aspect of the project, run the main function of the DroneGUI class in `src/DroneGUI.java`. This will
-create a resizable interface. Once running, close the GUI window to end that program.
-
 ### Testing
 
 To test the project, run all of the tests in the `test/` directory (e.g., by right-clicking the directory and selecting
