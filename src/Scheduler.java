@@ -191,6 +191,7 @@ public class Scheduler implements Runnable {
             this.gui.logMessage("Corrupted Packet Received");
             return;
         }
+
         // task finished -> assign next in the queue or mark drone as idle
         DroneResponse status = new DroneResponse(message.getMessageData());
 
@@ -198,11 +199,14 @@ public class Scheduler implements Runnable {
         DroneInfo drone = droneRegistry.get(status.getDroneID());
         drone.lastHeardFrom = System.currentTimeMillis();
         drone.awaitingResponse = false;
-        drone.state = status.getState();
         drone.x = status.getX();
         drone.y = status.getY();
         drone.fluid = status.getFluidAmount();
         drone.battery = status.getBattery();
+        if(drone.state.equals("FAULTED")){
+            gui.moveDroneToZone(drone.droneId,drone.assignedZoneID,calculateGuiDroneTravelTime(drone.x,drone.y,drone.assignedX,drone.assignedY),drone.fluid);
+        }
+        drone.state = status.getState();
         if (gui != null) {
             gui.updateDroneStatus(status.getDroneID(), status.getFluidAmount(), status.getBattery(), status.getState());
         }
@@ -275,12 +279,17 @@ public class Scheduler implements Runnable {
 
             case "FAULTED":
                 System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with " + status.getFaultType());
-                for (FireTask task : activeFires.values()) {
-                    if (task.assignedDrones.containsKey(status.getDroneID())) {
-                        System.out.println("Removing the faulted drones zone");
-                        task.assignedDrones.remove(status.getDroneID()); //remove the drone assignment
-                        tryAssignTask();
-                        break;
+                if(status.getFaultType().equals("stuck")){ //handles getting the drone back online
+                    sendEventToDrone(status.getDroneID(), DroneEvent.DRONE_BACKONLINE, String.valueOf(message.getSenderPort()));
+                }
+                else {
+                    for (FireTask task : activeFires.values()) {
+                        if (task.assignedDrones.containsKey(status.getDroneID())) {
+                            System.out.println("Removing the faulted drones zone");
+                            task.assignedDrones.remove(status.getDroneID()); //remove the drone assignment
+                            tryAssignTask();
+                            break;
+                        }
                     }
                 }
 
@@ -342,6 +351,8 @@ public class Scheduler implements Runnable {
         drone.assignedZoneID = fireEvent.getZoneId();
         drone.state = "EN_ROUTE_FIRE";
         drone.fluidAssigned = amountToDrop;
+        drone.assignedX = fireEvent.getTargetX();
+        drone.assignedY= fireEvent.getTargetY();
         drone.dispatchCount++;
 
         logger.log("DRONE_ASSIGNED", "drone=" + drone.droneId, "zone=" + fireEvent.getZoneId(), String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
@@ -636,6 +647,8 @@ public class Scheduler implements Runnable {
         int fluidAssigned, battery;
         double fluid;
         double x, y;
+
+        double assignedX, assignedY;
         int assignedZoneID = -1;
         int dispatchCount = 0;
 
@@ -681,6 +694,10 @@ public class Scheduler implements Runnable {
 
         public long getDispatchTime() {
             return dispatchTime;
+        }
+        public void setTargetXY(int x, int y){
+            this.assignedX=x;
+            this.assignedY=y;
         }
 
         public long getExpectedResponseTime() {

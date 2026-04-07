@@ -46,6 +46,8 @@ public class DroneSubsystem implements Runnable {
 
     private double initialDistance; // used for tracking when to fault stuck
 
+    private DroneState statebeforefaulted;
+
     private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
 
     public static void main(String[] args) {
@@ -128,6 +130,15 @@ public class DroneSubsystem implements Runnable {
             if (droneEvent.getDroneEvent() == DroneEvent.REQUEST_STATUS) {//if scheduler is requesting status send new  status
                 System.out.println("Received update scheduler");
                 updateScheduler();
+                return;
+            }
+            if(droneEvent.getDroneEvent() == DroneEvent.DRONE_BACKONLINE){
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {}
+                setCurrentState(statebeforefaulted);
+                updateScheduler();
+                return;
             }
             //Handles event and requests
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED || droneEvent.getDroneEvent() == DroneEvent.RETURN_BASE_REQUEST) {
@@ -278,6 +289,7 @@ public class DroneSubsystem implements Runnable {
             double distanceTravelled = initialDistance - calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             if (distanceTravelled >= initialDistance / 2) {
                 System.out.println("Drone stuck at " + coordX + " " + coordY + "Required" + targetCoordX + targetCoordY);
+                statebeforefaulted = this.getCurrentState();
                 droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
                 System.out.println("Current Fault is" + currentFault);
                 updateScheduler();

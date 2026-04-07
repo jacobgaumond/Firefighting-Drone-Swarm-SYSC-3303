@@ -536,6 +536,7 @@ public class DroneGUI extends JFrame {
         // Set to outbound color
         droneLabel.setVisible(true);
         droneLabel.setBackground(droneOutboundColor);
+        droneLabel.setText("D("+droneId+")");
 
         logMessage("Drone " + droneId + " outbound to Zone " + zoneId + "| fluid remaining: " + fluidRemaining);
 
