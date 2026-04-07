@@ -90,9 +90,6 @@ public class Scheduler implements Runnable {
                 gui.logMessage(logger.analyzeAverageEventCompletionTime());
                 gui.logMessage(logger.analyzeMaximumEventCompletionTime());
                 gui.logMessage(logger.analyzeDroneUtilization());
-                gui.logMessage(logger.analyzeAverageDroneIdleTime());
-                gui.logMessage(logger.analyzeDroneFlightTime());
-                gui.logMessage(logger.analyzeTotalSimulationTime());
             }
         } catch (IOException e) {
             System.out.println("[SCHEDULER] Error generating metrics");
