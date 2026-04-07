@@ -104,7 +104,7 @@ public class DroneSubsystem implements Runnable {
             }
             tick();
             try {
-                Thread.sleep(100);
+                Thread.sleep(100/SimulationEnvironment.SIMULATION_SPEED);
             } catch (InterruptedException e) {
                 System.out.println("[Drone " + droneId + "] Thread interrupted.");
                 break;
