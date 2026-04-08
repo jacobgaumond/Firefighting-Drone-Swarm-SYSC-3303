@@ -418,6 +418,7 @@ public class DroneGUI extends JFrame {
         clockThread.setDaemon(true); // closes with others
         clockThread.start();
     }
+
     public void stopClock(){
         clockThread.interrupt();
     }
