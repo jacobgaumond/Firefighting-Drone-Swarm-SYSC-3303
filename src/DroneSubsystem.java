@@ -208,14 +208,7 @@ public class DroneSubsystem implements Runnable {
             currentFault = pendingFault;
             System.out.println("[Drone "+this.droneId +"] nozzle jammed faulting");
             return false;
-        } else {
-            try {
-                Thread.sleep(NOZZLE_OPEN_DELAY_MS/SimulationEnvironment.SIMULATION_SECOND_MS);
-                return true;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        } else return true;
     }
 
     public void closeNozzle(String payload) {
