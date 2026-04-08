@@ -64,7 +64,7 @@ public class EventLogger {
     /**
      * Constructor for EventLogger
      *
-     * @param periodMs interval between flush() calls in ms
+     * @param periodMs    interval between flush() calls in ms
      * @param logFilePath path to the log file to write events to
      */
     public EventLogger(long periodMs, String logFilePath) {
@@ -102,22 +102,21 @@ public class EventLogger {
         );
     }
 
+    //purely used to print using the event logger main
+    public EventLogger(String logFilePath) {
+        this.logFilePath = logFilePath;
+        this.fileWriter = null;
+        this.scheduler = null;
+    }
+
     /**
      * Add Event to log queue
      *
      * @param eventCode type of event
-     * @param data optional extra information
+     * @param data      optional extra information
      */
-    /*public void log(String eventCode, String... data) {
 
-        queue.add(new Event(
-                SimulationEnvironment.getCurrentTimeSeconds(),
-                eventCode,
-                data
-        ));
-    }*/
     public void log(String eventCode, long simulationTimeSeconds, String... data) {
-        // Convert simulation seconds to milliseconds for consistency
         long simulationTimeMs = simulationTimeSeconds * 1000;
 
         queue.add(new Event(
@@ -149,93 +148,71 @@ public class EventLogger {
             fileWriter.close(); // close file
         }
     }
+
     public String analyzeAverageEventResponseTime() throws IOException {
-        // Use a Map of Queues to handle multiple fires in the same zone
-        Map<Integer, Queue<Double>> fireCreatedTimes = new HashMap<>();
-        Map<Integer, Queue<Double>> arrivalTimes = new HashMap<>();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("FIRE_EVENT_CREATED")) {
-                    String[] parts = line.split(", ");
-                    int zoneId = Integer.parseInt(parts[2].split("=")[1]);
-                    double timestamp = Double.parseDouble(parts[parts.length - 1].replace("]", ""));
-
-                    // Add this fire creation to the queue for this zone
-                    fireCreatedTimes.computeIfAbsent(zoneId, k -> new LinkedList<>()).add(timestamp);
-
-                } else if (line.contains("DRONE_ARRIVED_AT_FIRE")) {
-                    String[] parts = line.split(", ");
-                    // Note: Indexing for DRONE_ARRIVED_AT_FIRE is different (parts[3] is zone)
-                    int zoneId = Integer.parseInt(parts[3].split("=")[1]);
-                    double timestamp = Double.parseDouble(parts[parts.length - 1].replace("]", ""));
-
-                    // Add this arrival to the queue for this zone
-                    arrivalTimes.computeIfAbsent(zoneId, k -> new LinkedList<>()).add(timestamp);
-                }
-            }
-        }
+        Map<Integer, Queue<Double>> fireCreationTracker = new HashMap<>();
 
         double totalResponseTime = 0.0;
-        int firesHandled = 0;
-
-        // Iterate through all zones where a fire was created
-        for (Integer zone : fireCreatedTimes.keySet()) {
-            Queue<Double> createdQueue = fireCreatedTimes.get(zone);
-            Queue<Double> arrivedQueue = arrivalTimes.get(zone);
-
-            // While we have a matching pair of (Created, Arrived) for this specific zone
-            while (createdQueue != null && arrivedQueue != null &&
-                    !createdQueue.isEmpty() && !arrivedQueue.isEmpty()) {
-
-                double createdTime = createdQueue.poll(); // Get oldest creation
-                double arrivalTime = arrivedQueue.poll(); // Get oldest arrival
-
-                double responseTime = arrivalTime - createdTime;
-                totalResponseTime += responseTime;
-                firesHandled++;
-            }
-        }
-
-        double averageResponseTime = firesHandled > 0 ? totalResponseTime / firesHandled : 0.0;
-        return "\n- Average Event Response Time: " + String.format("%.2f", averageResponseTime) + " seconds\n";
-    }
-
-    public String analyzeMaximumEventResponseTime() throws IOException {
-        Map<Integer, Double> fireCreatedTimes = new HashMap<>();
-        Map<Integer, Double> firstArrivalTimes = new HashMap<>();
+        int firesCounted = 0;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
             String line;
-
             while ((line = reader.readLine()) != null) {
-                if (line.contains("FIRE_EVENT_CREATED")) {
-                    String[] parts = line.split(", ");
+                String cleanLine = line.replace("[", "").replace("]", "");
+                String[] parts = cleanLine.split(", ");
+                if (parts.length < 3) continue;
+
+                String eventType = parts[1];
+                double timestamp = Double.parseDouble(parts[parts.length - 1]);
+
+                if (eventType.equals("FIRE_EVENT_CREATED")) {
                     int zoneId = Integer.parseInt(parts[2].split("=")[1]);
-                    String lastPart = parts[parts.length - 1];
-                    double timestamp = Double.parseDouble(lastPart.replace("]", ""));
-                    fireCreatedTimes.put(zoneId, timestamp);
-
-                } else if (line.contains("DRONE_ARRIVED_AT_FIRE")) {
-                    String[] parts = line.split(", ");
+                    fireCreationTracker.computeIfAbsent(zoneId, k -> new LinkedList<>()).add(timestamp);
+                } else if (eventType.equals("DRONE_ARRIVED_AT_FIRE")) {
                     int zoneId = Integer.parseInt(parts[3].split("=")[1]);
-                    String lastPart = parts[parts.length - 1];
-                    double timestamp = Double.parseDouble(lastPart.replace("]", ""));
+                    if (fireCreationTracker.containsKey(zoneId) && !fireCreationTracker.get(zoneId).isEmpty()) {
+                        double createdTime = fireCreationTracker.get(zoneId).poll();
+                        double responseTime = timestamp - createdTime;
 
-                    if (!firstArrivalTimes.containsKey(zoneId)) {
-                        firstArrivalTimes.put(zoneId, timestamp);
+                        totalResponseTime += responseTime;
+                        firesCounted++;
                     }
                 }
             }
         }
 
+        double averageResponseTime = (firesCounted > 0) ? totalResponseTime / firesCounted : 0.0;
+
+        return "\n- Average Event Response Time: " + String.format("%.2f", averageResponseTime) + " seconds\n";
+    }
+
+    public String analyzeMaximumEventResponseTime() throws IOException {
+        Map<Integer, Queue<Double>> fireCreationTracker = new HashMap<>();
         double maxResponseTime = 0.0;
-        for (Integer zoneId : fireCreatedTimes.keySet()) {
-            if (firstArrivalTimes.containsKey(zoneId)) {
-                double responseTime = firstArrivalTimes.get(zoneId) - fireCreatedTimes.get(zoneId);
-                if (responseTime > maxResponseTime) {
-                    maxResponseTime = responseTime;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(logFilePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String cleanLine = line.replace("[", "").replace("]", "");
+                String[] parts = cleanLine.split(", ");
+                if (parts.length < 3) continue;
+
+                String eventType = parts[1];
+                double timestamp = Double.parseDouble(parts[parts.length - 1]);
+                if (eventType.equals("FIRE_EVENT_CREATED")) {
+                    int zoneId = Integer.parseInt(parts[2].split("=")[1]);
+                    fireCreationTracker.computeIfAbsent(zoneId, k -> new LinkedList<>()).add(timestamp);
+                }
+                else if (eventType.equals("DRONE_ARRIVED_AT_FIRE")) {
+                    int zoneId = Integer.parseInt(parts[3].split("=")[1]);
+                    if (fireCreationTracker.containsKey(zoneId) && !fireCreationTracker.get(zoneId).isEmpty()) {
+                        double createdTime = fireCreationTracker.get(zoneId).poll();
+                        double currentResponse = timestamp - createdTime;
+
+                        if (currentResponse > maxResponseTime) {
+                            maxResponseTime = currentResponse;
+                        }
+                    }
                 }
             }
         }
@@ -374,4 +351,32 @@ public class EventLogger {
         }
 
         return result;
-    }}
+    }
+
+    /**
+     * Main method to run metrics analysis on an existing log file.
+     * Use this to process the data after the simulation has finished.
+     */
+    public static void main(String[] args) {
+        String logPath = "log.txt"; //takes the written file
+
+        EventLogger analyzer = new EventLogger(logPath);
+
+        try {
+            System.out.println("================================");
+            System.out.print(analyzer.analyzeAverageEventResponseTime());
+            System.out.print(analyzer.analyzeMaximumEventResponseTime());
+            System.out.print(analyzer.analyzeAverageEventCompletionTime());
+            System.out.print(analyzer.analyzeMaximumEventCompletionTime());
+            System.out.print(analyzer.analyzeDroneUtilization());
+            System.out.println("================================");
+        } catch (IOException e) {
+            System.err.println("Could not read file: " + e.getMessage());
+        }
+    }
+}
+
+
+
+
+

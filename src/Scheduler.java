@@ -671,7 +671,7 @@ public class Scheduler implements Runnable {
         }
 
         public boolean canHandleTask(FireEvent fire) {
-            boolean isRightState = state.equals("IDLE") || state.equals("EN_ROUTE_BASE") || state.equals("FIRE_HANDLED");
+            boolean isRightState = state.equals("IDLE") || state.equals("FIRE_HANDLED");
             if (!isRightState) {
                 return false;
             }
