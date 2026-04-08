@@ -83,5 +83,8 @@ public class DroneResponse extends SimulationEvent {
     public double getFluidDropped() {
         return fluidDropped;
     }
-    public String getFaultType(){return faultType;}
+
+    public String getFaultType() {
+        return faultType;
+    }
 }
