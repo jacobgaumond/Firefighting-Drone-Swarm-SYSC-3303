@@ -43,7 +43,7 @@ public class ZoneMap {
                 int endY = Integer.parseInt(end[1]);
 
                 // add zone to HashMap
-                zones.put(zoneId, new Zone(startX, startY, endX, endY));
+                addZone(zoneId, new Zone(startX, startY, endX, endY));
             }
         } catch (FileNotFoundException e) {
             System.out.println("Error loading zone file: " + fileName + " - " + e.getMessage());
