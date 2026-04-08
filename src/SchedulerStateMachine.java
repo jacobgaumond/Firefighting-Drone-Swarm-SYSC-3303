@@ -1,4 +1,3 @@
-
 enum SchedulerState {
     NO_FIRES,
     DISPATCHING,

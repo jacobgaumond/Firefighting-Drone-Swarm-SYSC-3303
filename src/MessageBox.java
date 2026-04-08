@@ -1,4 +1,3 @@
-
 public class MessageBox {
 
     private Message message = null;

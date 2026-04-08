@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.time.*;
 import java.time.format.*;
@@ -375,8 +374,3 @@ public class EventLogger {
         }
     }
 }
-
-
-
-
-

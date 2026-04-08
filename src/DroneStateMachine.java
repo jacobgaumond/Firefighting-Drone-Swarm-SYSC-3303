@@ -1,4 +1,3 @@
-
 enum DroneEvent {
 
     DRONE_BACKONLINE, //This is purely so if faulted it will go back to the task it was doing

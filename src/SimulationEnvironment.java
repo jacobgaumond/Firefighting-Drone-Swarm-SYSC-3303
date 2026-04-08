@@ -1,4 +1,3 @@
-
 /**
  * Shared simulation environment for all subsystems.
  *
@@ -8,6 +7,7 @@
  *
  * In a real environment, each subsystem would use its own system time, as they would match.
  */
+
 public class SimulationEnvironment {
 
     public static final int SIMULATION_SPEED = 100;

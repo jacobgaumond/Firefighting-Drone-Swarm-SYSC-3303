@@ -1,4 +1,3 @@
-
 public abstract class SimulationEvent {
 
     protected static final String DELIMITER = "~";

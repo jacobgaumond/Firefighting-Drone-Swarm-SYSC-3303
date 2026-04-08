@@ -1,4 +1,3 @@
-
 public class FireEvent extends SimulationEvent {
 
     private String time; // 14:03:15

@@ -1,4 +1,3 @@
-
 public class DroneResponse extends SimulationEvent {
 
     private int droneId;
