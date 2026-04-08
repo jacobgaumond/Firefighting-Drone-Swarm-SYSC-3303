@@ -214,7 +214,7 @@ public class Scheduler implements Runnable {
 
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
-                logger.log("DRONE_ARRIVED_AT_FIRE", SimulationEnvironment.getCurrentTimeSeconds(), "drone=" + drone.droneId+", zone="+ drone.assignedZoneID);
+                logger.log("DRONE_ARRIVED_AT_FIRE", SimulationEnvironment.getCurrentTimeSeconds(), "drone=" + drone.droneId+", zone=" + drone.assignedZoneID);
 
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
                 if (gui != null) {

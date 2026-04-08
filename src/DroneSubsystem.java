@@ -46,7 +46,7 @@ public class DroneSubsystem implements Runnable {
 
     private DroneState statebeforefaulted;
 
-    private static final double speedPerTick = 15.0;
+    private static final double SPEED_PER_TICK = 15.0;
 
     public static void main(String[] args) {
         int TOTAL_DRONE_COUNT = 10;
@@ -195,7 +195,7 @@ public class DroneSubsystem implements Runnable {
 
     public void tick() {
         if (this.getCurrentState() == DroneState.EN_ROUTE_FIRE || this.getCurrentState() == DroneState.EN_ROUTE_BASE) {
-            moveTick(speedPerTick);
+            moveTick(SPEED_PER_TICK);
         } else if (this.getCurrentState() == DroneState.DROPPING_AGENT) {
             releaseFluidPerTick(FLUID_RATE_ML_TICK);
         }
