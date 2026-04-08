@@ -41,10 +41,6 @@ public class DroneGUI extends JFrame {
     public Thread clockThread;
 
     public static void main(String[] args) {
-        String zoneFileName = "src/data/Sample_zone_file.csv";
-        ZoneMap.loadZones(zoneFileName);
-        ZoneMap.printZones();
-
         DroneGUI gui = new DroneGUI();
         gui.setVisible(true);
     }
