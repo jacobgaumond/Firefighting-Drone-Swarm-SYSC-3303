@@ -201,50 +201,6 @@ public class DroneSubsystem implements Runnable {
         }
     }
 
-    //** Drone Movement & Modification Functions **//
-    public boolean openNozzle(String payload) {
-        System.out.println("[Drone"+this.droneId +" ]Opening Nozzle");
-        if (pendingFault.equals("jammed")) {
-            currentFault = pendingFault;
-            System.out.println("[Drone "+this.droneId +"] nozzle jammed faulting");
-            return false;
-        } else return true;
-    }
-
-    public void closeNozzle(String payload) {
-        try {
-            Thread.sleep((long) (NOZZLE_CLOSE_DELAY_MS / SimulationEnvironment.SIMULATION_SPEED));
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("[Drone " + droneId + "] Nozzle closed.");
-        updateScheduler();
-    }
-
-    public void restore() {//restores battery and restores fuel level
-        System.out.println("[Drone " + droneId + "] restocking drone.");
-        this.batteryTravelDistance = BATTERY_MAX;
-        this.fluidAmount = FLUID_MAX;
-    }
-
-    //This is to be decided later with different information//
-    public void handleFault() {
-        System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
-        currentFault = pendingFault;
-        pendingFault = "";
-    }
-
-    // ========== Helpers ==========
-    private double calculateDistance(double x1, double y1, int x2, int y2) {
-        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-    }
-
-    public boolean hasBattery() {
-        double droneToFire = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
-        double fireToBase = calculateDistance(targetCoordX, targetCoordY, 0, 0);
-        double totalDistance = droneToFire + fireToBase;
-        return batteryTravelDistance >= totalDistance;
-    }
     private void releaseFluidPerTick(double fluidPerTick) {
         if (fluidReleasedAtZone + fluidPerTick >= fluidAmountToDrop) {
             fluidPerTick = fluidAmountToDrop - fluidReleasedAtZone;
@@ -296,6 +252,51 @@ public class DroneSubsystem implements Runnable {
                 batteryTravelDistance = 0;
             }
         }
+    }
+
+    //** Drone Movement & Modification Functions **//
+    public boolean openNozzle(String payload) {
+        System.out.println("[Drone"+this.droneId +" ]Opening Nozzle");
+        if (pendingFault.equals("jammed")) {
+            currentFault = pendingFault;
+            System.out.println("[Drone "+this.droneId +"] nozzle jammed faulting");
+            return false;
+        } else return true;
+    }
+
+    public void closeNozzle(String payload) {
+        try {
+            Thread.sleep((long) (NOZZLE_CLOSE_DELAY_MS / SimulationEnvironment.SIMULATION_SPEED));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("[Drone " + droneId + "] Nozzle closed.");
+        updateScheduler();
+    }
+
+    public void restore() {//restores battery and restores fuel level
+        System.out.println("[Drone " + droneId + "] restocking drone.");
+        this.batteryTravelDistance = BATTERY_MAX;
+        this.fluidAmount = FLUID_MAX;
+    }
+
+    //This is to be decided later with different information//
+    public void handleFault() {
+        System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
+        currentFault = pendingFault;
+        pendingFault = "";
+    }
+
+    // ========== Helpers ==========
+    private double calculateDistance(double x1, double y1, int x2, int y2) {
+        return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
+    public boolean hasBattery() {
+        double droneToFire = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
+        double fireToBase = calculateDistance(targetCoordX, targetCoordY, 0, 0);
+        double totalDistance = droneToFire + fireToBase;
+        return batteryTravelDistance >= totalDistance;
     }
 
     public boolean hasAgent() {
