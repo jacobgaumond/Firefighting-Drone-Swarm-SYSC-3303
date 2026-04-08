@@ -143,12 +143,13 @@ public class Scheduler implements Runnable {
                 SimulationEnvironment.startClock(fireEvent.getTimeInSeconds());
                 gui.startClockDisplay();
                 clockStarted = true;
-                logger.log("FIRST_FIRE_EVENT", String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+                logger.log("FIRST_FIRE_EVENT", SimulationEnvironment.getCurrentTimeSeconds(), "");
+
+
             }
             gui.fireStatusChange(zoneId, fireEvent.getSeverity());
         }
-
-        logger.log("FIRE_EVENT_CREATED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+        logger.log("FIRE_EVENT_CREATED", SimulationEnvironment.getCurrentTimeSeconds(), "zone=" + zoneId);
 
         System.out.println("[SCHEDULER] Handling fire event: " + fireEvent);
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
@@ -197,7 +198,7 @@ public class Scheduler implements Runnable {
 
         // Update drone registry
         DroneInfo drone = droneRegistry.get(status.getDroneID());
-        drone.lastHeardFrom = System.currentTimeMillis();
+        drone.lastHeardFrom = SimulationEnvironment.getCurrentTimeSeconds();
         drone.awaitingResponse = false;
         drone.x = status.getX();
         drone.y = status.getY();
@@ -213,7 +214,7 @@ public class Scheduler implements Runnable {
 
         switch (drone.state) {
             case "ARRIVED_AT_FIRE":
-                logger.log("DRONE_ARRIVED_AT_FIRE", "drone=" + status.getDroneID(), "zone=" + drone.assignedZoneID, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+                logger.log("DRONE_ARRIVED_AT_FIRE", SimulationEnvironment.getCurrentTimeSeconds(), "drone=" + drone.droneId+", zone="+ drone.assignedZoneID);
 
                 sendEventToDrone(status.getDroneID(), DroneEvent.EXTINGUISH_REQUEST, "");
                 if (gui != null) {
@@ -230,8 +231,7 @@ public class Scheduler implements Runnable {
                     activeTask.fluidDropped += (int) status.getFluidDropped();
                     if (activeTask.isExtinguished()) {
                         System.out.println("[Scheduler] Zone " + zoneId + " EXTINGUISHED!");
-
-                        logger.log("FIRE_EXTINGUISHED", "zone=" + zoneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+                        logger.log("FIRE_EXTINGUISHED", SimulationEnvironment.getCurrentTimeSeconds(), "zone=" + zoneId);
                         activeFires.remove(zoneId);
                         if (gui != null) {
                             gui.fireStatusChange(zoneId, capitalizeSeverity(getFireSeverity(activeTask)));
@@ -239,7 +239,7 @@ public class Scheduler implements Runnable {
 
                         if (activeFires.isEmpty()) {
                             System.out.println("[SCHEDULER] Logging ALL_FIRES_EXTINGUISHED");
-                            logger.log("ALL_FIRES_EXTINGUISHED", String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+                            logger.log("ALL_FIRES_EXTINGUISHED", SimulationEnvironment.getCurrentTimeSeconds(), "");
                             schedulerSM.handleEvent(SchedulerEvent.ALL_FIRES_EXTINGUISHED, this);
                         }
                     } else {
@@ -272,7 +272,7 @@ public class Scheduler implements Runnable {
                 break;
 
             case "IDLE":
-                logger.log("DRONE_IDLE", "drone=" + status.getDroneID(), String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+                logger.log("DRONE_IDLE", SimulationEnvironment.getCurrentTimeSeconds(), "drone=" + drone.droneId);
 
                 tryAssignTask();
                 break;
@@ -355,8 +355,8 @@ public class Scheduler implements Runnable {
         drone.assignedY= fireEvent.getTargetY();
         drone.dispatchCount++;
 
-        logger.log("DRONE_ASSIGNED", "drone=" + drone.droneId, "zone=" + fireEvent.getZoneId(), String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
-        logger.log("DRONE_DEPARTED", "drone=" + drone.droneId, String.valueOf(SimulationEnvironment.getCurrentTimeSeconds()));
+        logger.log("DRONE_ASSIGNED", SimulationEnvironment.getCurrentTimeSeconds(), "drone=" + drone.droneId);
+        logger.log("DRONE_DEPARTED", SimulationEnvironment.getCurrentTimeSeconds(), "drone=" + drone.droneId);
 
         DroneRequest request = new DroneRequest(
                 DroneEvent.FIRE_ASSIGNED,
@@ -391,10 +391,9 @@ public class Scheduler implements Runnable {
 
         double distance = calculateDistance(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY());
 
-        long expectedTime = (long) ((distance * MS_PER_UNIT * 10) / SimulationEnvironment.SIMULATION_SPEED);
-        expectedTime += 2000;
+        long expectedTime = (long) (distance * MS_PER_UNIT * 10);
 
-        drone.dispatchTime = System.currentTimeMillis();
+        drone.dispatchTime = SimulationEnvironment.getCurrentTimeSeconds();
         drone.expectedResponseTime = expectedTime;
 
         messageBox.putMessage(droneMessage, drone.port);
@@ -419,7 +418,7 @@ public class Scheduler implements Runnable {
         }
         DroneInfo drone = droneRegistry.get(droneId);
         System.out.println("Sending Event To Drone:" + droneId + "Event:" + event);
-        drone.dispatchTime = System.currentTimeMillis();
+        drone.dispatchTime = SimulationEnvironment.getCurrentTimeSeconds();
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
 
@@ -603,7 +602,7 @@ public class Scheduler implements Runnable {
                 } catch (InterruptedException e) {
                     break;
                 }
-                long now = System.currentTimeMillis();
+                long now = SimulationEnvironment.getCurrentTimeSeconds();
                 for (DroneInfo drone : droneRegistry.values()) {
                     if (drone.awaitingResponse && (now - drone.dispatchTime) > drone.expectedResponseTime) {
                         System.out.println("[Scheduler] Drone " + drone.droneId + " never responded, resending.");
@@ -653,7 +652,7 @@ public class Scheduler implements Runnable {
         int dispatchCount = 0;
 
         DroneRequest lastSentRequest;
-        long lastHeardFrom = System.currentTimeMillis();
+        long lastHeardFrom = SimulationEnvironment.getCurrentTimeSeconds();
         boolean awaitingResponse = false;
 
         private long dispatchTime;
@@ -719,7 +718,7 @@ public class Scheduler implements Runnable {
         double fluidRequired;
         double fluidDropped = 0.0;
         Map<Integer, Integer> assignedDrones = new HashMap<>();
-        long createdAt = System.currentTimeMillis();
+        long createdAt = SimulationEnvironment.getCurrentTimeSeconds();
 
         public FireTask(FireEvent fireEvent) {
             this.fireEvent = fireEvent;
@@ -750,12 +749,14 @@ public class Scheduler implements Runnable {
 
     public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
         double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        return (long) (((distance * MS_PER_UNIT) * 10 / 1.35) / SimulationEnvironment.SIMULATION_SPEED);
+        double timeSeconds = distance / 15.0; // simulated seconds
+        double timeMs = timeSeconds * 1000;   // simulated ms
+        return (long) (timeMs / SimulationEnvironment.SIMULATION_SPEED); // convert to real ms
     }
 
     private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
-        double fluidRateMlMs = 0.25;
-        int nozzleOpenDelayMs = 100;
-        return (long) ((((fluidToDrop / fluidRateMlMs) + nozzleOpenDelayMs) * 10) / SimulationEnvironment.SIMULATION_SPEED);
+        int nozzleOpenDelayMs = 100 / SimulationEnvironment.SIMULATION_SPEED;
+        double ticksNeeded = fluidToDrop / 0.5;
+        return (long) (ticksNeeded * SimulationEnvironment.SIMULATION_SECOND_MS) + nozzleOpenDelayMs;
     }
 }

@@ -19,8 +19,6 @@ public class DroneSubsystem implements Runnable {
     private static final int FLUID_MAX = 15;
     public static final int BATTERY_MAX = 100;
 
-    private static final double MS_PER_UNIT = 0.15;
-
     private static final double FLUID_RATE_ML_TICK = 0.5; //change it to be faster
 
     private UDPMessageBox messageBox;
@@ -48,7 +46,7 @@ public class DroneSubsystem implements Runnable {
 
     private DroneState statebeforefaulted;
 
-    private double speedPertick = 100.0 / (MS_PER_UNIT * 10);
+    private static final double speedPerTick = 15.0;
 
     public static void main(String[] args) {
         int TOTAL_DRONE_COUNT = 10;
@@ -106,7 +104,7 @@ public class DroneSubsystem implements Runnable {
             }
             tick();
             try {
-                Thread.sleep(100);
+                Thread.sleep(SimulationEnvironment.SIMULATION_SECOND_MS);
             } catch (InterruptedException e) {
                 System.out.println("[Drone " + droneId + "] Thread interrupted.");
                 break;
@@ -197,7 +195,7 @@ public class DroneSubsystem implements Runnable {
 
     public void tick() {
         if (this.getCurrentState() == DroneState.EN_ROUTE_FIRE || this.getCurrentState() == DroneState.EN_ROUTE_BASE) {
-            moveTick(speedPertick);
+            moveTick(speedPerTick);
         } else if (this.getCurrentState() == DroneState.DROPPING_AGENT) {
             releaseFluidPerTick(FLUID_RATE_ML_TICK);
         }
@@ -281,10 +279,10 @@ public class DroneSubsystem implements Runnable {
 
     // Called by tick()
     private void moveTick(double speed) {
+
         double dx = targetCoordX - coordX;
         double dy = targetCoordY - coordY;
         double distance = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
-
         if ("stuck".equals(pendingFault)) {
             double distanceTravelled = initialDistance - calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             if (distanceTravelled >= initialDistance / 2) {

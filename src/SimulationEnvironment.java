@@ -13,17 +13,17 @@ public class SimulationEnvironment {
     public static final int SIMULATION_SPEED = 100;
     public static final int SIMULATION_SECOND_MS = (1000 / SIMULATION_SPEED);
 
-    public static long currentTime = 0;
+    public static volatile long currentSimulationTimeSeconds = 0;
 
     public static synchronized void startClock(long startTime) {
-        currentTime = startTime;
+        currentSimulationTimeSeconds = startTime;
 
         // Ticking thread
         Thread clockThread = new Thread(() -> {
             while (true) {
                 try {
                     Thread.sleep(SIMULATION_SECOND_MS);
-                    currentTime++;
+                    currentSimulationTimeSeconds ++;
                 } catch (InterruptedException e) {
                     break;
                 }
@@ -35,11 +35,11 @@ public class SimulationEnvironment {
     }
 
     public static long getCurrentTimeSeconds() {
-        return currentTime;
+        return currentSimulationTimeSeconds;
     }
 
     public static String getFormattedTime() {
-        long timeSeconds = currentTime;
+        long timeSeconds = currentSimulationTimeSeconds;
         int hours = (int) (timeSeconds / 3600);
         int minutes = (int) ((timeSeconds % 3600) / 60);
         int seconds = (int) (timeSeconds % 60);
