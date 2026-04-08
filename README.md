@@ -87,6 +87,9 @@ before it was realized that they would only be usable in future iterations.
 - `src/data/Sample_event_file.csv`
   This csv file is used as the event input file for the FireIncidentSubsystem class.
 
+- `src/data/sample_zone_file.csv`
+  This csv file is used as the zone map input file for the DroneGui and FireIncidentSubsystem classes.
+
 ### Faulting
 
 Faults are problems that drones might run into when doing their tasks
