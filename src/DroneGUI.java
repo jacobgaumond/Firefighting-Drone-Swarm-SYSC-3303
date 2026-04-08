@@ -28,16 +28,18 @@ public class DroneGUI extends JFrame {
     private Map<Integer, JLabel> fireLabels = new HashMap<>();
     private Map<Integer, JLabel> droneLabels = new HashMap<>();
     private Map<Integer, Thread> droneAnimationThreads = new HashMap<>();
-    private final static int animationDelay = 20;
-    private final static int buffer = 120;
 
-    private final static Color activeFireColor = new Color(255, 0, 0);
-    private final static Color extinguishedFireColor = new Color(77, 167, 46);
+    private final static int ANIMATION_DELAY = 20;
+    private final static int BUFFER = 120;
 
-    private final static Color droneOutboundColor = new Color(255, 191, 0);
-    private final static Color droneExtinguishingColor = new Color(77, 167, 46);
-    private final static Color droneReturningColor = new Color(216, 109, 205);
-    private final static Color droneFaultedColor = new Color(117, 117, 117);
+    private final static Color ACTIVE_FIRE_COLOR = new Color(255, 0, 0);
+    private final static Color EXTINGUISHED_FIRE_COLOR = new Color(77, 167, 46);
+
+    private final static Color DRONE_OUTBOUND_COLOR = new Color(255, 191, 0);
+    private final static Color DRONE_EXTINGUISHING_COLOR = new Color(77, 167, 46);
+    private final static Color DRONE_RETURNING_COLOR = new Color(216, 109, 205);
+    private final static Color DRONE_FAULTED_COLOR = new Color(117, 117, 117);
+
     public Thread clockThread;
 
     public static void main(String[] args) {
@@ -157,7 +159,7 @@ public class DroneGUI extends JFrame {
         JLabel label = new JLabel();
 
         label.setOpaque(true);
-        label.setBackground(extinguishedFireColor);
+        label.setBackground(EXTINGUISHED_FIRE_COLOR);
         label.setForeground(Color.BLACK);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setText("");
@@ -177,7 +179,7 @@ public class DroneGUI extends JFrame {
         JLabel label = new JLabel("D(" + droneId + ")");
 
         label.setOpaque(true);
-        label.setBackground(droneOutboundColor);
+        label.setBackground(DRONE_OUTBOUND_COLOR);
         label.setForeground(Color.BLACK);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
@@ -303,12 +305,12 @@ public class DroneGUI extends JFrame {
         p.setBackground(new Color(245, 245, 245));
 
         p.add(createLegendItem("Zone Label", new Color(158, 194, 211), "Z(n)"));
-        p.add(createLegendItem("Active Fire", activeFireColor, ""));
-        p.add(createLegendItem("Extinguished Fire", extinguishedFireColor, ""));
-        p.add(createLegendItem("Drone Outbound", droneOutboundColor, "D(n)"));
-        p.add(createLegendItem("Drone Extinguishing fire", droneExtinguishingColor, "D(n)"));
-        p.add(createLegendItem("Drone returning", droneReturningColor, "D(n)"));
-        p.add(createLegendItem("Drone faulted", droneFaultedColor, "D(n)"));
+        p.add(createLegendItem("Active Fire", ACTIVE_FIRE_COLOR, ""));
+        p.add(createLegendItem("Extinguished Fire", EXTINGUISHED_FIRE_COLOR, ""));
+        p.add(createLegendItem("Drone Outbound", DRONE_OUTBOUND_COLOR, "D(n)"));
+        p.add(createLegendItem("Drone Extinguishing fire", DRONE_EXTINGUISHING_COLOR, "D(n)"));
+        p.add(createLegendItem("Drone returning", DRONE_RETURNING_COLOR, "D(n)"));
+        p.add(createLegendItem("Drone faulted", DRONE_FAULTED_COLOR, "D(n)"));
         return p;
     }
 
@@ -487,7 +489,7 @@ public class DroneGUI extends JFrame {
 
         if (Objects.equals(fireLevel, "")) {
             // Extinguished
-            fireLabel.setBackground(extinguishedFireColor);
+            fireLabel.setBackground(EXTINGUISHED_FIRE_COLOR);
             fireLabel.setText(fireLevel);
 
             if (activeFires > 0) {
@@ -496,7 +498,7 @@ public class DroneGUI extends JFrame {
             logMessage("Fire in Zone " + zoneId + " extinguished");
         } else {
             // Active
-            fireLabel.setBackground(activeFireColor);
+            fireLabel.setBackground(ACTIVE_FIRE_COLOR);
 
             if (fireLabel.getText().equals("")) {
                 activeFires++; // new fire, not update
@@ -534,7 +536,7 @@ public class DroneGUI extends JFrame {
 
         // Set to outbound color
         droneLabel.setVisible(true);
-        droneLabel.setBackground(droneOutboundColor);
+        droneLabel.setBackground(DRONE_OUTBOUND_COLOR);
         droneLabel.setText("D("+droneId+")");
 
         logMessage("Drone " + droneId + " outbound to Zone " + zoneId + "| fluid remaining: " + fluidRemaining);
@@ -548,7 +550,7 @@ public class DroneGUI extends JFrame {
         int targetY = (ZoneMap.getY(zoneId) / 100) * cellHeight;
 
         // Animation based on travel time
-        final int steps = (int) Math.max(1, (travelTime - buffer) / animationDelay);  // frames needed to match travel time
+        final int steps = (int) Math.max(1, (travelTime - BUFFER) / ANIMATION_DELAY);  // frames needed to match travel time
 
         // Thread for asynchronous animation
         Thread animationThread = new Thread(() -> {
@@ -563,7 +565,7 @@ public class DroneGUI extends JFrame {
                 updateDronePosition(droneId, newX, newY);
 
                 try {
-                    Thread.sleep(animationDelay); // delay between animation steps
+                    Thread.sleep(ANIMATION_DELAY); // delay between animation steps
                 } catch (InterruptedException e) {
                     break; // stop animation if interrupted
                 }
@@ -589,7 +591,7 @@ public class DroneGUI extends JFrame {
         }
 
         // Change color to extinguishing
-        droneLabel.setBackground(droneExtinguishingColor);
+        droneLabel.setBackground(DRONE_EXTINGUISHING_COLOR);
         logMessage("Drone " + droneId + " extinguishing fire at zone: " + zoneId);
 
         // Wait for drop time
@@ -621,7 +623,7 @@ public class DroneGUI extends JFrame {
 
         // Set returning color
         droneLabel.setVisible(true);
-        droneLabel.setBackground(droneReturningColor);
+        droneLabel.setBackground(DRONE_RETURNING_COLOR);
 
         logMessage("Drone " + droneId + " returning to origin");
 
@@ -634,7 +636,7 @@ public class DroneGUI extends JFrame {
         int targetY = 0;
 
         // Animation based on travel time
-        final int steps = (int) Math.max(1, (travelTime - buffer) / animationDelay);
+        final int steps = (int) Math.max(1, (travelTime - BUFFER) / ANIMATION_DELAY);
 
         // Thread for asynchronous animation
         Thread animationThread = new Thread(() -> {
@@ -654,7 +656,7 @@ public class DroneGUI extends JFrame {
                 }
 
                 try {
-                    Thread.sleep(animationDelay); // delay between animation steps
+                    Thread.sleep(ANIMATION_DELAY); // delay between animation steps
                 } catch (InterruptedException e) {
                     break; // Stop animation if interrupted
                 }
@@ -697,7 +699,7 @@ public class DroneGUI extends JFrame {
         }
 
         // Set faulted color and display fault text
-        droneLabel.setBackground(droneFaultedColor);
+        droneLabel.setBackground(DRONE_FAULTED_COLOR);
         // droneLabel.setText("<html style='lineHeight: 0.5; textAlign: center;'>D(" + droneId + ")<br/>Fault: " + type.toUpperCase() + "</html>");
         droneLabel.setText("<html>D(" + droneId + ")<br/><font color='red'>" + type.toUpperCase() + "</font></html>");
         droneLabel.setVisible(true);
