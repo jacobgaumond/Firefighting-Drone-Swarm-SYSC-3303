@@ -115,18 +115,18 @@ public class DroneSubsystem implements Runnable {
     public void handleMessage(Message message) {
         if (message.getMessageType() == Message.MessageType.DroneRequest) {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
-            System.out.println("[DroneSubsystem] Received DroneEvent: " + droneEvent);
+            System.out.println("[Drone]="+this.droneId +"] Received DroneEvent: " + droneEvent);
 
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED) {
                 this.pendingFault = droneEvent.getFaultType();
             }
             if (pendingFault.equals("packet_loss")) {
-                System.out.println("FAULTED: The drone never got the packet");
+                System.out.println("[Drone]"+this.droneId +" lost the packet");
                 pendingFault = "";
                 return;
             }
             if (droneEvent.getDroneEvent() == DroneEvent.REQUEST_STATUS) {//if scheduler is requesting status send new  status
-                System.out.println("Received update scheduler");
+                System.out.println("[Drone]"+this.droneId +"Received Status Request from scheduler");
                 updateScheduler();
                 return;
             }
@@ -153,14 +153,14 @@ public class DroneSubsystem implements Runnable {
             updateScheduler();
 
         } else {
-            System.out.println("[DroneSubsystem] Received unknown message type: " + message.getMessageType());
+            System.out.println("[Drone]"+this.droneId +" Received unknown message type: " + message.getMessageType());
         }
 
     }
 
     public Message sendStatus() { //creates the message
         if (droneSM.getCurrentState() == DroneState.FIRE_HANDLED && pendingFault.equals("corrupted")) { //corrupts on the fire extinguished message
-            System.out.println("Corrupting a message");
+            System.out.println("[Drone]"+this.droneId +"Sending a corrupted message");
             DroneResponse status = new DroneResponse(
                     droneId * -1,
                     generateCorruptedString(9),
@@ -203,15 +203,14 @@ public class DroneSubsystem implements Runnable {
 
     //** Drone Movement & Modification Functions **//
     public boolean openNozzle(String payload) {
-        System.out.println("Opening Nozzle");
+        System.out.println("[Drone"+this.droneId +" ]Opening Nozzle");
         if (pendingFault.equals("jammed")) {
             currentFault = pendingFault;
-            System.out.println("Drone nozzle jammed faulting");
-            //handleFault();
+            System.out.println("[Drone "+this.droneId +"] nozzle jammed faulting");
             return false;
         } else {
             try {
-                Thread.sleep(NOZZLE_OPEN_DELAY_MS);
+                Thread.sleep(NOZZLE_OPEN_DELAY_MS/SimulationEnvironment.SIMULATION_SECOND_MS);
                 return true;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -239,7 +238,6 @@ public class DroneSubsystem implements Runnable {
     public void handleFault() {
         System.out.println("[Drone " + droneId + "] FAULTED. Awaiting repair.");
         currentFault = pendingFault;
-        //updateScheduler();
         pendingFault = "";
     }
 
@@ -254,18 +252,10 @@ public class DroneSubsystem implements Runnable {
         double totalDistance = droneToFire + fireToBase;
         return batteryTravelDistance >= totalDistance;
     }
-
-    public int calculateBatteryUsage() {
-        double droneToFire = calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
-        double fireToBase = calculateDistance(targetCoordX, targetCoordY, 0, 0);
-        return (int) Math.ceil(droneToFire + fireToBase);
-    }
-
     private void releaseFluidPerTick(double fluidPerTick) {
         if (fluidReleasedAtZone + fluidPerTick >= fluidAmountToDrop) {
             fluidPerTick = fluidAmountToDrop - fluidReleasedAtZone;
         }
-        //System.out.println("Fluid per Tick " + fluidPerTick);
 
         fluidReleasedAtZone += fluidPerTick;
         fluidAmount -= fluidPerTick;
@@ -286,10 +276,9 @@ public class DroneSubsystem implements Runnable {
         if ("stuck".equals(pendingFault)) {
             double distanceTravelled = initialDistance - calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             if (distanceTravelled >= initialDistance / 2) {
-                System.out.println("Drone stuck at " + coordX + " " + coordY + "Required" + targetCoordX + targetCoordY);
+                System.out.println("[Drone"+this.droneId +"] stuck at " + coordX + " " + coordY + "Required" + targetCoordX + targetCoordY);
                 statebeforefaulted = this.getCurrentState();
                 droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
-                System.out.println("Current Fault is" + currentFault);
                 updateScheduler();
                 return;
             }

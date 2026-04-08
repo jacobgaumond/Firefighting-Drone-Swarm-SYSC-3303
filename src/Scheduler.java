@@ -394,7 +394,7 @@ public class Scheduler implements Runnable {
 
         double travelTimeSeconds = distance * MS_PER_UNIT / 1000.0;
         drone.dispatchTime = SimulationEnvironment.getCurrentTimeSeconds();
-        drone.expectedResponseTime = (long) (travelTimeSeconds + 6);
+        drone.expectedResponseTime = (long) (travelTimeSeconds + 10);
 
         messageBox.putMessage(droneMessage, drone.port);
     }
@@ -419,7 +419,7 @@ public class Scheduler implements Runnable {
         DroneInfo drone = droneRegistry.get(droneId);
         System.out.println("Sending Event To Drone:" + droneId + "Event:" + event);
         drone.dispatchTime = SimulationEnvironment.getCurrentTimeSeconds();
-        drone.expectedResponseTime =6;
+        drone.expectedResponseTime = 10;
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
 
