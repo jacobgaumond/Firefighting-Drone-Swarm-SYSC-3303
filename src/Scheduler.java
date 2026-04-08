@@ -654,20 +654,20 @@ public class Scheduler implements Runnable {
     // ========== Sub Classes ==========
     public class DroneInfo {
 
-        int droneId;
-        int port;
-        String state;
-        int fluidAssigned, battery;
-        double fluid;
-        double x, y;
+        public int droneId;
+        public int port;
+        public String state;
+        public int fluidAssigned, battery;
+        public double fluid;
+        public double x, y;
 
-        double assignedX, assignedY;
-        int assignedZoneID = -1;
-        int dispatchCount = 0;
+        public double assignedX, assignedY;
+        public int assignedZoneID = -1;
+        public int dispatchCount = 0;
 
-        DroneRequest lastSentRequest;
-        long lastHeardFrom = SimulationEnvironment.getCurrentTimeSeconds();
-        boolean awaitingResponse = false;
+        public DroneRequest lastSentRequest;
+        public long lastHeardFrom = SimulationEnvironment.getCurrentTimeSeconds();
+        public boolean awaitingResponse = false;
 
         private long dispatchTime;
         private long expectedResponseTime;
@@ -728,11 +728,11 @@ public class Scheduler implements Runnable {
 
     public class FireTask {
 
-        FireEvent fireEvent;
-        double fluidRequired;
-        double fluidDropped = 0.0;
-        Map<Integer, Integer> assignedDrones = new HashMap<>();
-        long createdAt = SimulationEnvironment.getCurrentTimeSeconds();
+        public FireEvent fireEvent;
+        public double fluidRequired;
+        public double fluidDropped = 0.0;
+        public Map<Integer, Integer> assignedDrones = new HashMap<>();
+        public long createdAt = SimulationEnvironment.getCurrentTimeSeconds();
 
         public FireTask(FireEvent fireEvent) {
             this.fireEvent = fireEvent;
