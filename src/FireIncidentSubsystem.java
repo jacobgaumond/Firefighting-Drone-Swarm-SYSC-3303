@@ -67,7 +67,6 @@ public class FireIncidentSubsystem implements Runnable {
 
         // Dispatch events
         for (FireEvent fireEvent : fireEvents) {
-            // respect delay between timestamps (accounting for simulation speed)
             long delay = (long) ((fireEvent.getTimeInSeconds() - startTime) * (1000.0 / SimulationEnvironment.SIMULATION_SPEED));
             try {
                 Thread.sleep(delay);
