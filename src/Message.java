@@ -77,6 +77,11 @@ public class Message {
         return type;
     }
 
-    public int getSenderPort(){return senderPort;}
-    public void setSenderPort(int senderPort){this.senderPort= senderPort;}
+    public int getSenderPort() {
+        return senderPort;
+    }
+
+    public void setSenderPort(int senderPort) {
+        this.senderPort= senderPort;
+    }
 }
