@@ -116,20 +116,6 @@ public class Scheduler implements Runnable {
         }
     }
 
-    public void registerDrone(Message message) {
-        String[] parts = message.getMessageData().split(",");
-        int droneId = Integer.parseInt(parts[0]); // id
-        int dronePort = Integer.parseInt(parts[1]); // port
-
-        DroneInfo droneInfo = new DroneInfo(droneId, dronePort);
-        droneRegistry.put(droneId, droneInfo);
-
-        System.out.println("[SCHEDULER] Registered drone " + droneId + " (PORT: " + dronePort + ")");
-        if (gui != null) {
-            gui.createDroneLabel(droneId);
-        }
-    }
-
     public void processFireEvent(Message message) {
         FireEvent fireEvent = new FireEvent(message.getMessageData());
         int zoneId = fireEvent.getZoneId();
@@ -154,37 +140,6 @@ public class Scheduler implements Runnable {
 
         System.out.println("[SCHEDULER] Handling fire event: " + fireEvent);
         schedulerSM.handleEvent(SchedulerEvent.FIRE_EVENT, this);
-    }
-
-    //Simple Message checking//
-    private boolean checkMessage(Message message) {
-        if (message == null || message.getMessageData() == null) {
-            return false;
-        }
-        DroneResponse status;
-        try {
-            status = new DroneResponse(message.getMessageData());
-        } catch (Exception e) {
-            System.out.println("[Scheduler] Failed to parse message (corrupted)");
-            return false;
-        }
-        // ===== field validation =====
-        if (status.getDroneID() < 0) {
-            return false;
-        }
-        if (status.getBattery() < 0 || status.getBattery() > DroneSubsystem.BATTERY_MAX) {
-            return false;
-        }
-        if (Double.isNaN(status.getX()) || Double.isInfinite(status.getX())) {
-            return false;
-        }
-        if (Double.isNaN(status.getY()) || Double.isInfinite(status.getY())) {
-            return false;
-        }
-        if (status.getFluidAmount() < 0) {
-            return false;
-        }
-        return true;
     }
 
     private void processDroneMessage(Message message) {
@@ -297,6 +252,51 @@ public class Scheduler implements Runnable {
                 gui.faultDrone(status.getDroneID(), status.getFaultType());
                 break;
         }
+    }
+
+    public void registerDrone(Message message) {
+        String[] parts = message.getMessageData().split(",");
+        int droneId = Integer.parseInt(parts[0]); // id
+        int dronePort = Integer.parseInt(parts[1]); // port
+
+        DroneInfo droneInfo = new DroneInfo(droneId, dronePort);
+        droneRegistry.put(droneId, droneInfo);
+
+        System.out.println("[SCHEDULER] Registered drone " + droneId + " (PORT: " + dronePort + ")");
+        if (gui != null) {
+            gui.createDroneLabel(droneId);
+        }
+    }
+
+    //Simple Message checking//
+    private boolean checkMessage(Message message) {
+        if (message == null || message.getMessageData() == null) {
+            return false;
+        }
+        DroneResponse status;
+        try {
+            status = new DroneResponse(message.getMessageData());
+        } catch (Exception e) {
+            System.out.println("[Scheduler] Failed to parse message (corrupted)");
+            return false;
+        }
+        // ===== field validation =====
+        if (status.getDroneID() < 0) {
+            return false;
+        }
+        if (status.getBattery() < 0 || status.getBattery() > DroneSubsystem.BATTERY_MAX) {
+            return false;
+        }
+        if (Double.isNaN(status.getX()) || Double.isInfinite(status.getX())) {
+            return false;
+        }
+        if (Double.isNaN(status.getY()) || Double.isInfinite(status.getY())) {
+            return false;
+        }
+        if (status.getFluidAmount() < 0) {
+            return false;
+        }
+        return true;
     }
 
     // ========== Drone and Task Logic ==========
