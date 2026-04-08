@@ -629,6 +629,19 @@ public class Scheduler implements Runnable {
         watchdog.start();
     }
 
+    public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
+        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
+        double timeSeconds = distance / 15.0; // simulated seconds
+        double timeMs = timeSeconds * 1000;   // simulated ms
+        return (long) (timeMs / SimulationEnvironment.SIMULATION_SPEED); // convert to real ms
+    }
+
+    private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
+        int nozzleOpenDelayMs = 100 / SimulationEnvironment.SIMULATION_SPEED;
+        double ticksNeeded = fluidToDrop / 0.5;
+        return (long) (ticksNeeded * SimulationEnvironment.SIMULATION_SECOND_MS) + nozzleOpenDelayMs;
+    }
+
     // ========== Getters and Setters ==========
     public Map<Integer, DroneInfo> getDroneRegistry() {
         return droneRegistry;
@@ -746,18 +759,5 @@ public class Scheduler implements Runnable {
             return fluidDropped >= fluidRequired;
         }
 
-    }
-
-    public long calculateGuiDroneTravelTime(double coordX, double coordY, double targetCoordX, double targetCoordY) {
-        double distance = Math.sqrt(Math.pow(targetCoordX - coordX, 2) + Math.pow(targetCoordY - coordY, 2));
-        double timeSeconds = distance / 15.0; // simulated seconds
-        double timeMs = timeSeconds * 1000;   // simulated ms
-        return (long) (timeMs / SimulationEnvironment.SIMULATION_SPEED); // convert to real ms
-    }
-
-    private long calculateGuiDroneExtinguishTime(int fluidToDrop) {
-        int nozzleOpenDelayMs = 100 / SimulationEnvironment.SIMULATION_SPEED;
-        double ticksNeeded = fluidToDrop / 0.5;
-        return (long) (ticksNeeded * SimulationEnvironment.SIMULATION_SECOND_MS) + nozzleOpenDelayMs;
     }
 }
