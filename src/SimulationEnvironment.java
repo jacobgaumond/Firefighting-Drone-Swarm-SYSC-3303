@@ -2,7 +2,7 @@
  * Shared simulation environment for all subsystems.
  *
  * We actively avoid shared resources in distributed systems, but this
- * clock is essential for simulation purposes, allowing us to to change
+ * clock is essential for simulation purposes, allowing us to change
  * simulation speed while having all subsystems align.
  *
  * In a real environment, each subsystem would use its own system time, as they would match.
