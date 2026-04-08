@@ -392,10 +392,9 @@ public class Scheduler implements Runnable {
 
         double distance = calculateDistance(drone.x, drone.y, fireEvent.getTargetX(), fireEvent.getTargetY());
 
-        long expectedTime = (long) (distance * MS_PER_UNIT * 10);
-
+        double travelTimeSeconds = distance * MS_PER_UNIT / 1000.0;
         drone.dispatchTime = SimulationEnvironment.getCurrentTimeSeconds();
-        drone.expectedResponseTime = expectedTime;
+        drone.expectedResponseTime = (long) (travelTimeSeconds + 6);
 
         messageBox.putMessage(droneMessage, drone.port);
     }
@@ -420,6 +419,7 @@ public class Scheduler implements Runnable {
         DroneInfo drone = droneRegistry.get(droneId);
         System.out.println("Sending Event To Drone:" + droneId + "Event:" + event);
         drone.dispatchTime = SimulationEnvironment.getCurrentTimeSeconds();
+        drone.expectedResponseTime =6;
         drone.lastSentRequest = request;
         drone.awaitingResponse = true;
 
@@ -599,7 +599,7 @@ public class Scheduler implements Runnable {
         Thread watchdog = new Thread(() -> {
             while (!stopWatchdog) {
                 try {
-                    Thread.sleep(6000);
+                    Thread.sleep(SimulationEnvironment.SIMULATION_SECOND_MS);
                 } catch (InterruptedException e) {
                     break;
                 }
