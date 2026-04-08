@@ -24,7 +24,7 @@ public class DroneRequest extends SimulationEvent {
         this.droneId = droneId;
         this.faultType = "";
     }
-    public DroneRequest(DroneEvent droneEvent, String time, int zoneId, String eventType, String severity, int targetX, int targetY, int amountToDrop, int droneId,String faultType) {
+    public DroneRequest(DroneEvent droneEvent, String time, int zoneId, String eventType, String severity, int targetX, int targetY, int amountToDrop, int droneId, String faultType) {
         this.droneEvent = droneEvent;
         this.time = time;
         this.zoneId = zoneId;
@@ -99,6 +99,11 @@ public class DroneRequest extends SimulationEvent {
     public int getDroneId() {
         return droneId;
     }
-    public String getFaultType(){return faultType;}
-    public void setFaultType(String faultType){this.faultType=faultType;}
+    public String getFaultType() {
+        return faultType;
+    }
+
+    public void setFaultType(String faultType) {
+        this.faultType=faultType;
+    }
 }
