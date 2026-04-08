@@ -115,7 +115,7 @@ public class DroneSubsystem implements Runnable {
     public void handleMessage(Message message) {
         if (message.getMessageType() == Message.MessageType.DroneRequest) {
             DroneRequest droneEvent = new DroneRequest(message.getMessageData());
-            System.out.println("[Drone]="+this.droneId +"] Received DroneEvent: " + droneEvent);
+            System.out.println("[Drone"+this.droneId +"] Received DroneEvent: " + droneEvent);
 
             if (droneEvent.getDroneEvent() == DroneEvent.FIRE_ASSIGNED) {
                 this.pendingFault = droneEvent.getFaultType();
