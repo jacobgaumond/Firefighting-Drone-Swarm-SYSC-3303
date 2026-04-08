@@ -1,6 +1,5 @@
 enum DroneEvent {
-
-    DRONE_BACKONLINE, //This is purely so if faulted it will go back to the task it was doing
+    DRONE_BACK_ONLINE, //This is purely so if faulted it will go back to the task it was doing
     REQUEST_STATUS, // This event doesn't create a transition just the scheduler asking for the drone status again
     FIRE_ASSIGNED, //request going to fire
     ARRIVAL, // I've arrived at destination

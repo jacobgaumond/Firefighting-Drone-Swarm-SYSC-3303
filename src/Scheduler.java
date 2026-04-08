@@ -281,7 +281,7 @@ public class Scheduler implements Runnable {
             case "FAULTED":
                 System.out.println("[Scheduler] Drone " + status.getDroneID() + " has faulted with " + status.getFaultType());
                 if(status.getFaultType().equals("stuck")){ //handles getting the drone back online
-                    sendEventToDrone(status.getDroneID(), DroneEvent.DRONE_BACKONLINE, String.valueOf(message.getSenderPort()));
+                    sendEventToDrone(status.getDroneID(), DroneEvent.DRONE_BACK_ONLINE, String.valueOf(message.getSenderPort()));
                 }
                 else {
                     for (FireTask task : activeFires.values()) {

@@ -130,7 +130,7 @@ public class DroneSubsystem implements Runnable {
                 updateScheduler();
                 return;
             }
-            if(droneEvent.getDroneEvent() == DroneEvent.DRONE_BACKONLINE){
+            if(droneEvent.getDroneEvent() == DroneEvent.DRONE_BACK_ONLINE){
                 try {
                     Thread.sleep(2*SimulationEnvironment.SIMULATION_SECOND_MS);
                 } catch (InterruptedException e) {}
