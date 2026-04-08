@@ -44,7 +44,7 @@ public class DroneSubsystem implements Runnable {
 
     private double initialDistance; // used for tracking when to fault stuck
 
-    private DroneState statebeforefaulted;
+    private DroneState stateBeforeFaulted;
 
     private static final double SPEED_PER_TICK = 15.0;
 
@@ -134,7 +134,7 @@ public class DroneSubsystem implements Runnable {
                 try {
                     Thread.sleep(2*SimulationEnvironment.SIMULATION_SECOND_MS);
                 } catch (InterruptedException e) {}
-                setCurrentState(statebeforefaulted);
+                setCurrentState(stateBeforeFaulted);
                 updateScheduler();
                 return;
             }
@@ -270,7 +270,7 @@ public class DroneSubsystem implements Runnable {
             double distanceTravelled = initialDistance - calculateDistance(coordX, coordY, targetCoordX, targetCoordY);
             if (distanceTravelled >= initialDistance / 2) {
                 System.out.println("[Drone"+this.droneId +"] stuck at " + coordX + " " + coordY + "Required" + targetCoordX + targetCoordY);
-                statebeforefaulted = this.getCurrentState();
+                stateBeforeFaulted = this.getCurrentState();
                 droneSM.handleEvent(DroneEvent.FAILURE, "stuck", this);
                 updateScheduler();
                 return;
