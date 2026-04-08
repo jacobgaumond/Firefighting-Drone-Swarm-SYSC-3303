@@ -98,15 +98,13 @@ Faults are initially loaded from the event file and sent to the scheduler attach
 to pick up the fireEvent the drone also picks up the fault that goes with the event. Once a drone has knowledge of the
 fault the logic acts accordingly for the specific drone fault:
 
-1. jammed: A drones nozzle gets stuck
+1. jammed: A drones nozzle gets jammed
 
-  When the drone arrives at the fire it attempts to open its nozzle and then realizes it's stuck, switch to a faulted
-  state, updates scheduler.
+  When the drone arrives at the fire it attempts to open its nozzle and then realizes it's jammed, switches to a faulted state and updates scheduler. This never comes back online. 
 
 2. stuck: A drone gets stuck midair
 
-  When the drone is on its way to the assigned task it will randomly switch to a stuck state where it no longer moves
-  and then updates scheduler.
+  When the drone is on its way to the assigned task it will randomly switch to a stuck state where it no longer moves and then updates scheduler. The scheduler will then tell the drone to reboot and keep doing what it was doing.
 
 3. corrupted: A drone sends a corrupted message back to the scheduler
 
