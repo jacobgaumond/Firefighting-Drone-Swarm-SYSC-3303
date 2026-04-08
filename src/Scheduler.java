@@ -83,6 +83,7 @@ public class Scheduler implements Runnable {
         }
 
         // Generate and log metrics analysis
+        gui.stopClock();
         try {
             if (gui != null) {
                 gui.logMessage(logger.analyzeAverageEventResponseTime());

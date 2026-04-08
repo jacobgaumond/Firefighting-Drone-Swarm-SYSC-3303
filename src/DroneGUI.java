@@ -39,6 +39,7 @@ public class DroneGUI extends JFrame {
     private final static Color droneExtinguishingColor = new Color(77, 167, 46);
     private final static Color droneReturningColor = new Color(216, 109, 205);
     private final static Color droneFaultedColor = new Color(117, 117, 117);
+    public Thread clockThread;
 
     public static void main(String[] args) {
         String zoneFileName = "src/data/Sample_zone_file.csv";
@@ -407,7 +408,7 @@ public class DroneGUI extends JFrame {
     // Start Clock
     public void startClockDisplay() {
         // update time every second
-        Thread clockThread = new Thread(() -> {
+       clockThread = new Thread(() -> {
             while (true) {
                 timeLabel.setText("Time: " + SimulationEnvironment.getFormattedTime());
                 try {
@@ -419,6 +420,9 @@ public class DroneGUI extends JFrame {
         });
         clockThread.setDaemon(true); // closes with others
         clockThread.start();
+    }
+    public void stopClock(){
+        clockThread.interrupt();
     }
 
     public void updateDroneStatus(int droneId, double fluid, int battery, String state) {
