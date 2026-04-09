@@ -165,3 +165,15 @@ Breakdown of responsibilities of each team member for each iteration
   - Scheduler:
     - responds to ALL_FIRES_HANDLED
     - prints analytics once all fires handled and drones IDLE
+
+# Final Deliverable
+
+- Olivia:
+
+- Jacob:
+  - General refactoring of entire project.
+  - UML Class Diagram complete update
+
+- Ulan:
+
+- Peter:
