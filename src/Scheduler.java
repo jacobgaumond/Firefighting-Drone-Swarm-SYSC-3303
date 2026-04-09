@@ -705,12 +705,13 @@ public class Scheduler implements Runnable {
             return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
         }
 
-        public long getDispatchTime() {
-            return dispatchTime;
-        }
         public void setTargetXY(int x, int y){
             this.assignedX=x;
             this.assignedY=y;
+        }
+
+        public long getDispatchTime() {
+            return dispatchTime;
         }
 
         public long getExpectedResponseTime() {
